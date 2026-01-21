@@ -617,6 +617,116 @@ def test_optimized_runner_memory():
 
 ---
 
+## Phase 6: Learned Weights & Analysis Validation (Gate: Real dynamics demonstrated?)
+
+### Problem Statement
+Phases 1-5 validated optimizations on **random weights**:
+- "100% accuracy" = preserving random rankings
+- Analysis tools show uniform scores, no dynamics
+- Speedups are real, but "so what?" is unclear
+
+**We need learned weights to demonstrate genuine value.**
+
+### Objective
+Train Phoenix on MovieLens to:
+1. Validate optimizations work on non-trivial weights
+2. Demonstrate analysis tools reveal real dynamics
+3. Show genuine filter bubble emergence
+
+### Why MovieLens?
+| Criterion | MovieLens | Twitter Data | Synthetic |
+|-----------|-----------|--------------|-----------|
+| Real human patterns | ✅ | ✅ | ❌ Designed |
+| Accessible | ✅ Free | ❌ API costs | ✅ Free |
+| Credible | ✅ Academic benchmark | ✅ Most relevant | ⚠️ Circular |
+
+### Data Mapping
+```
+MovieLens → Phoenix:
+- User ID → User hash
+- Movie ID → Item hash (post_hash)
+- Rating history → Engagement history
+- Movie genres → Item embeddings
+- Ratings: 5★→"like", 4★→"positive", 3★→"neutral"
+```
+
+### Deliverables
+```
+enhancements/data/
+├── __init__.py
+├── movielens.py              # Dataset loader
+├── movielens_adapter.py      # Phoenix format adapter
+└── embeddings.py             # Embedding utilities
+
+enhancements/training/
+├── __init__.py
+├── train_phoenix.py          # Training loop
+├── losses.py                 # Loss functions
+└── metrics.py                # Evaluation metrics
+
+scripts/
+├── download_movielens.py     # Data download
+├── train_movielens.py        # Training entry point
+└── run_analysis.py           # Run analysis tools
+
+models/movielens_phoenix/
+└── best_model.pkl            # Trained weights
+```
+
+### Implementation Steps
+1. **Data Infrastructure**: Download MovieLens, create dataset class
+2. **Phoenix Adapter**: Map MovieLens to RecsysBatch/RecsysEmbeddings
+3. **Embeddings**: Generate movie embeddings from genres
+4. **Training Loop**: Loss function, optimizer, checkpointing
+5. **Validation**: NDCG@10, Hit Rate metrics
+6. **Re-run Analysis**: Trajectory, diversity, counterfactual
+7. **Re-run Benchmarks**: Verify optimizations preserve learned rankings
+
+### Tests
+```python
+# tests/test_data/test_movielens.py
+
+def test_movielens_loads():
+    """Verify MovieLens dataset loads correctly."""
+    dataset = MovieLensDataset("100k")
+    assert len(dataset.train) > 0
+    assert len(dataset.test) > 0
+
+def test_adapter_produces_valid_batch():
+    """Verify adapter creates valid Phoenix batch."""
+    adapter = MovieLensToPhoenixAdapter(dataset, model_config)
+    batch, embeddings = adapter.get_batch(user_id=1)
+
+    assert batch.user_hashes.shape[0] == 1
+    assert embeddings.user_embeddings.shape[-1] == model_config.emb_size
+
+def test_model_learns():
+    """Verify loss decreases during training."""
+    initial_loss = trainer.evaluate(val_data)
+    trainer.train(epochs=5)
+    final_loss = trainer.evaluate(val_data)
+
+    assert final_loss < initial_loss * 0.8  # At least 20% reduction
+```
+
+### Go/No-Go Gates
+| Gate | Criterion | Measurement |
+|------|-----------|-------------|
+| Training works | Loss decreases | Training curves |
+| Model learns | Val NDCG@10 > random | Evaluation metrics |
+| Analysis shows dynamics | Non-uniform scores | Trajectory plots |
+| Filter bubbles emerge | Diversity decreases | Coverage/Gini metrics |
+| Counterfactuals meaningful | Some τ < 0.9 | Ablation analysis |
+| Optimizations preserve accuracy | <1% degradation | Before/after comparison |
+
+### Success Criteria
+Phase 6 is successful when we can demonstrate:
+1. Filter bubbles emerge naturally when following recommendations
+2. Early engagement history influences later recommendations
+3. Optimizations preserve ranking quality on learned weights
+
+---
+
 # F4: RL Reward Modeling - Testable Phases
 
 ## Phase 0: Reward Model Wrapper (Gate: Can compute rewards?)
