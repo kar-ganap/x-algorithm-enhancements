@@ -16,8 +16,9 @@ This document captures the actual results, benchmarks, and learnings from implem
 | Phase 3b | ✅ Complete | Analysis tools: trajectory, diversity, counterfactual |
 | Phase 4 | ✅ Complete | Quantization study: **58% memory reduction** with INT8 |
 | Phase 4b | ✅ Complete | Extended quantization: mixed precision, per-group, KV-cache |
+| Phase 5 | ✅ Complete | Combined optimization runner: all gates pass |
 
-**Total Tests:** 141 passing (87 optimization + 54 quantization)
+**Total Tests:** 166 passing (112 optimization + 54 quantization)
 
 **Key Phase 4b Finding:** INT8 per-channel + KV-cache quantization wins with 58% memory reduction, 1.13x latency, and 100% accuracy. All 14 configurations tested; 12 passed all gates.
 
@@ -264,6 +265,7 @@ enhancements/optimization/
 ├── caching_transformer.py   # Phase 2b: Layer-wise cache
 ├── full_kv_cache.py         # Phase 2b: Complete runner
 ├── attention.py             # Phase 3: Efficient attention
+├── optimized_runner.py      # Phase 5: Combined optimization runner
 └── quantization/            # Phase 4 & 4b: Quantization
     ├── __init__.py          # Exports
     ├── config.py            # QuantizationConfig, MixedPrecisionConfig
@@ -289,12 +291,13 @@ enhancements/analysis/
 ### Tests
 ```
 tests/test_optimization/
-├── test_benchmark.py        # 4 tests
-├── test_jit_runner.py       # 10 tests
-├── test_kv_cache.py         # 14 tests
-├── test_kv_cache_full.py    # 17 tests
-├── test_attention.py        # 21 tests
-└── test_quantization.py     # 54 tests (Phase 4 + 4b)
+├── test_benchmark.py         # 4 tests
+├── test_jit_runner.py        # 10 tests
+├── test_kv_cache.py          # 14 tests
+├── test_kv_cache_full.py     # 17 tests
+├── test_attention.py         # 21 tests
+├── test_quantization.py      # 54 tests (Phase 4 + 4b)
+└── test_optimized_runner.py  # 25 tests (Phase 5)
 
 tests/test_analysis/
 └── test_trajectory_simulation.py  # 25 tests
@@ -307,7 +310,8 @@ benchmarks/
 ├── kv_cache_limits.py       # Maximum speedup exploration
 ├── kv_cache_stress.py       # Stress tests (6 scenarios)
 ├── kv_cache_hw_analysis.py  # Hardware analysis
-└── quantization_study.py    # Quantization comparative study (--extended for Phase 4b)
+├── quantization_study.py    # Quantization comparative study (--extended for Phase 4b)
+└── f2_final_benchmark.py    # Combined optimization benchmark (Phase 5)
 ```
 
 ---
@@ -708,26 +712,102 @@ uv run pytest tests/test_optimization/test_quantization.py -v
 
 ---
 
-## Next Steps (Phase 5)
+## Phase 5: Combined Optimization Runner
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| Phase 3 | Efficient attention (memory-optimized) | ✅ Complete |
-| Phase 3b | Analysis tools (trajectory, counterfactual) | ✅ Complete |
-| Phase 4 | Quantization comparative study | ✅ Complete |
-| Phase 4b | Extended quantization (mixed, per-group, KV-cache) | ✅ Complete |
-| Phase 5 | Combined optimization runner | Not started |
-| — | **Re-run analysis with trained weights** | Blocked on weights |
+### Objective
+Create a unified runner that combines all F2 optimizations (JIT, KV-cache, Quantization) and verify go/no-go gates.
 
-**Current cumulative potential:**
-- JIT: ~10x speedup
-- KV-cache: ~2-10x speedup
-- Quantization: ~2.4x memory reduction (58% savings)
-- KV-cache quantization: Additional ~4x cache memory reduction
+### Go/No-Go Gates
 
-**Combined on GPU:** 20-100x speedup + 2.4x weight memory reduction + 4x cache memory reduction
+| Gate | Criterion | Threshold | Result |
+|------|-----------|-----------|--------|
+| Accuracy | Top-3 preserved | >= 95% | ✅ **100%** |
+| Latency | Speedup vs baseline | >= 2x | ✅ **4.56x** (KV-cache) |
+| Memory | Reduction (quant only) | >= 30% | ✅ **49.8%** |
 
-**Test coverage:** 141 tests (87 optimization + 54 quantization)
+### Results (Large Model: 12L, 512d, 512 context)
+
+| Config | Top-3 | Speedup | Memory | Status |
+|--------|-------|---------|--------|--------|
+| baseline | 100% | 1.00x | N/A | --- |
+| jit_only | 100% | 2.01x | N/A | PASS |
+| **kv_cache_only** | **100%** | **4.56x** | N/A | **PASS** |
+| quantization_only | 100% | 0.72x | 49.8% | FAIL |
+| jit_kv_cache | 100% | 3.08x | N/A | PASS |
+| kv_cache_quantization | 100% | 2.26x | 49.8% | PASS |
+| full_optimized | 100% | 2.33x | 49.8% | PASS |
+
+### Key Findings
+
+1. **KV-cache provides the largest latency benefit** (4.56x) for inference with repeated users. The speedup scales with context length.
+
+2. **JIT compilation provides 2x speedup** from static shape optimization.
+
+3. **Quantization trades latency for memory** - on CPU, the dequantization overhead results in slower inference (0.72x), but achieves 49.8% memory reduction.
+
+4. **Combined optimizations work together** - the full_optimized config achieves 2.33x speedup and 49.8% memory reduction while maintaining 100% accuracy.
+
+5. **Context length is critical for KV-cache benefit** - with short context (32-128 tokens), the overhead dominates. With longer context (512+ tokens), substantial speedups are achieved.
+
+### Implementation Details
+
+**OptimizedPhoenixRunner:**
+- Unified interface combining all optimizations
+- Configurable via `OptimizationConfig`
+- Three inference paths:
+  1. KV-cache path (includes its own JIT)
+  2. JIT path (static shape compilation)
+  3. Base path (fallback)
+
+**Key Files:**
+```
+enhancements/optimization/
+├── optimized_runner.py      # OptimizedPhoenixRunner, OptimizationConfig
+└── ...
+
+benchmarks/
+└── f2_final_benchmark.py    # Combined benchmark
+
+tests/test_optimization/
+└── test_optimized_runner.py # 25 tests
+```
+
+### Usage
+
+```bash
+# Run combined benchmark
+uv run python benchmarks/f2_final_benchmark.py --model-size large
+
+# Quick benchmark
+uv run python benchmarks/f2_final_benchmark.py --model-size large --quick
+
+# Small model (fast but overhead dominates)
+uv run python benchmarks/f2_final_benchmark.py --model-size small
+```
+
+---
+
+## Summary
+
+**Current cumulative potential (verified):**
+- JIT: ~2x speedup (static shape compilation)
+- KV-cache: ~4.5x speedup (with 512 context)
+- Quantization: ~50% memory reduction (INT8)
+- KV-cache quantization: Additional cache memory reduction
+
+**Combined on GPU (estimated):** 10-50x speedup + 2x weight memory reduction + 4x cache memory reduction
+
+**Test coverage:** 166 tests (112 optimization + 54 quantization)
+
+---
+
+## Next Steps
+
+| Task | Status |
+|------|--------|
+| **Re-run analysis with trained weights** | Blocked on weights |
+| GPU benchmarking | Future work |
+| Production deployment guide | Future work |
 
 ---
 
@@ -745,13 +825,18 @@ uv run python benchmarks/quantization_study.py              # Phase 4 configs
 uv run python benchmarks/quantization_study.py --extended   # Phase 4b extended configs
 uv run python benchmarks/quantization_study.py --quick      # Quick test
 
-# Run optimization tests (including quantization)
+# Combined optimization benchmark (Phase 5)
+uv run python benchmarks/f2_final_benchmark.py --model-size large  # Full benchmark
+uv run python benchmarks/f2_final_benchmark.py --model-size large --quick  # Quick version
+uv run python benchmarks/f2_final_benchmark.py --model-size small  # Small model
+
+# Run optimization tests (including quantization and optimized runner)
 uv run pytest tests/test_optimization/ -v
 
 # Run analysis tests
 uv run pytest tests/test_analysis/ -v
 
-# Run all tests (141 total)
+# Run all tests (166 total)
 uv run pytest tests/ -v
 ```
 
