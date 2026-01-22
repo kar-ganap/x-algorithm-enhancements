@@ -13,13 +13,21 @@ This document captures the actual results, benchmarks, and learnings from implem
 | Phase 2 | ✅ Complete | Logical KV-cache with hash-based invalidation |
 | Phase 2b | ✅ Complete | Full K/V tensor caching with **9.62x max speedup** |
 | Phase 3 | ✅ Complete | Efficient attention exploiting Phoenix mask structure |
-| Phase 3b | ✅ Complete | Analysis tools: trajectory, diversity, counterfactual |
+| Phase 3b | ✅ Complete | Analysis tools validated with trained weights |
 | Phase 4 | ✅ Complete | Quantization study: **58% memory reduction** with INT8 |
-| Phase 4b | ✅ Complete | Extended quantization: mixed precision, per-group, KV-cache |
+| Phase 4b | ✅ Complete | Trained model quantization: **~90% top-3 agreement** |
+| Phase 5 | ✅ Complete | Combined optimization runner: all gates pass |
+| Phase 6 | ✅ Complete | MovieLens training: **NDCG 0.4112** (+59% vs untrained) |
 
-**Total Tests:** 141 passing (87 optimization + 54 quantization)
+**Total Tests:** 166 passing (112 optimization + 54 quantization)
 
-**Key Phase 4b Finding:** INT8 per-channel + KV-cache quantization wins with 58% memory reduction, 1.13x latency, and 100% accuracy. All 14 configurations tested; 12 passed all gates.
+**Key Phase 6 Finding (BPR + In-Batch Negatives):** Training with BPR loss and in-batch negatives achieved dramatic improvements: **Val NDCG 0.4112** (vs 0.3157 BCE), **Test NDCG 0.4183** (vs 0.2410 BCE). The 73% test improvement shows much better generalization.
+
+**Key Phase 4b Finding (Trained Model):** INT8 per-channel achieves **99.0% top-3 agreement** on the BPR-trained model. The improved score margins with BPR make quantization much more robust.
+
+**Key Phase 3b Finding (Trained Model):** Trajectory stability τ=0.907 (very high), counterfactual ablations change top-1 in 36.2% of cases, no recency bias detected.
+
+**Key Ablation Finding:** Neither transformer nor embeddings work well alone. The improvement is almost entirely from **synergy (107.5%)** - components must work together.
 
 ---
 
@@ -264,6 +272,7 @@ enhancements/optimization/
 ├── caching_transformer.py   # Phase 2b: Layer-wise cache
 ├── full_kv_cache.py         # Phase 2b: Complete runner
 ├── attention.py             # Phase 3: Efficient attention
+├── optimized_runner.py      # Phase 5: Combined optimization runner
 └── quantization/            # Phase 4 & 4b: Quantization
     ├── __init__.py          # Exports
     ├── config.py            # QuantizationConfig, MixedPrecisionConfig
@@ -289,12 +298,13 @@ enhancements/analysis/
 ### Tests
 ```
 tests/test_optimization/
-├── test_benchmark.py        # 4 tests
-├── test_jit_runner.py       # 10 tests
-├── test_kv_cache.py         # 14 tests
-├── test_kv_cache_full.py    # 17 tests
-├── test_attention.py        # 21 tests
-└── test_quantization.py     # 54 tests (Phase 4 + 4b)
+├── test_benchmark.py         # 4 tests
+├── test_jit_runner.py        # 10 tests
+├── test_kv_cache.py          # 14 tests
+├── test_kv_cache_full.py     # 17 tests
+├── test_attention.py         # 21 tests
+├── test_quantization.py      # 54 tests (Phase 4 + 4b)
+└── test_optimized_runner.py  # 25 tests (Phase 5)
 
 tests/test_analysis/
 └── test_trajectory_simulation.py  # 25 tests
@@ -307,7 +317,8 @@ benchmarks/
 ├── kv_cache_limits.py       # Maximum speedup exploration
 ├── kv_cache_stress.py       # Stress tests (6 scenarios)
 ├── kv_cache_hw_analysis.py  # Hardware analysis
-└── quantization_study.py    # Quantization comparative study (--extended for Phase 4b)
+├── quantization_study.py    # Quantization comparative study (--extended for Phase 4b)
+└── f2_final_benchmark.py    # Combined optimization benchmark (Phase 5)
 ```
 
 ---
@@ -418,7 +429,73 @@ With **randomly initialized weights**:
 - No filter bubble dynamics
 - History items have no influence (all Kendall's τ = 1.0)
 
-**Conclusion:** Filter bubble effects are **learned behaviors**, not architectural properties. The tools are ready to reveal real dynamics once trained weights are available.
+**Conclusion:** Filter bubble effects are **learned behaviors**, not architectural properties.
+
+---
+
+### Phase 3b Results with Trained Weights (MovieLens)
+
+After training the Phoenix model on MovieLens-100K with BPR + in-batch negatives (see Phase 6), we validated the analysis tools with learned weights.
+
+#### Training Context
+- **Model**: 64d embeddings, 4 transformer layers
+- **Best NDCG@3**: 0.4112 (epoch 9)
+- **Training approach**: BPR loss with in-batch negatives (31 per positive)
+- **Ablation finding**: 107.5% synergy - transformer and embeddings only work together
+
+#### Trajectory Simulation Results
+
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| Users analyzed | 19 | |
+| Avg ranking stability (τ) | **0.907** | Very high - rankings very consistent |
+| Score range | ~1.0 | Scores close to 1.0 (saturated sigmoid) |
+| Score spread | ~0.1-0.2 | Reasonable margins between candidates |
+
+**Finding**: Rankings are very stable as user history grows (τ=0.907, up from 0.808 with BCE). The BPR-trained model produces more confident, consistent recommendations.
+
+#### Counterfactual Analysis Results
+
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| Users analyzed | 20 | |
+| Total ablations | 160 | 8 positions × 20 users |
+| Avg τ after ablation | **0.654** | Moderate ranking changes |
+| Top-1 changed | **36.2%** | History influences top pick |
+
+**Recency Analysis:**
+| Position | Avg Impact |
+|----------|------------|
+| Recent items (pos 0-3) | 1.42e-1 |
+| Older items (pos 4+) | 1.44e-1 |
+
+**Finding**: No recency bias detected - recent and older history items have equal influence on rankings. This is consistent across both BCE and BPR trained models.
+
+#### Comparison: BCE vs BPR Training Effects on Analysis
+
+| Metric | BCE Training | BPR Training |
+|--------|--------------|--------------|
+| Trajectory stability (τ) | 0.808 | **0.907** (+12%) |
+| Top-1 change rate | 42.5% | 36.2% (-15%) |
+| Avg ablation τ | 0.675 | 0.654 (-3%) |
+| Score spreads | ~3.5e-8 (tiny) | ~0.1-0.2 (healthy) |
+
+**Key Insight**: BPR training produces:
+1. More stable recommendations (higher trajectory τ)
+2. Better score margins (0.1 vs 1e-8) - less sensitive to noise
+3. Similar history importance patterns (no recency bias in either)
+
+#### Echo Chamber Assessment
+
+Evidence **for** echo chamber tendency:
+- Very high trajectory stability (τ=0.907) - rankings barely change with new engagement
+
+Evidence **against** strong echo chamber:
+- 36.2% of ablations changed top-1 - history does influence recommendations
+- No recency bias - model doesn't amplify recent preferences
+- Healthy score margins - strong differentiation between candidates
+
+**Conclusion**: The BPR-trained model shows signs of **stable personalization** rather than echo chamber - it makes confident, consistent recommendations based on user history, but individual history items still matter (36% top-1 change rate on ablation).
 
 #### Diversity Metrics Results (100 candidates)
 
@@ -506,7 +583,7 @@ tests/test_analysis/
 
 4. **Counterfactual ≠ Caching opportunity**: Value is in analysis framework (explainability), not performance optimization.
 
-5. **Ready for trained weights**: All tools functional, waiting for weights to reveal real dynamics.
+5. **Validated with trained weights**: Analysis tools reveal real dynamics - see "Phase 3b Results with Trained Weights" section above.
 
 ### Usage
 
@@ -666,6 +743,68 @@ Push quantization further with three advanced techniques:
 
 5. **Composability works** - Mixed precision + per-group + KV-cache all compose correctly, enabling flexible deployment configurations.
 
+---
+
+### Phase 4b Results with Trained Weights (MovieLens)
+
+We re-evaluated quantization on the **BPR-trained** model (NDCG 0.4112) to validate real-world accuracy.
+
+#### Quantization Study on BPR-Trained Model
+
+| Config | FP32 NDCG | INT8 NDCG | Retention | Top-3 Agreement |
+|--------|-----------|-----------|-----------|-----------------|
+| INT8 per-channel | 0.4096 | 0.4084 | **99.7%** | **99.0%** |
+
+**Gate: ✅ PASSED (99.0% >= 95%)**
+
+#### Comparison: BCE vs BPR Training for Quantization
+
+| Metric | BCE Training | BPR Training | Improvement |
+|--------|--------------|--------------|-------------|
+| Top-3 Agreement | ~90% | **99.0%** | +9% |
+| NDCG Retention | 93.1% | **99.7%** | +7% |
+| Gate Status | PASS (marginal) | **PASS (comfortable)** |
+
+#### Why BPR Training Improves Quantization Robustness
+
+The key difference is **score margins**:
+
+| Metric | BCE Training | BPR Training |
+|--------|--------------|--------------|
+| Typical score | ~3e-7 | ~1.0 |
+| Score margin | ~1e-8 | ~0.1-0.2 |
+| Quantization noise | ~6e-9 | ~6e-9 |
+| Noise/Margin ratio | **66%** | **<0.01%** |
+
+With BCE, quantization noise (6e-9) was 66% of score margins (1e-8), causing ranking flips.
+With BPR, score margins (~0.1) are 10 million times larger than quantization noise - virtually no impact.
+
+**Key Insight**: BPR loss produces better-calibrated scores with healthy margins, making the model much more robust to quantization.
+
+#### Extended Quantization Study (14 Configs)
+
+We also ran the full Phase 4b extended study:
+
+| Observation | Result |
+|-------------|--------|
+| Configs tested | 14 |
+| Top-3 agreement | 100% for most configs |
+| Kendall's tau | 0.643-1.0 (varies) |
+| Memory reduction | 58-59% |
+| **All configs failed latency gate** | >1.2x on CPU |
+
+The latency gate failures are due to dequantization overhead on CPU. On GPU, INT8/INT4 would show throughput benefits.
+
+#### Recommendations for Production
+
+1. **INT8 per-channel quantization works excellently** - 99% top-3 agreement, 99.7% NDCG retention, 58% memory reduction
+
+2. **BPR training makes quantization easier** - the healthy score margins eliminate the quantization sensitivity issue seen with BCE
+
+3. **Gate can remain at 95%** - with BPR training, we comfortably exceed this threshold
+
+4. **GPU deployment recommended** for latency-sensitive applications - CPU dequantization overhead causes all configs to fail latency gate
+
 ### CPU vs GPU Expectations
 
 | Aspect | CPU (Measured) | GPU (Expected) |
@@ -708,26 +847,199 @@ uv run pytest tests/test_optimization/test_quantization.py -v
 
 ---
 
-## Next Steps (Phase 5)
+## Phase 5: Combined Optimization Runner
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| Phase 3 | Efficient attention (memory-optimized) | ✅ Complete |
-| Phase 3b | Analysis tools (trajectory, counterfactual) | ✅ Complete |
-| Phase 4 | Quantization comparative study | ✅ Complete |
-| Phase 4b | Extended quantization (mixed, per-group, KV-cache) | ✅ Complete |
-| Phase 5 | Combined optimization runner | Not started |
-| — | **Re-run analysis with trained weights** | Blocked on weights |
+### Objective
+Create a unified runner that combines all F2 optimizations (JIT, KV-cache, Quantization) and verify go/no-go gates.
 
-**Current cumulative potential:**
-- JIT: ~10x speedup
-- KV-cache: ~2-10x speedup
-- Quantization: ~2.4x memory reduction (58% savings)
-- KV-cache quantization: Additional ~4x cache memory reduction
+### Go/No-Go Gates
 
-**Combined on GPU:** 20-100x speedup + 2.4x weight memory reduction + 4x cache memory reduction
+| Gate | Criterion | Threshold | Result |
+|------|-----------|-----------|--------|
+| Accuracy | Top-3 preserved | >= 95% | ✅ **100%** |
+| Latency | Speedup vs baseline | >= 2x | ✅ **4.56x** (KV-cache) |
+| Memory | Reduction (quant only) | >= 30% | ✅ **49.8%** |
 
-**Test coverage:** 141 tests (87 optimization + 54 quantization)
+### Results (Large Model: 12L, 512d, 512 context)
+
+| Config | Top-3 | Speedup | Memory | Status |
+|--------|-------|---------|--------|--------|
+| baseline | 100% | 1.00x | N/A | --- |
+| jit_only | 100% | 2.01x | N/A | PASS |
+| **kv_cache_only** | **100%** | **4.56x** | N/A | **PASS** |
+| quantization_only | 100% | 0.72x | 49.8% | FAIL |
+| jit_kv_cache | 100% | 3.08x | N/A | PASS |
+| kv_cache_quantization | 100% | 2.26x | 49.8% | PASS |
+| full_optimized | 100% | 2.33x | 49.8% | PASS |
+
+### Key Findings
+
+1. **KV-cache provides the largest latency benefit** (4.56x) for inference with repeated users. The speedup scales with context length.
+
+2. **JIT compilation provides 2x speedup** from static shape optimization.
+
+3. **Quantization trades latency for memory** - on CPU, the dequantization overhead results in slower inference (0.72x), but achieves 49.8% memory reduction.
+
+4. **Combined optimizations work together** - the full_optimized config achieves 2.33x speedup and 49.8% memory reduction while maintaining 100% accuracy.
+
+5. **Context length is critical for KV-cache benefit** - with short context (32-128 tokens), the overhead dominates. With longer context (512+ tokens), substantial speedups are achieved.
+
+### Implementation Details
+
+**OptimizedPhoenixRunner:**
+- Unified interface combining all optimizations
+- Configurable via `OptimizationConfig`
+- Three inference paths:
+  1. KV-cache path (includes its own JIT)
+  2. JIT path (static shape compilation)
+  3. Base path (fallback)
+
+**Key Files:**
+```
+enhancements/optimization/
+├── optimized_runner.py      # OptimizedPhoenixRunner, OptimizationConfig
+└── ...
+
+benchmarks/
+└── f2_final_benchmark.py    # Combined benchmark
+
+tests/test_optimization/
+└── test_optimized_runner.py # 25 tests
+```
+
+### Usage
+
+```bash
+# Run combined benchmark
+uv run python benchmarks/f2_final_benchmark.py --model-size large
+
+# Quick benchmark
+uv run python benchmarks/f2_final_benchmark.py --model-size large --quick
+
+# Small model (fast but overhead dominates)
+uv run python benchmarks/f2_final_benchmark.py --model-size small
+```
+
+---
+
+## Summary
+
+**Current cumulative potential (verified):**
+- JIT: ~2x speedup (static shape compilation)
+- KV-cache: ~4.5x speedup (with 512 context)
+- Quantization: ~50% memory reduction (INT8)
+- KV-cache quantization: Additional cache memory reduction
+
+**Combined on GPU (estimated):** 10-50x speedup + 2x weight memory reduction + 4x cache memory reduction
+
+**Test coverage:** 166 tests (112 optimization + 54 quantization)
+
+---
+
+## Phase 6: MovieLens Training
+
+### Objective
+Train the Phoenix model on MovieLens-100K to validate optimizations with learned weights.
+
+### Training Evolution
+
+We tested multiple training configurations to find the best approach:
+
+| Config | Loss | Negatives | Val NDCG@3 | Test NDCG@3 | Notes |
+|--------|------|-----------|-----------|------------|-------|
+| BCE (1:7 random) | BCE | 7 random | 0.3157 | 0.2410 | Initial approach |
+| BPR (1:15 random) | BPR | 15 random | 0.2727 | - | Overfitting |
+| **BPR + In-Batch** | BPR | 31 in-batch | **0.4112** | **0.4183** | **Best** |
+
+### Best Configuration (BPR + In-Batch Negatives)
+
+| Parameter | Value |
+|-----------|-------|
+| Dataset | MovieLens-100K |
+| Users | 943 |
+| Movies | 1,682 |
+| Training ratings | 81,513 |
+| Model | 64d embeddings, 4 layers |
+| Batch size | 32 |
+| Learning rate | **0.0005** (halved from 0.001) |
+| Weight decay | **0.0001** |
+| Loss function | **BPR (pairwise ranking)** |
+| Negatives | **In-batch (31 per positive)** |
+| Early stopping | 5 epochs patience |
+
+### Results
+
+| Epoch | NDCG@3 | Hit@3 | Notes |
+|-------|--------|-------|-------|
+| 0 (before training) | 0.2585 | 0.3650 | Random initialization |
+| 9 (best) | **0.4112** | **0.5458** | +59% NDCG improvement |
+| Test set | **0.4183** | **0.5539** | **Excellent generalization** |
+
+### Comparison: Old BCE vs New BPR+In-Batch
+
+| Metric | BCE (1:7) | BPR+In-Batch | Improvement |
+|--------|-----------|--------------|-------------|
+| Val NDCG@3 | 0.3157 | **0.4112** | **+30%** |
+| Val Hit@3 | 0.4330 | **0.5458** | +26% |
+| Test NDCG@3 | 0.2410 | **0.4183** | **+73%** |
+| Test Hit@3 | 0.3328 | **0.5539** | +66% |
+
+The 73% improvement on test set shows BPR + in-batch negatives dramatically improved generalization.
+
+### Training Validation (Ablation Study)
+
+To understand what each component contributes:
+
+| Configuration | NDCG@3 | Hit@3 | Contribution |
+|---------------|--------|-------|--------------|
+| Full trained model | 0.4096 | 0.5400 | - |
+| Learned Emb + Dot-Product (no transformer) | 0.2862 | 0.3960 | Embeddings: **+3.2%** |
+| Random Emb + Transformer (no learned emb) | 0.2684 | 0.3740 | Transformer: **-10.7%** |
+| Random baseline | 0.2821 | 0.3960 | - |
+| **Synergy (interaction effect)** | - | - | **+107.5%** |
+
+**Key Insight**: Neither transformer nor embeddings work well alone:
+- Embeddings alone barely beat random (+0.4%)
+- Transformer with random embeddings is WORSE than random
+- The improvement is almost entirely from **synergy** - they must work together
+
+This differs from the old BCE training where components had more independent value. BPR loss seems to train the model to rely more heavily on the transformer-embedding interaction.
+
+### Why BPR + In-Batch Works Better
+
+1. **In-batch negatives are harder** - Each positive gets 31 negatives that are other users' liked items. These are harder to distinguish than random movies because they're popular enough to be liked by someone.
+
+2. **BPR optimizes relative ranking** - Instead of absolute probabilities, BPR optimizes `score(positive) > score(negative)`. This directly matches the evaluation metric (NDCG).
+
+3. **Lower LR prevents overfitting** - Halving LR from 0.001 to 0.0005 with weight decay 0.0001 gave more stable training.
+
+4. **Better generalization** - Test NDCG improved 73% vs only 30% on validation, showing the model learned more generalizable patterns.
+
+### Key Learnings
+
+1. **Zero initialization bug discovered and fixed** - Original Phoenix code used `Constant(0)` for transformer weights, causing model to bypass attention entirely. Fixed to Xavier initialization.
+
+2. **BPR >> BCE for ranking** - BPR loss directly optimizes ranking, leading to much better NDCG scores than BCE which optimizes click probability.
+
+3. **In-batch negatives >> random negatives** - Using other users' positives as negatives provides harder, more informative training signal.
+
+4. **Components must work together** - Unlike old training, the new model shows almost no independent component value - 107.5% of improvement comes from transformer-embedding synergy.
+
+5. **Much better generalization** - Old model had severe overfitting (val 0.3157 vs test 0.2410). New model generalizes well (val 0.4112 vs test 0.4183).
+
+---
+
+## Next Steps
+
+| Task | Status |
+|------|--------|
+| ~~Re-run analysis with trained weights~~ | ✅ Complete |
+| ~~BPR + in-batch negatives training~~ | ✅ Complete (NDCG 0.4112) |
+| ~~Ablation study (transformer vs embeddings)~~ | ✅ Complete (107.5% synergy) |
+| ~~Re-validate quantization with BPR model~~ | ✅ Complete (99% agreement) |
+| GPU benchmarking | Future work |
+| Production deployment guide | Future work |
+| Richer features (content embeddings) | Future work |
 
 ---
 
@@ -745,13 +1057,18 @@ uv run python benchmarks/quantization_study.py              # Phase 4 configs
 uv run python benchmarks/quantization_study.py --extended   # Phase 4b extended configs
 uv run python benchmarks/quantization_study.py --quick      # Quick test
 
-# Run optimization tests (including quantization)
+# Combined optimization benchmark (Phase 5)
+uv run python benchmarks/f2_final_benchmark.py --model-size large  # Full benchmark
+uv run python benchmarks/f2_final_benchmark.py --model-size large --quick  # Quick version
+uv run python benchmarks/f2_final_benchmark.py --model-size small  # Small model
+
+# Run optimization tests (including quantization and optimized runner)
 uv run pytest tests/test_optimization/ -v
 
 # Run analysis tests
 uv run pytest tests/test_analysis/ -v
 
-# Run all tests (141 total)
+# Run all tests (166 total)
 uv run pytest tests/ -v
 ```
 
@@ -772,4 +1089,10 @@ uv run python enhancements/analysis/sensitivity_analysis.py
 
 # Counterfactual analysis (use with trained weights)
 uv run python enhancements/analysis/counterfactual_analysis.py --history 32
+
+# Phase 3b analysis with trained MovieLens model
+uv run python scripts/run_phase3b_analysis.py
+
+# Quantization analysis with trained model
+uv run python scripts/analyze_learned_model.py --num-samples 200
 ```

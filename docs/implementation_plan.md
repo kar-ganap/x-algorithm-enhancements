@@ -617,6 +617,322 @@ def test_optimized_runner_memory():
 
 ---
 
+## Phase 6: Learned Weights & Analysis Validation (Gate: Real dynamics demonstrated?)
+
+### Problem Statement
+Phases 1-5 validated optimizations on **random weights**:
+- "100% accuracy" = preserving random rankings
+- Analysis tools show uniform scores, no dynamics
+- Speedups are real, but "so what?" is unclear
+
+**We need learned weights to demonstrate genuine value.**
+
+### Objective
+Train Phoenix on MovieLens to:
+1. Validate optimizations work on non-trivial weights
+2. Demonstrate analysis tools reveal real dynamics
+3. Show genuine filter bubble emergence
+
+### Why MovieLens?
+| Criterion | MovieLens | Twitter Data | Synthetic |
+|-----------|-----------|--------------|-----------|
+| Real human patterns | ✅ | ✅ | ❌ Designed |
+| Accessible | ✅ Free | ❌ API costs | ✅ Free |
+| Credible | ✅ Academic benchmark | ✅ Most relevant | ⚠️ Circular |
+
+### Data Mapping
+```
+MovieLens → Phoenix:
+- User ID → User hash
+- Movie ID → Item hash (post_hash)
+- Rating history → Engagement history
+- Movie genres → Item embeddings
+- Ratings: 5★→"like", 4★→"positive", 3★→"neutral"
+```
+
+### Deliverables
+```
+enhancements/data/
+├── __init__.py
+├── movielens.py              # Dataset loader
+├── movielens_adapter.py      # Phoenix format adapter
+└── embeddings.py             # Embedding utilities
+
+enhancements/training/
+├── __init__.py
+├── train_phoenix.py          # Training loop
+├── losses.py                 # Loss functions
+└── metrics.py                # Evaluation metrics
+
+scripts/
+├── download_movielens.py     # Data download
+├── train_movielens.py        # Training entry point
+└── run_analysis.py           # Run analysis tools
+
+models/movielens_phoenix/
+└── best_model.pkl            # Trained weights
+```
+
+### Implementation Steps
+1. **Data Infrastructure**: Download MovieLens, create dataset class
+2. **Phoenix Adapter**: Map MovieLens to RecsysBatch/RecsysEmbeddings
+3. **Embeddings**: Generate movie embeddings from genres
+4. **Training Loop**: Loss function, optimizer, checkpointing
+5. **Validation**: NDCG@10, Hit Rate metrics
+6. **Re-run Analysis**: Trajectory, diversity, counterfactual
+7. **Re-run Benchmarks**: Verify optimizations preserve learned rankings
+
+### Tests
+```python
+# tests/test_data/test_movielens.py
+
+def test_movielens_loads():
+    """Verify MovieLens dataset loads correctly."""
+    dataset = MovieLensDataset("100k")
+    assert len(dataset.train) > 0
+    assert len(dataset.test) > 0
+
+def test_adapter_produces_valid_batch():
+    """Verify adapter creates valid Phoenix batch."""
+    adapter = MovieLensToPhoenixAdapter(dataset, model_config)
+    batch, embeddings = adapter.get_batch(user_id=1)
+
+    assert batch.user_hashes.shape[0] == 1
+    assert embeddings.user_embeddings.shape[-1] == model_config.emb_size
+
+def test_model_learns():
+    """Verify loss decreases during training."""
+    initial_loss = trainer.evaluate(val_data)
+    trainer.train(epochs=5)
+    final_loss = trainer.evaluate(val_data)
+
+    assert final_loss < initial_loss * 0.8  # At least 20% reduction
+```
+
+### Go/No-Go Gates
+| Gate | Criterion | Measurement |
+|------|-----------|-------------|
+| Training works | Loss decreases | Training curves |
+| Model learns | Val NDCG@10 > random | Evaluation metrics |
+| Analysis shows dynamics | Non-uniform scores | Trajectory plots |
+| Filter bubbles emerge | Diversity decreases | Coverage/Gini metrics |
+| Counterfactuals meaningful | Some τ < 0.9 | Ablation analysis |
+| Optimizations preserve accuracy | <1% degradation | Before/after comparison |
+
+### Success Criteria
+Phase 6 is successful when we can demonstrate:
+1. Filter bubbles emerge naturally when following recommendations
+2. Early engagement history influences later recommendations
+3. Optimizations preserve ranking quality on learned weights
+
+---
+
+## Phase 7: Synthetic Twitter Data & Verification (Gate: Model learns planted patterns?)
+
+### Objective
+Create synthetic Twitter-like data with known ground truth patterns, train Phoenix, and verify the model recovers those patterns. This validates Phoenix on the full 19-action space.
+
+### Motivation
+MovieLens only tests 1 action type. Synthetic data enables:
+- Testing all 19 action types (like, retweet, reply, block, etc.)
+- Verifying author preference learning
+- Testing negative signal effectiveness (block/mute)
+- Ground truth comparison (we know the planted patterns)
+
+### Deliverables
+```
+enhancements/
+├── data/
+│   ├── synthetic_twitter.py      # Data generator
+│   ├── synthetic_adapter.py      # Phoenix format adapter
+│   └── ground_truth.py           # Planted pattern definitions
+│
+├── verification/                  # NEW
+│   ├── __init__.py
+│   ├── embedding_probes.py       # Cluster analysis
+│   ├── behavioral_tests.py       # Topic/author preference tests
+│   ├── action_tests.py           # Action differentiation tests
+│   ├── counterfactual_tests.py   # Intervention tests
+│   └── suite.py                  # Orchestrator
+
+scripts/
+├── generate_synthetic.py         # Generate dataset
+├── train_synthetic.py            # Train model
+└── verify_synthetic.py           # Run verification
+
+tests/test_verification/
+├── test_embedding_probes.py
+├── test_behavioral_tests.py
+└── test_action_tests.py
+```
+
+### Data Model
+
+**User Archetypes (1,000 users)**
+| Archetype | % | Behavior |
+|-----------|---|----------|
+| `sports_fan` | 15% | Like/RT sports, ignore politics |
+| `political_L` | 15% | Engage left, block right |
+| `political_R` | 15% | Engage right, block left |
+| `tech_bro` | 15% | Like/RT tech content |
+| `lurker` | 20% | Like only, never RT/reply |
+| `power_user` | 20% | High RT/reply ratio |
+
+**Content Topics (50,000 posts)**
+| Topic | % | Authors |
+|-------|---|---------|
+| `sports` | 25% | 20 sports accounts |
+| `politics_L` | 12.5% | 15 left-leaning accounts |
+| `politics_R` | 12.5% | 15 right-leaning accounts |
+| `tech` | 20% | 20 tech accounts |
+| `entertainment` | 20% | 20 entertainment accounts |
+| `news` | 10% | 10 mixed accounts |
+
+**Engagement Rules (Ground Truth)**
+```python
+ENGAGEMENT_RULES = {
+    ('sports_fan', 'sports'): {
+        'favorite': 0.70, 'repost': 0.30, 'reply': 0.10,
+    },
+    ('sports_fan', 'politics'): {
+        'favorite': 0.05, 'not_interested': 0.10,
+    },
+    ('political_L', 'politics_L'): {
+        'favorite': 0.65, 'repost': 0.45, 'follow_author': 0.20,
+    },
+    ('political_L', 'politics_R'): {
+        'block_author': 0.25, 'not_interested': 0.30,
+    },
+    ('lurker', '*'): {
+        'favorite': 0.20, 'repost': 0.01, 'reply': 0.00,
+    },
+    ('power_user', '*'): {
+        'favorite': 0.45, 'repost': 0.35, 'reply': 0.25,
+    },
+}
+```
+
+### Verification Tests
+
+**1. Embedding Probes**
+```python
+def test_user_archetype_clustering():
+    """Users of same archetype should cluster in embedding space."""
+    user_embs = get_user_embeddings(all_users)
+    labels = [get_archetype(u) for u in all_users]
+    silhouette = silhouette_score(user_embs, labels)
+    assert silhouette > 0.2  # Meaningful clustering
+
+def test_topic_clustering():
+    """Posts of same topic should cluster."""
+    post_embs = get_post_embeddings(all_posts)
+    labels = [get_topic(p) for p in all_posts]
+    silhouette = silhouette_score(post_embs, labels)
+    assert silhouette > 0.2
+```
+
+**2. Behavioral Tests**
+```python
+def test_topic_preference(archetype, topic, expected):
+    """Verify archetype prefers expected topic."""
+    users = get_users_by_archetype(archetype)
+    posts = get_posts_by_topic(topic)
+
+    scores = []
+    for user in sample(users, 50):
+        for post in sample(posts, 20):
+            score = model.predict_engagement(user, post)
+            scores.append(score)
+
+    actual = np.mean(scores)
+    assert abs(actual - expected) < 0.15  # Within 15%
+```
+
+**3. Action Differentiation Tests**
+```python
+def test_lurker_action_distribution():
+    """Lurkers: high like, low retweet/reply."""
+    lurkers = get_users_by_archetype('lurker')
+    action_dist = predict_action_distribution(lurkers)
+
+    assert action_dist['favorite'] > action_dist['repost'] * 10
+    assert action_dist['reply'] < 0.05
+
+def test_power_user_vs_lurker():
+    """Power users have higher retweet ratio than lurkers."""
+    lurker_dist = predict_action_distribution(get_users_by_archetype('lurker'))
+    power_dist = predict_action_distribution(get_users_by_archetype('power_user'))
+
+    lurker_rt_ratio = lurker_dist['repost'] / lurker_dist['favorite']
+    power_rt_ratio = power_dist['repost'] / power_dist['favorite']
+
+    assert power_rt_ratio > lurker_rt_ratio * 3  # 3x higher
+```
+
+**4. Counterfactual Tests**
+```python
+def test_block_reduces_ranking():
+    """Blocking author should reduce their posts' ranking."""
+    user = sample_user()
+    author = sample_author()
+
+    baseline_rank = get_rank(user, author_posts)
+
+    # Add block to history
+    add_block_to_history(user, author)
+    counterfactual_rank = get_rank(user, author_posts)
+
+    assert counterfactual_rank > baseline_rank  # Worse rank
+
+def test_archetype_flip():
+    """Replacing history with different archetype's should flip predictions."""
+    sports_fan = sample_user_by_archetype('sports_fan')
+    tech_bro_history = get_typical_history('tech_bro')
+
+    # Give sports fan a tech bro's history
+    predictions = predict_with_custom_history(sports_fan, tech_bro_history)
+
+    # Should now prefer tech over sports
+    assert predictions['tech'] > predictions['sports']
+```
+
+### Go/No-Go Gates
+
+| Gate | Criterion | Threshold |
+|------|-----------|-----------|
+| G1: Data generates | 50K posts, 200K engagements | Complete |
+| G2: Training works | Loss decreases | NDCG > random |
+| G3: Embedding probes | Archetype clustering | Silhouette > 0.2 |
+| G4: Behavioral tests | Topic preference accuracy | > 70% |
+| G5: Action differentiation | Lurker vs power user | Ratio > 2x |
+| G6: Counterfactual tests | Block reduces ranking | > 50% of cases |
+
+### Failure Interpretation
+
+| If This Fails | It Suggests |
+|---------------|-------------|
+| G2 (training) | Bug in adapter or training loop |
+| G3 (embeddings) | Model not learning user/item structure |
+| G4 (behavioral) | Topic preferences not captured |
+| G5 (actions) | Phoenix treats all actions same |
+| G6 (counterfactual) | Negative signals not learned |
+
+### Implementation Order
+
+| Step | Component | Depends On |
+|------|-----------|------------|
+| 7.1 | Ground truth definitions | - |
+| 7.2 | Data generator | 7.1 |
+| 7.3 | Phoenix adapter | 7.2 |
+| 7.4 | Training script | 7.3 |
+| 7.5 | Embedding probes | 7.4 |
+| 7.6 | Behavioral tests | 7.4 |
+| 7.7 | Action tests | 7.4 |
+| 7.8 | Counterfactual tests | 7.4 |
+| 7.9 | Verification suite | 7.5-7.8 |
+
+---
+
 # F4: RL Reward Modeling - Testable Phases
 
 ## Phase 0: Reward Model Wrapper (Gate: Can compute rewards?)
@@ -1032,6 +1348,8 @@ def test_comparison_with_clip():
 | 3 | Memory OR latency improvement | ⚠️ |
 | 4 | Ranking preserved > 90%, memory reduced | ✅ |
 | 5 | Overall speedup >= 2x | ✅ |
+| 6 | MovieLens training, NDCG > random | ✅ |
+| 7 | Synthetic verification: patterns recovered | ⬜ |
 
 ## F4: RL Reward Modeling
 | Phase | Gate Criterion | Required |
