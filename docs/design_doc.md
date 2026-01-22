@@ -270,6 +270,98 @@ graph LR
 
 ---
 
+## F2 Phase 7: Synthetic Twitter Data & Verification
+
+### Motivation
+
+MovieLens validation has limitations:
+- Only 1 action type (rating → like)
+- No author preferences
+- No negative signals (block/mute)
+- Unknown ground truth
+
+Synthetic data enables controlled experiments with **planted patterns** we can verify.
+
+### Architecture
+
+```mermaid
+graph TB
+    subgraph generation["Data Generation"]
+        users["Users<br/>(1K, 6 archetypes)"]
+        authors["Authors<br/>(100, by topic)"]
+        posts["Posts<br/>(50K, with topics)"]
+        rules["Engagement Rules<br/>(Ground Truth)"]
+
+        users --> engagements
+        authors --> posts
+        posts --> engagements
+        rules --> engagements
+        engagements["Engagements<br/>(200K events)"]
+    end
+
+    subgraph training["Training"]
+        adapter["Synthetic Adapter"]
+        phoenix["Phoenix Model"]
+        engagements --> adapter --> phoenix
+    end
+
+    subgraph verification["Verification Suite"]
+        embed["Embedding Probes<br/>(clustering)"]
+        behav["Behavioral Tests<br/>(topic prefs)"]
+        action["Action Tests<br/>(differentiation)"]
+        counter["Counterfactual Tests<br/>(interventions)"]
+
+        phoenix --> embed
+        phoenix --> behav
+        phoenix --> action
+        phoenix --> counter
+
+        rules -.->|"compare"| embed
+        rules -.->|"compare"| behav
+        rules -.->|"compare"| action
+        rules -.->|"compare"| counter
+    end
+```
+
+### User Archetypes
+
+| Archetype | Behavior |
+|-----------|----------|
+| `sports_fan` | Like/RT sports, ignore politics |
+| `political_L` | Engage left, block right |
+| `political_R` | Engage right, block left |
+| `tech_bro` | Like/RT tech content |
+| `lurker` | Like only, no RT/reply |
+| `power_user` | High RT/reply ratio |
+
+### Verification Tests
+
+| Category | Tests | Purpose |
+|----------|-------|---------|
+| Embedding Probes | User clustering, topic clustering | Verify structure in learned representations |
+| Behavioral Tests | Topic preferences, author preferences | Verify model predicts correctly |
+| Action Tests | Lurker vs power user distributions | Verify action differentiation |
+| Counterfactual | Block effect, archetype flip | Verify causal relationships |
+
+### Output
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║           SYNTHETIC DATA VERIFICATION RESULTS                 ║
+╠══════════════════════════════════════════════════════════════╣
+║  Category              │ Passed │ Total │ Rate              ║
+╠══════════════════════════════════════════════════════════════╣
+║  Embedding Probes      │  3/4   │  4    │  75%              ║
+║  Behavioral Tests      │ 16/20  │ 20    │  80%              ║
+║  Action Tests          │  3/4   │  4    │  75%              ║
+║  Counterfactual Tests  │ 12/20  │ 20    │  60%              ║
+╠══════════════════════════════════════════════════════════════╣
+║  OVERALL               │ 34/48  │ 48    │  71% ✓            ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+---
+
 ## Feature 4 (F4): RL Reward Modeling
 
 ### Architecture
