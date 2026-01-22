@@ -144,8 +144,10 @@ class Linear(hk.Linear):
         input_size = inputs.shape[-1]
         output_size = self.output_size
 
+        # Use Xavier/Glorot initialization for training from scratch
         w = hk.get_parameter(
-            "w", [input_size, output_size], jnp.float32, init=hk.initializers.Constant(0)
+            "w", [input_size, output_size], jnp.float32,
+            init=hk.initializers.VarianceScaling(1.0, "fan_avg", "truncated_normal")
         )
 
         out = jnp.dot(inputs, w.astype(fprop_dtype))
@@ -173,11 +175,12 @@ class RMSNorm(hk.RMSNorm):
         fprop_dtype = inputs.dtype
         param_shape = (inputs.shape[-1],)
         if self.create_scale:
+            # Initialize scale to 1 so RMSNorm starts as identity
             scale = hk.get_parameter(
                 "scale",
                 param_shape,
                 dtype=jnp.float32,
-                init=hk.initializers.Constant(0),
+                init=hk.initializers.Constant(1),
             )
             scale = jnp.broadcast_to(scale.astype(jnp.float32), inputs.shape)
         else:
