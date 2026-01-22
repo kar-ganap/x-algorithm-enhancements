@@ -17,13 +17,17 @@ This document captures the actual results, benchmarks, and learnings from implem
 | Phase 4 | ✅ Complete | Quantization study: **58% memory reduction** with INT8 |
 | Phase 4b | ✅ Complete | Trained model quantization: **~90% top-3 agreement** |
 | Phase 5 | ✅ Complete | Combined optimization runner: all gates pass |
-| Phase 6 | ✅ Complete | MovieLens training: **NDCG 0.3157** (+22% vs untrained) |
+| Phase 6 | ✅ Complete | MovieLens training: **NDCG 0.4112** (+59% vs untrained) |
 
 **Total Tests:** 166 passing (112 optimization + 54 quantization)
 
-**Key Phase 4b Finding (Trained Model):** INT8 per-channel achieves ~90% top-3 agreement on trained MovieLens model. The 95% gate was relaxed to 90% after investigation revealed quantization noise (~6e-9) exceeds score margins (~1e-8) in this model.
+**Key Phase 6 Finding (BPR + In-Batch Negatives):** Training with BPR loss and in-batch negatives achieved dramatic improvements: **Val NDCG 0.4112** (vs 0.3157 BCE), **Test NDCG 0.4183** (vs 0.2410 BCE). The 73% test improvement shows much better generalization.
 
-**Key Phase 3b Finding (Trained Model):** Trajectory stability τ=0.808 (high), counterfactual ablations change top-1 in 42.5% of cases, no recency bias detected.
+**Key Phase 4b Finding (Trained Model):** INT8 per-channel achieves **99.0% top-3 agreement** on the BPR-trained model. The improved score margins with BPR make quantization much more robust.
+
+**Key Phase 3b Finding (Trained Model):** Trajectory stability τ=0.907 (very high), counterfactual ablations change top-1 in 36.2% of cases, no recency bias detected.
+
+**Key Ablation Finding:** Neither transformer nor embeddings work well alone. The improvement is almost entirely from **synergy (107.5%)** - components must work together.
 
 ---
 
@@ -431,23 +435,24 @@ With **randomly initialized weights**:
 
 ### Phase 3b Results with Trained Weights (MovieLens)
 
-After training the Phoenix model on MovieLens-100K (see Phase 6), we validated the analysis tools with learned weights.
+After training the Phoenix model on MovieLens-100K with BPR + in-batch negatives (see Phase 6), we validated the analysis tools with learned weights.
 
 #### Training Context
 - **Model**: 64d embeddings, 4 transformer layers
-- **Best NDCG@3**: 0.3157 (epoch 12)
-- **Training proved correct**: Ablation study showed transformer contributes +7.5% NDCG, embeddings contribute +14.6% NDCG
+- **Best NDCG@3**: 0.4112 (epoch 9)
+- **Training approach**: BPR loss with in-batch negatives (31 per positive)
+- **Ablation finding**: 107.5% synergy - transformer and embeddings only work together
 
 #### Trajectory Simulation Results
 
 | Metric | Value | Interpretation |
 |--------|-------|----------------|
 | Users analyzed | 19 | |
-| Avg ranking stability (τ) | **0.808** | High - rankings remain consistent |
-| Score range | ~3e-7 | Very small absolute values |
-| Score spread | ~3.5e-8 | Tiny margins between candidates |
+| Avg ranking stability (τ) | **0.907** | Very high - rankings very consistent |
+| Score range | ~1.0 | Scores close to 1.0 (saturated sigmoid) |
+| Score spread | ~0.1-0.2 | Reasonable margins between candidates |
 
-**Finding**: Rankings are fairly stable as user history grows. The model produces consistent recommendations, which could indicate either good personalization OR mild echo chamber effects.
+**Finding**: Rankings are very stable as user history grows (τ=0.907, up from 0.808 with BCE). The BPR-trained model produces more confident, consistent recommendations.
 
 #### Counterfactual Analysis Results
 
@@ -455,28 +460,42 @@ After training the Phoenix model on MovieLens-100K (see Phase 6), we validated t
 |--------|-------|----------------|
 | Users analyzed | 20 | |
 | Total ablations | 160 | 8 positions × 20 users |
-| Avg τ after ablation | **0.675** | Moderate ranking changes |
-| Top-1 changed | **42.5%** | History significantly influences top pick |
+| Avg τ after ablation | **0.654** | Moderate ranking changes |
+| Top-1 changed | **36.2%** | History influences top pick |
 
 **Recency Analysis:**
 | Position | Avg Impact |
 |----------|------------|
-| Recent items (pos 0-3) | 2.41e-8 |
-| Older items (pos 4+) | 2.42e-8 |
+| Recent items (pos 0-3) | 1.42e-1 |
+| Older items (pos 4+) | 1.44e-1 |
 
-**Finding**: No recency bias detected - recent and older history items have equal influence on rankings. This suggests the model weights all history equally rather than over-indexing on recent behavior.
+**Finding**: No recency bias detected - recent and older history items have equal influence on rankings. This is consistent across both BCE and BPR trained models.
+
+#### Comparison: BCE vs BPR Training Effects on Analysis
+
+| Metric | BCE Training | BPR Training |
+|--------|--------------|--------------|
+| Trajectory stability (τ) | 0.808 | **0.907** (+12%) |
+| Top-1 change rate | 42.5% | 36.2% (-15%) |
+| Avg ablation τ | 0.675 | 0.654 (-3%) |
+| Score spreads | ~3.5e-8 (tiny) | ~0.1-0.2 (healthy) |
+
+**Key Insight**: BPR training produces:
+1. More stable recommendations (higher trajectory τ)
+2. Better score margins (0.1 vs 1e-8) - less sensitive to noise
+3. Similar history importance patterns (no recency bias in either)
 
 #### Echo Chamber Assessment
 
 Evidence **for** echo chamber tendency:
-- High trajectory stability (τ=0.808) - rankings barely change with new engagement
-- Tiny score spreads (~3.5e-8) - weak differentiation between candidates
+- Very high trajectory stability (τ=0.907) - rankings barely change with new engagement
 
 Evidence **against** strong echo chamber:
-- 42.5% of ablations changed top-1 - history does influence recommendations
+- 36.2% of ablations changed top-1 - history does influence recommendations
 - No recency bias - model doesn't amplify recent preferences
+- Healthy score margins - strong differentiation between candidates
 
-**Conclusion**: The model shows characteristics of a **passive** echo chamber - not from aggressive personalization, but from inability to strongly differentiate content (limited features: genre-only embeddings, small dataset).
+**Conclusion**: The BPR-trained model shows signs of **stable personalization** rather than echo chamber - it makes confident, consistent recommendations based on user history, but individual history items still matter (36% top-1 change rate on ablation).
 
 #### Diversity Metrics Results (100 candidates)
 
@@ -728,63 +747,63 @@ Push quantization further with three advanced techniques:
 
 ### Phase 4b Results with Trained Weights (MovieLens)
 
-The above results used randomly initialized weights. After training on MovieLens-100K, we re-evaluated quantization on the **learned** model to validate real-world accuracy.
+We re-evaluated quantization on the **BPR-trained** model (NDCG 0.4112) to validate real-world accuracy.
 
-#### Quantization Study on Trained Model
+#### Quantization Study on BPR-Trained Model
 
-| Config | NDCG@3 | Retention | Top-3 Agreement |
-|--------|--------|-----------|-----------------|
-| FP32 (baseline) | 0.3576 | 100% | 100% |
-| INT8 per-tensor | 0.3448 | **96.4%** | 87.2% |
-| **INT8 per-channel** | 0.3328 | 93.1% | **~90%** |
-| Mixed INT4-FFN/INT8-Attn | 0.3308 | 92.5% | 84.7% |
-| INT4 per-channel | 0.3066 | 85.7% | 77.5% |
-| INT4 per-group-128 | 0.2796 | 78.2% | 67.0% |
+| Config | FP32 NDCG | INT8 NDCG | Retention | Top-3 Agreement |
+|--------|-----------|-----------|-----------|-----------------|
+| INT8 per-channel | 0.4096 | 0.4084 | **99.7%** | **99.0%** |
 
-#### Investigation: Why Top-3 Agreement Lower Than Expected
+**Gate: ✅ PASSED (99.0% >= 95%)**
 
-**Root Cause Analysis:**
-```
-Margin when rankings preserved:  3.33e-08
-Margin when rankings flipped:    9.66e-09
-Quantization error:              6.40e-09
+#### Comparison: BCE vs BPR Training for Quantization
 
-Quantization error is 66% of flipped-case margin!
-```
+| Metric | BCE Training | BPR Training | Improvement |
+|--------|--------------|--------------|-------------|
+| Top-3 Agreement | ~90% | **99.0%** | +9% |
+| NDCG Retention | 93.1% | **99.7%** | +7% |
+| Gate Status | PASS (marginal) | **PASS (comfortable)** |
 
-**Finding**: The trained model produces very small scores (~3e-7) with tiny margins (~1e-8). INT8 quantization introduces ~6e-9 noise, which is sufficient to flip rankings when candidates are nearly tied.
+#### Why BPR Training Improves Quantization Robustness
 
-**This is NOT a quantization bug** - it's a model output scale issue:
-1. Model outputs very negative logits → sigmoid produces ~1e-7 scores
-2. Score differences between candidates are ~1e-8
-3. Any noise (including quantization) can flip rankings
+The key difference is **score margins**:
 
-#### Gate Threshold Adjustment
+| Metric | BCE Training | BPR Training |
+|--------|--------------|--------------|
+| Typical score | ~3e-7 | ~1.0 |
+| Score margin | ~1e-8 | ~0.1-0.2 |
+| Quantization noise | ~6e-9 | ~6e-9 |
+| Noise/Margin ratio | **66%** | **<0.01%** |
 
-The original 95% top-3 agreement gate was **unrealistic** for this model. After investigation:
+With BCE, quantization noise (6e-9) was 66% of score margins (1e-8), causing ranking flips.
+With BPR, score margins (~0.1) are 10 million times larger than quantization noise - virtually no impact.
 
-| Gate | Original | Revised | Rationale |
-|------|----------|---------|-----------|
-| Top-3 Agreement | ≥95% | **≥90%** | Quantization noise exceeds score margins |
+**Key Insight**: BPR loss produces better-calibrated scores with healthy margins, making the model much more robust to quantization.
 
-With the **relaxed 90% gate**:
+#### Extended Quantization Study (14 Configs)
 
-| Config | Top-3 Agreement | 90% Gate |
-|--------|-----------------|----------|
-| INT8 per-channel | ~90% | ✅ PASS (marginal) |
-| INT8 per-tensor | 87% | ✗ FAIL |
-| Mixed INT4/INT8 | 85% | ✗ FAIL |
-| INT4 variants | 67-78% | ✗ FAIL |
+We also ran the full Phase 4b extended study:
+
+| Observation | Result |
+|-------------|--------|
+| Configs tested | 14 |
+| Top-3 agreement | 100% for most configs |
+| Kendall's tau | 0.643-1.0 (varies) |
+| Memory reduction | 58-59% |
+| **All configs failed latency gate** | >1.2x on CPU |
+
+The latency gate failures are due to dequantization overhead on CPU. On GPU, INT8/INT4 would show throughput benefits.
 
 #### Recommendations for Production
 
-1. **Use INT8 per-channel quantization** - achieves ~90% top-3 agreement, 93% NDCG retention, 58% memory reduction
+1. **INT8 per-channel quantization works excellently** - 99% top-3 agreement, 99.7% NDCG retention, 58% memory reduction
 
-2. **INT4 is not viable** for this model - even with mixed precision or per-group, agreement drops below 85%
+2. **BPR training makes quantization easier** - the healthy score margins eliminate the quantization sensitivity issue seen with BCE
 
-3. **Accept ~90% as realistic ceiling** without more sophisticated techniques (calibration-based quantization, QAT)
+3. **Gate can remain at 95%** - with BPR training, we comfortably exceed this threshold
 
-4. **Output scale transformation doesn't help** - the issue is in quantized weights, not output format
+4. **GPU deployment recommended** for latency-sensitive applications - CPU dequantization overhead causes all configs to fail latency gate
 
 ### CPU vs GPU Expectations
 
@@ -922,7 +941,17 @@ uv run python benchmarks/f2_final_benchmark.py --model-size small
 ### Objective
 Train the Phoenix model on MovieLens-100K to validate optimizations with learned weights.
 
-### Training Configuration
+### Training Evolution
+
+We tested multiple training configurations to find the best approach:
+
+| Config | Loss | Negatives | Val NDCG@3 | Test NDCG@3 | Notes |
+|--------|------|-----------|-----------|------------|-------|
+| BCE (1:7 random) | BCE | 7 random | 0.3157 | 0.2410 | Initial approach |
+| BPR (1:15 random) | BPR | 15 random | 0.2727 | - | Overfitting |
+| **BPR + In-Batch** | BPR | 31 in-batch | **0.4112** | **0.4183** | **Best** |
+
+### Best Configuration (BPR + In-Batch Negatives)
 
 | Parameter | Value |
 |-----------|-------|
@@ -932,7 +961,10 @@ Train the Phoenix model on MovieLens-100K to validate optimizations with learned
 | Training ratings | 81,513 |
 | Model | 64d embeddings, 4 layers |
 | Batch size | 32 |
-| Learning rate | 0.001 |
+| Learning rate | **0.0005** (halved from 0.001) |
+| Weight decay | **0.0001** |
+| Loss function | **BPR (pairwise ranking)** |
+| Negatives | **In-batch (31 per positive)** |
 | Early stopping | 5 epochs patience |
 
 ### Results
@@ -940,31 +972,60 @@ Train the Phoenix model on MovieLens-100K to validate optimizations with learned
 | Epoch | NDCG@3 | Hit@3 | Notes |
 |-------|--------|-------|-------|
 | 0 (before training) | 0.2585 | 0.3650 | Random initialization |
-| 12 (best) | **0.3157** | **0.4330** | +22% NDCG improvement |
-| Test set | 0.2410 | 0.3328 | Some overfitting |
+| 9 (best) | **0.4112** | **0.5458** | +59% NDCG improvement |
+| Test set | **0.4183** | **0.5539** | **Excellent generalization** |
+
+### Comparison: Old BCE vs New BPR+In-Batch
+
+| Metric | BCE (1:7) | BPR+In-Batch | Improvement |
+|--------|-----------|--------------|-------------|
+| Val NDCG@3 | 0.3157 | **0.4112** | **+30%** |
+| Val Hit@3 | 0.4330 | **0.5458** | +26% |
+| Test NDCG@3 | 0.2410 | **0.4183** | **+73%** |
+| Test Hit@3 | 0.3328 | **0.5539** | +66% |
+
+The 73% improvement on test set shows BPR + in-batch negatives dramatically improved generalization.
 
 ### Training Validation (Ablation Study)
 
-To prove training worked correctly, we compared full model vs component ablations:
+To understand what each component contributes:
 
-| Configuration | NDCG@3 | Contribution |
-|---------------|--------|--------------|
-| Full trained model | 0.3483 | - |
-| Random transformer + trained embeddings | 0.2737 | Transformer: **+7.5%** |
-| Trained transformer + random embeddings | 0.2019 | Embeddings: **+14.6%** |
-| Both random (baseline) | 0.2114 | - |
+| Configuration | NDCG@3 | Hit@3 | Contribution |
+|---------------|--------|-------|--------------|
+| Full trained model | 0.4096 | 0.5400 | - |
+| Learned Emb + Dot-Product (no transformer) | 0.2862 | 0.3960 | Embeddings: **+3.2%** |
+| Random Emb + Transformer (no learned emb) | 0.2684 | 0.3740 | Transformer: **-10.7%** |
+| Random baseline | 0.2821 | 0.3960 | - |
+| **Synergy (interaction effect)** | - | - | **+107.5%** |
 
-**Conclusion**: Both transformer AND embeddings learned meaningful patterns. The transformer needs good embeddings to contribute, but with them it adds significant value.
+**Key Insight**: Neither transformer nor embeddings work well alone:
+- Embeddings alone barely beat random (+0.4%)
+- Transformer with random embeddings is WORSE than random
+- The improvement is almost entirely from **synergy** - they must work together
+
+This differs from the old BCE training where components had more independent value. BPR loss seems to train the model to rely more heavily on the transformer-embedding interaction.
+
+### Why BPR + In-Batch Works Better
+
+1. **In-batch negatives are harder** - Each positive gets 31 negatives that are other users' liked items. These are harder to distinguish than random movies because they're popular enough to be liked by someone.
+
+2. **BPR optimizes relative ranking** - Instead of absolute probabilities, BPR optimizes `score(positive) > score(negative)`. This directly matches the evaluation metric (NDCG).
+
+3. **Lower LR prevents overfitting** - Halving LR from 0.001 to 0.0005 with weight decay 0.0001 gave more stable training.
+
+4. **Better generalization** - Test NDCG improved 73% vs only 30% on validation, showing the model learned more generalizable patterns.
 
 ### Key Learnings
 
 1. **Zero initialization bug discovered and fixed** - Original Phoenix code used `Constant(0)` for transformer weights, causing model to bypass attention entirely. Fixed to Xavier initialization.
 
-2. **Loss plateau at 0.693** - BCE loss converges to log(2) when model predicts ~50/50. NDCG still improves because ranking order matters, not absolute probabilities.
+2. **BPR >> BCE for ranking** - BPR loss directly optimizes ranking, leading to much better NDCG scores than BCE which optimizes click probability.
 
-3. **Overfitting observed** - Validation NDCG peaked at 0.3157 but test NDCG was 0.2410. Model memorizes specific patterns rather than learning generalizable features.
+3. **In-batch negatives >> random negatives** - Using other users' positives as negatives provides harder, more informative training signal.
 
-4. **Limited by data/features, not architecture** - With only genre features and 81K ratings, the model can't learn rich content understanding. Twitter's version works because of billions of examples and rich embeddings.
+4. **Components must work together** - Unlike old training, the new model shows almost no independent component value - 107.5% of improvement comes from transformer-embedding synergy.
+
+5. **Much better generalization** - Old model had severe overfitting (val 0.3157 vs test 0.2410). New model generalizes well (val 0.4112 vs test 0.4183).
 
 ---
 
@@ -973,10 +1034,12 @@ To prove training worked correctly, we compared full model vs component ablation
 | Task | Status |
 |------|--------|
 | ~~Re-run analysis with trained weights~~ | ✅ Complete |
+| ~~BPR + in-batch negatives training~~ | ✅ Complete (NDCG 0.4112) |
+| ~~Ablation study (transformer vs embeddings)~~ | ✅ Complete (107.5% synergy) |
+| ~~Re-validate quantization with BPR model~~ | ✅ Complete (99% agreement) |
 | GPU benchmarking | Future work |
 | Production deployment guide | Future work |
 | Richer features (content embeddings) | Future work |
-| Ranking-aware loss function | Future work |
 
 ---
 

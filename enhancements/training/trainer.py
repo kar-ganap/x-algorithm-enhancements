@@ -2,7 +2,7 @@
 
 Trains Phoenix recommendation model on MovieLens data with:
 - Binary cross-entropy loss on candidate selection
-- Optional ranking loss (ListNet-style)
+- BPR (Bayesian Personalized Ranking) loss for better ranking
 - Validation metrics: NDCG@K, Hit Rate@K
 """
 
@@ -10,6 +10,7 @@ import pickle
 import sys
 import time
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
@@ -59,12 +60,23 @@ except ValueError:
     pass  # Already registered
 
 
-def _make_loss_fn_with_embeddings(forward_fn: Callable, compute_embeddings_fn: Callable):
+class LossType(Enum):
+    """Loss function type for training."""
+    BCE = "bce"  # Binary Cross-Entropy (original)
+    BPR = "bpr"  # Bayesian Personalized Ranking (pairwise)
+
+
+def _make_loss_fn_with_embeddings(
+    forward_fn: Callable,
+    compute_embeddings_fn: Callable,
+    loss_type: LossType = LossType.BCE,
+):
     """Create a pure loss function that also learns embeddings.
 
     Args:
         forward_fn: The haiku-transformed forward function (apply method)
         compute_embeddings_fn: Function to compute embeddings from params
+        loss_type: Type of loss function (BCE or BPR)
 
     Returns:
         A pure function that computes loss and metrics
@@ -96,13 +108,45 @@ def _make_loss_fn_with_embeddings(forward_fn: Callable, compute_embeddings_fn: C
         # Get scores for primary action (action 0)
         logits = output.scores[..., 0]  # [batch_size, num_candidates]
 
-        # Binary cross-entropy loss (numerically stable version)
-        # Use log-sum-exp trick: BCE = max(logits, 0) - logits * labels + log(1 + exp(-|logits|))
-        # Clamp logits to prevent overflow
-        logits = jnp.clip(logits, -20, 20)
-        max_val = jnp.maximum(logits, 0)
-        bce = max_val - logits * labels + jnp.log1p(jnp.exp(-jnp.abs(logits)))
-        loss = jnp.mean(bce)
+        if loss_type == LossType.BPR:
+            # BPR Loss: -log(sigmoid(positive_score - negative_score))
+            # For each sample, compare positive against all negatives
+            # labels has shape [batch_size, num_candidates] with one 1 per row
+
+            # Get positive scores: where label == 1
+            # positive_mask: [batch_size, num_candidates]
+            positive_mask = labels > 0.5
+
+            # Get the positive score for each sample
+            # Use sum with mask (since there's exactly one positive per row)
+            positive_scores = jnp.sum(logits * positive_mask, axis=-1, keepdims=True)  # [batch_size, 1]
+
+            # Negative mask: where label == 0
+            negative_mask = labels < 0.5
+
+            # Compute score differences: positive - negative for all negatives
+            # Shape: [batch_size, num_candidates]
+            score_diff = positive_scores - logits  # broadcast: [batch_size, 1] - [batch_size, num_candidates]
+
+            # BPR loss: -log(sigmoid(diff)) for negatives only
+            # log_sigmoid is numerically stable
+            bpr_loss_per_pair = -jax.nn.log_sigmoid(score_diff)
+
+            # Mask to only include negative pairs and average
+            # Sum over negatives, divide by number of negatives
+            num_negatives = jnp.sum(negative_mask, axis=-1, keepdims=True)  # [batch_size, 1]
+            masked_loss = bpr_loss_per_pair * negative_mask
+            loss_per_sample = jnp.sum(masked_loss, axis=-1) / (num_negatives.squeeze(-1) + 1e-8)
+            loss = jnp.mean(loss_per_sample)
+        else:
+            # BCE Loss (original)
+            # Binary cross-entropy loss (numerically stable version)
+            # Use log-sum-exp trick: BCE = max(logits, 0) - logits * labels + log(1 + exp(-|logits|))
+            # Clamp logits to prevent overflow
+            logits_clipped = jnp.clip(logits, -20, 20)
+            max_val = jnp.maximum(logits_clipped, 0)
+            bce = max_val - logits_clipped * labels + jnp.log1p(jnp.exp(-jnp.abs(logits_clipped)))
+            loss = jnp.mean(bce)
 
         # Compute accuracy (which candidate has highest score)
         predictions = jnp.argmax(logits, axis=-1)
@@ -164,12 +208,16 @@ class TrainingMetrics(NamedTuple):
 class TrainingConfig:
     """Configuration for training."""
     # Training parameters
-    learning_rate: float = 1e-3
+    learning_rate: float = 5e-4  # Lower LR for stability
     weight_decay: float = 1e-4
     batch_size: int = 32
     num_epochs: int = 20
-    num_negatives: int = 7  # Will give 8 candidates total (1 positive + 7 negative)
+    num_negatives: int = 7  # Random negatives (used when not using in-batch)
+    use_in_batch_negatives: bool = True  # Use other positives in batch as negatives
     max_batches_per_epoch: Optional[int] = None  # Limit batches for testing
+
+    # Loss function
+    loss_type: LossType = LossType.BPR  # BPR for ranking, BCE for classification
 
     # Evaluation
     eval_batch_size: int = 64
@@ -239,10 +287,11 @@ class PhoenixTrainer:
         print("  Optimizer initialized!")
 
         # Create JIT-compiled training functions with learnable embeddings
-        print("  Creating JIT-compiled training step (with learnable embeddings)...")
+        print(f"  Creating JIT-compiled training step (loss={self.config.loss_type.value})...")
         self._loss_fn = _make_loss_fn_with_embeddings(
             self.runner.rank_candidates,
             self.adapter.compute_embeddings_from_params,
+            loss_type=self.config.loss_type,
         )
         self._train_step = _make_train_step_with_embeddings(self._loss_fn, self.optimizer)
         print("  Training functions ready!")
@@ -272,6 +321,7 @@ class PhoenixTrainer:
             batch, _, labels = self.adapter.get_training_batch(
                 batch_size=self.config.batch_size,
                 num_negatives=self.config.num_negatives,
+                use_in_batch_negatives=self.config.use_in_batch_negatives,
             )
 
             # Convert to JAX arrays
@@ -532,6 +582,12 @@ class PhoenixTrainer:
         print(f"Starting training for {self.config.num_epochs} epochs")
         print(f"  Batch size: {self.config.batch_size}")
         print(f"  Learning rate: {self.config.learning_rate}")
+        print(f"  Weight decay: {self.config.weight_decay}")
+        print(f"  Loss function: {self.config.loss_type.value.upper()}")
+        if self.config.use_in_batch_negatives:
+            print(f"  Negatives: in-batch ({self.config.batch_size - 1} per positive)")
+        else:
+            print(f"  Negatives: random ({self.config.num_negatives} per positive)")
         if self.config.early_stopping_patience:
             print(f"  Early stopping patience: {self.config.early_stopping_patience} epochs")
         if start_epoch > 0:

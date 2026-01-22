@@ -173,13 +173,15 @@ class MovieLensPhoenixAdapter:
         )  # [B, num_candidates, num_item_hashes, emb_size]
 
         # Author embeddings (dummy - small constant for stability)
+        # Infer actual dimensions from batch to support variable candidate counts
+        actual_num_candidates = batch.candidate_post_hashes.shape[1]
         history_author_embeddings = jnp.full(
             (batch_size, self.history_len, num_author_hashes, self.emb_size),
             0.01,
             dtype=jnp.float32
         )
         candidate_author_embeddings = jnp.full(
-            (batch_size, self.num_candidates, num_author_hashes, self.emb_size),
+            (batch_size, actual_num_candidates, num_author_hashes, self.emb_size),
             0.01,
             dtype=jnp.float32
         )
@@ -257,6 +259,7 @@ class MovieLensPhoenixAdapter:
         user_id: int,
         candidate_movie_ids: List[int],
         history_limit: Optional[int] = None,
+        num_candidates_override: Optional[int] = None,
     ) -> Tuple[RecsysBatch, RecsysEmbeddings]:
         """Create Phoenix batch for a single user.
 
@@ -264,6 +267,8 @@ class MovieLensPhoenixAdapter:
             user_id: User ID
             candidate_movie_ids: Movie IDs to rank
             history_limit: Max history items to use (None = use all up to history_len)
+            num_candidates_override: Override the number of candidates (for training
+                                    with variable negative ratios)
 
         Returns:
             Tuple of (RecsysBatch, RecsysEmbeddings)
@@ -277,8 +282,10 @@ class MovieLensPhoenixAdapter:
         if len(history) > self.history_len:
             history = history[-self.history_len:]  # Take most recent
 
-        # Truncate or pad candidates to num_candidates
-        candidates = candidate_movie_ids[:self.num_candidates]
+        # Use override if provided (for training), otherwise model config
+        num_cands = num_candidates_override if num_candidates_override else self.num_candidates
+        # Truncate or pad candidates
+        candidates = candidate_movie_ids[:num_cands]
 
         # Build batch arrays
         batch_size = 1
@@ -315,20 +322,21 @@ class MovieLensPhoenixAdapter:
         )
 
         # Candidate post hashes
+        actual_num_candidates = len(candidates)
         candidate_post_hashes = np.zeros(
-            (batch_size, self.num_candidates, num_item_hashes), dtype=np.int32
+            (batch_size, actual_num_candidates, num_item_hashes), dtype=np.int32
         )
         for i, movie_id in enumerate(candidates):
             candidate_post_hashes[0, i, :] = movie_id
 
         # Candidate author hashes (dummy)
         candidate_author_hashes = np.ones(
-            (batch_size, self.num_candidates, num_author_hashes), dtype=np.int32
+            (batch_size, actual_num_candidates, num_author_hashes), dtype=np.int32
         )
 
         # Candidate product surface (constant 0)
         candidate_product_surface = np.zeros(
-            (batch_size, self.num_candidates), dtype=np.int32
+            (batch_size, actual_num_candidates), dtype=np.int32
         )
 
         batch = RecsysBatch(
@@ -378,8 +386,9 @@ class MovieLensPhoenixAdapter:
             history_post_embeddings[0, i, :, :] = emb
 
         # Candidate post embeddings [B, num_candidates, num_item_hashes, emb_size]
+        actual_num_candidates = len(candidates)
         candidate_post_embeddings = np.zeros(
-            (batch_size, self.num_candidates, num_item_hashes, self.emb_size),
+            (batch_size, actual_num_candidates, num_item_hashes, self.emb_size),
             dtype=np.float32
         )
         for i, movie_id in enumerate(candidates):
@@ -393,7 +402,7 @@ class MovieLensPhoenixAdapter:
             dtype=np.float32
         )
         candidate_author_embeddings = np.full(
-            (batch_size, self.num_candidates, num_author_hashes, self.emb_size),
+            (batch_size, actual_num_candidates, num_author_hashes, self.emb_size),
             0.01,
             dtype=np.float32
         )
@@ -435,19 +444,16 @@ class MovieLensPhoenixAdapter:
 
         # Combine positive + negatives as candidates
         candidates = [positive_movie] + negatives
+        actual_num_candidates = len(candidates)  # 1 + num_negatives
 
         # Shuffle to avoid position bias (positive always first)
-        order = self.rng.permutation(len(candidates))
+        order = self.rng.permutation(actual_num_candidates)
         candidates = [candidates[i] for i in order]
 
         # Labels: 1 for positive, 0 for negative
-        labels = np.zeros(self.num_candidates, dtype=np.float32)
+        labels = np.zeros(actual_num_candidates, dtype=np.float32)
         positive_idx = list(order).index(0)  # Where did positive end up?
         labels[positive_idx] = 1.0
-
-        # Also encode the rating strength
-        rating_labels = np.zeros(self.num_candidates, dtype=np.float32)
-        rating_labels[positive_idx] = rating.rating / 5.0  # Normalize to [0, 1]
 
         # Get user history up to this rating (temporal split)
         history = self.dataset.get_user_history(user_id)
@@ -458,6 +464,7 @@ class MovieLensPhoenixAdapter:
             user_id,
             candidates,
             history_limit=len(history_before),
+            num_candidates_override=actual_num_candidates,
         )
 
         return batch, embeddings, labels
@@ -466,16 +473,22 @@ class MovieLensPhoenixAdapter:
         self,
         batch_size: int = 32,
         num_negatives: int = 4,
+        use_in_batch_negatives: bool = False,
     ) -> Tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
         """Get a batch of training examples.
 
         Args:
             batch_size: Number of examples in batch
-            num_negatives: Negative samples per positive
+            num_negatives: Negative samples per positive (ignored if use_in_batch_negatives=True)
+            use_in_batch_negatives: If True, use other positives in batch as negatives
+                                   (more efficient, harder negatives)
 
         Returns:
             Tuple of (batched_batch, batched_embeddings, batched_labels)
         """
+        if use_in_batch_negatives:
+            return self._get_in_batch_negatives_batch(batch_size)
+
         # Sample random ratings from training set
         indices = self.rng.choice(
             len(self.dataset.train_ratings),
@@ -496,6 +509,185 @@ class MovieLensPhoenixAdapter:
 
         # Stack into batched tensors
         return self._stack_batches(batches, embeddings_list, labels_list)
+
+    def _get_in_batch_negatives_batch(
+        self,
+        batch_size: int,
+    ) -> Tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
+        """Get training batch using in-batch negatives strategy.
+
+        In-batch negatives: For each user's positive item, use all other users'
+        positive items in the batch as negatives. This is more efficient (no extra
+        negative sampling) and provides harder negatives (other users' positives
+        are likely popular items).
+
+        Architecture:
+        - Sample batch_size ratings (one positive per user)
+        - Candidates = all positive movies in batch (batch_size items)
+        - Labels[i, j] = 1 if rating[i].movie_id == candidates[j], else 0
+        - Each row has exactly one positive, (batch_size - 1) negatives
+
+        This gives effective 1:(batch_size-1) negative ratio efficiently.
+
+        Args:
+            batch_size: Number of examples (also = number of candidates)
+
+        Returns:
+            Tuple of (batched_batch, batched_embeddings, batched_labels)
+        """
+        # Sample batch_size ratings
+        indices = self.rng.choice(
+            len(self.dataset.train_ratings),
+            size=batch_size,
+            replace=False
+        )
+        ratings = [self.dataset.train_ratings[idx] for idx in indices]
+
+        # Shared candidate list = all positive movies in this batch
+        candidate_movie_ids = [r.movie_id for r in ratings]
+
+        # Build labels: labels[i, j] = 1 if ratings[i].movie_id == candidate_movie_ids[j]
+        # With unique movies, this is just the identity matrix
+        # But movies can repeat, so we need to handle that
+        labels = np.zeros((batch_size, batch_size), dtype=np.float32)
+        for i, rating in enumerate(ratings):
+            for j, cand_id in enumerate(candidate_movie_ids):
+                if rating.movie_id == cand_id:
+                    labels[i, j] = 1.0
+
+        # Build batch arrays
+        num_user_hashes = self.model_config.hash_config.num_user_hashes
+        num_item_hashes = self.model_config.hash_config.num_item_hashes
+        num_author_hashes = self.model_config.hash_config.num_author_hashes
+        num_actions = self.model_config.num_actions
+
+        # Initialize arrays
+        user_hashes = np.zeros((batch_size, num_user_hashes), dtype=np.int32)
+        history_post_hashes = np.zeros(
+            (batch_size, self.history_len, num_item_hashes), dtype=np.int32
+        )
+        history_author_hashes = np.ones(
+            (batch_size, self.history_len, num_author_hashes), dtype=np.int32
+        )
+        history_actions = np.zeros(
+            (batch_size, self.history_len, num_actions), dtype=np.float32
+        )
+        history_product_surface = np.zeros(
+            (batch_size, self.history_len), dtype=np.int32
+        )
+
+        # Shared candidates for all users in batch
+        candidate_post_hashes = np.zeros(
+            (batch_size, batch_size, num_item_hashes), dtype=np.int32
+        )
+        candidate_author_hashes = np.ones(
+            (batch_size, batch_size, num_author_hashes), dtype=np.int32
+        )
+        candidate_product_surface = np.zeros(
+            (batch_size, batch_size), dtype=np.int32
+        )
+
+        # Fill candidate hashes (same for all users)
+        for j, movie_id in enumerate(candidate_movie_ids):
+            candidate_post_hashes[:, j, :] = movie_id
+
+        # Fill user-specific data
+        for i, rating in enumerate(ratings):
+            user_id = rating.user_id
+            user_hashes[i, :] = user_id
+
+            # Get history before this rating (temporal split)
+            history = self.dataset.get_user_history(user_id)
+            history_before = [r for r in history if r.timestamp < rating.timestamp]
+
+            # Truncate to history_len (most recent)
+            if len(history_before) > self.history_len:
+                history_before = history_before[-self.history_len:]
+
+            # Fill history
+            for h_idx, h_rating in enumerate(history_before):
+                history_post_hashes[i, h_idx, :] = h_rating.movie_id
+                history_actions[i, h_idx, :] = self.rating_to_actions(h_rating.rating)
+
+        batch = RecsysBatch(
+            user_hashes=user_hashes,
+            history_post_hashes=history_post_hashes,
+            history_author_hashes=history_author_hashes,
+            history_actions=history_actions,
+            history_product_surface=history_product_surface,
+            candidate_post_hashes=candidate_post_hashes,
+            candidate_author_hashes=candidate_author_hashes,
+            candidate_product_surface=candidate_product_surface,
+        )
+
+        # Build embeddings
+        embeddings = self._build_in_batch_embeddings(
+            ratings, candidate_movie_ids, batch_size
+        )
+
+        return batch, embeddings, labels
+
+    def _build_in_batch_embeddings(
+        self,
+        ratings: List[Rating],
+        candidate_movie_ids: List[int],
+        batch_size: int,
+    ) -> RecsysEmbeddings:
+        """Build embeddings for in-batch negatives setup."""
+        num_user_hashes = self.model_config.hash_config.num_user_hashes
+        num_item_hashes = self.model_config.hash_config.num_item_hashes
+        num_author_hashes = self.model_config.hash_config.num_author_hashes
+
+        # User embeddings [B, num_user_hashes, emb_size]
+        user_embeddings = np.zeros(
+            (batch_size, num_user_hashes, self.emb_size), dtype=np.float32
+        )
+        for i, rating in enumerate(ratings):
+            user_emb = self.get_user_embedding(rating.user_id)
+            user_embeddings[i, :, :] = user_emb
+
+        # History embeddings [B, history_len, num_item_hashes, emb_size]
+        history_post_embeddings = np.zeros(
+            (batch_size, self.history_len, num_item_hashes, self.emb_size),
+            dtype=np.float32
+        )
+        for i, rating in enumerate(ratings):
+            history = self.dataset.get_user_history(rating.user_id)
+            history_before = [r for r in history if r.timestamp < rating.timestamp]
+            if len(history_before) > self.history_len:
+                history_before = history_before[-self.history_len:]
+
+            for h_idx, h_rating in enumerate(history_before):
+                emb = self.get_movie_embedding(h_rating.movie_id)
+                history_post_embeddings[i, h_idx, :, :] = emb
+
+        # Candidate embeddings [B, B, num_item_hashes, emb_size]
+        # Same candidates for all users
+        candidate_post_embeddings = np.zeros(
+            (batch_size, batch_size, num_item_hashes, self.emb_size),
+            dtype=np.float32
+        )
+        for j, movie_id in enumerate(candidate_movie_ids):
+            emb = self.get_movie_embedding(movie_id)
+            candidate_post_embeddings[:, j, :, :] = emb
+
+        # Author embeddings (dummy)
+        history_author_embeddings = np.full(
+            (batch_size, self.history_len, num_author_hashes, self.emb_size),
+            0.01, dtype=np.float32
+        )
+        candidate_author_embeddings = np.full(
+            (batch_size, batch_size, num_author_hashes, self.emb_size),
+            0.01, dtype=np.float32
+        )
+
+        return RecsysEmbeddings(
+            user_embeddings=user_embeddings,
+            history_post_embeddings=history_post_embeddings,
+            candidate_post_embeddings=candidate_post_embeddings,
+            history_author_embeddings=history_author_embeddings,
+            candidate_author_embeddings=candidate_author_embeddings,
+        )
 
     def _stack_batches(
         self,

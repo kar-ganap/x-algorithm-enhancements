@@ -18,7 +18,7 @@ from phoenix.grok import TransformerConfig
 from phoenix.recsys_model import HashConfig, PhoenixModelConfig
 
 from enhancements.data.movielens import MovieLensDataset
-from enhancements.training.trainer import PhoenixTrainer, TrainingConfig
+from enhancements.training.trainer import LossType, PhoenixTrainer, TrainingConfig
 
 
 def create_model_config(size: str = "small") -> PhoenixModelConfig:
@@ -85,8 +85,8 @@ def main():
         help="Training batch size"
     )
     parser.add_argument(
-        "--lr", type=float, default=1e-3,
-        help="Learning rate"
+        "--lr", type=float, default=5e-4,
+        help="Learning rate (default 0.0005)"
     )
     parser.add_argument(
         "--quick", action="store_true",
@@ -108,7 +108,26 @@ def main():
         "--patience", type=int, default=5,
         help="Early stopping patience (epochs without improvement)"
     )
+    parser.add_argument(
+        "--loss", type=str, default="bpr", choices=["bpr", "bce"],
+        help="Loss function: bpr (pairwise ranking) or bce (pointwise)"
+    )
+    parser.add_argument(
+        "--negatives", type=int, default=7,
+        help="Number of random negative samples (when not using in-batch)"
+    )
+    parser.add_argument(
+        "--in-batch", action="store_true", default=True,
+        help="Use in-batch negatives (other positives as negatives)"
+    )
+    parser.add_argument(
+        "--no-in-batch", action="store_true",
+        help="Disable in-batch negatives, use random sampling only"
+    )
     args = parser.parse_args()
+
+    # Handle in-batch flag
+    use_in_batch = args.in_batch and not args.no_in_batch
 
     print("=" * 60)
     print("Phoenix Training on MovieLens")
@@ -134,6 +153,7 @@ def main():
     print()
 
     # Create training config
+    loss_type = LossType.BPR if args.loss == "bpr" else LossType.BCE
     training_config = TrainingConfig(
         learning_rate=args.lr,
         batch_size=args.batch_size,
@@ -141,6 +161,9 @@ def main():
         max_batches_per_epoch=args.max_batches or (100 if args.quick else None),
         log_every_n_steps=20 if args.quick else 50,
         early_stopping_patience=args.patience,
+        loss_type=loss_type,
+        num_negatives=args.negatives,
+        use_in_batch_negatives=use_in_batch,
     )
 
     # Create trainer
