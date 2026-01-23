@@ -111,23 +111,34 @@ def create_model_config(size: str = "small") -> PhoenixModelConfig:
         )
 
 
-def make_bpr_loss_fn(
+def make_multitask_loss_fn(
     forward_fn: Callable,
     compute_embeddings_fn: Callable,
+    bpr_weight: float = 1.0,
+    bce_weight: float = 1.0,
 ):
-    """Create BPR loss function with learnable embeddings."""
+    """Create multi-task loss function with BPR + BCE for action prediction.
+
+    Args:
+        forward_fn: Model forward function
+        compute_embeddings_fn: Function to compute embeddings
+        bpr_weight: Weight for BPR ranking loss
+        bce_weight: Weight for BCE action prediction loss
+    """
 
     def loss_fn(
         params: Dict[str, Any],
         batch: RecsysBatch,
         labels: jnp.ndarray,
+        action_labels: jnp.ndarray,
     ) -> Tuple[jnp.ndarray, Dict[str, jnp.ndarray]]:
-        """Compute BPR loss.
+        """Compute multi-task loss.
 
         Args:
             params: {'model': model_params, 'embeddings': emb_params}
             batch: Input batch
             labels: [batch_size, num_candidates] binary labels
+            action_labels: [batch_size, num_actions] action labels for positive
 
         Returns:
             (loss, metrics_dict)
@@ -142,11 +153,11 @@ def make_bpr_loss_fn(
         output = forward_fn(model_params, batch, embeddings)
         logits = output.scores  # [batch, candidates, actions]
 
+        # === BPR Loss for ranking ===
         # Use mean across actions as relevance score
         scores = jnp.mean(logits, axis=-1)  # [batch, candidates]
 
         # BPR loss: maximize positive score over negative scores
-        # Positive is always the first candidate
         pos_scores = scores[:, 0:1]  # [batch, 1]
         neg_scores = scores[:, 1:]   # [batch, num_negs]
 
@@ -158,7 +169,32 @@ def make_bpr_loss_fn(
         pos_wins = jnp.all(pos_scores > neg_scores, axis=-1)
         accuracy = jnp.mean(pos_wins.astype(jnp.float32))
 
-        return bpr_loss, {"loss": bpr_loss, "accuracy": accuracy}
+        # === BCE Loss for action prediction ===
+        # Only use the positive candidate (first one)
+        pos_logits = logits[:, 0, :18]  # [batch, 18 actions] (exclude dwell_time)
+
+        # Binary cross-entropy
+        # BCE = -[y * log(sigmoid(x)) + (1-y) * log(1-sigmoid(x))]
+        # Use log_sigmoid for numerical stability
+        bce_loss = -jnp.mean(
+            action_labels * jax.nn.log_sigmoid(pos_logits)
+            + (1 - action_labels) * jax.nn.log_sigmoid(-pos_logits)
+        )
+
+        # Action prediction accuracy (threshold at 0.5)
+        pred_actions = jax.nn.sigmoid(pos_logits) > 0.5
+        action_acc = jnp.mean((pred_actions == action_labels).astype(jnp.float32))
+
+        # Combined loss
+        total_loss = bpr_weight * bpr_loss + bce_weight * bce_loss
+
+        return total_loss, {
+            "loss": total_loss,
+            "bpr_loss": bpr_loss,
+            "bce_loss": bce_loss,
+            "accuracy": accuracy,
+            "action_acc": action_acc,
+        }
 
     return loss_fn
 
@@ -167,9 +203,9 @@ def make_train_step(loss_fn, optimizer):
     """Create JIT-compiled training step."""
 
     @jax.jit
-    def train_step(params, opt_state, batch, labels):
+    def train_step(params, opt_state, batch, labels, action_labels):
         (loss, metrics), grads = jax.value_and_grad(loss_fn, has_aux=True)(
-            params, batch, labels
+            params, batch, labels, action_labels
         )
 
         updates, new_opt_state = optimizer.update(grads, opt_state, params)
@@ -258,10 +294,12 @@ class SyntheticTrainer:
         )
         self.opt_state = self.optimizer.init(self.params)
 
-        # Loss function
-        self._loss_fn = make_bpr_loss_fn(
+        # Loss function (multi-task: BPR + BCE for action prediction)
+        self._loss_fn = make_multitask_loss_fn(
             self.runner.rank_candidates,
             self.adapter.compute_embeddings_from_params,
+            bpr_weight=1.0,
+            bce_weight=1.0,
         )
         self._train_step = make_train_step(self._loss_fn, self.optimizer)
 
@@ -279,7 +317,7 @@ class SyntheticTrainer:
         total_acc = 0.0
 
         for step in range(num_batches):
-            batch, _, labels = self.adapter.get_training_batch(
+            batch, _, labels, action_labels = self.adapter.get_training_batch(
                 batch_size=self.batch_size,
                 neg_ratio=self.neg_ratio,
             )
@@ -296,16 +334,19 @@ class SyntheticTrainer:
                 candidate_product_surface=jnp.array(batch.candidate_product_surface),
             )
             labels = jnp.array(labels)
+            action_labels = jnp.array(action_labels)
 
             self.params, self.opt_state, metrics = self._train_step(
-                self.params, self.opt_state, batch, labels
+                self.params, self.opt_state, batch, labels, action_labels
             )
 
             total_loss += float(metrics["loss"])
             total_acc += float(metrics["accuracy"])
 
             if (step + 1) % 50 == 0:
-                print(f"    Step {step+1}/{num_batches}: loss={float(metrics['loss']):.4f}")
+                bce = float(metrics.get("bce_loss", 0))
+                act_acc = float(metrics.get("action_acc", 0))
+                print(f"    Step {step+1}/{num_batches}: loss={float(metrics['loss']):.4f}, bce={bce:.4f}, act_acc={act_acc:.2%}")
 
         return total_loss / num_batches, total_acc / num_batches
 
@@ -373,6 +414,7 @@ def main():
     parser.add_argument("--data-dir", type=str, default="data/synthetic_twitter")
     parser.add_argument("--max-batches", type=int, default=None)
     parser.add_argument("--generate", action="store_true", help="Generate new dataset first")
+    parser.add_argument("--patience", type=int, default=5, help="Early stopping patience")
     args = parser.parse_args()
 
     print("=" * 70)
@@ -446,7 +488,10 @@ def main():
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     print("Starting training...")
+    print(f"Early stopping patience: {args.patience} epochs")
     print()
+
+    epochs_without_improvement = 0
 
     for epoch in range(1, args.epochs + 1):
         start_time = time.time()
@@ -469,6 +514,12 @@ def main():
             trainer.best_val_ndcg = val_ndcg
             trainer.save(str(checkpoint_dir / "best_model.pkl"))
             print(f"  -> New best! Saved to {checkpoint_dir}/best_model.pkl")
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= args.patience:
+                print(f"\nEarly stopping: No improvement for {args.patience} epochs")
+                break
 
     print()
     print("=" * 70)

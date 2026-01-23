@@ -505,7 +505,7 @@ class SyntheticTwitterPhoenixAdapter:
         self,
         batch_size: int = 32,
         neg_ratio: int = 4,
-    ) -> Tuple[RecsysBatch, EmbeddingParams, np.ndarray]:
+    ) -> Tuple[RecsysBatch, EmbeddingParams, np.ndarray, np.ndarray]:
         """Get a training batch with positive and negative samples.
 
         For each positive engagement, samples neg_ratio negative posts
@@ -516,10 +516,11 @@ class SyntheticTwitterPhoenixAdapter:
             neg_ratio: Number of negatives per positive
 
         Returns:
-            Tuple of (batch, embedding_params, labels)
+            Tuple of (batch, embedding_params, labels, action_labels)
             - batch: RecsysBatch
             - embedding_params: EmbeddingParams for computing embeddings
             - labels: [batch_size, 1+neg_ratio] binary labels (1 for positive)
+            - action_labels: [batch_size, num_actions] action labels for positive sample
         """
         if self.train_engagements is None:
             raise ValueError("Must call set_splits() before get_training_batch()")
@@ -531,6 +532,17 @@ class SyntheticTwitterPhoenixAdapter:
 
         batches = []
         all_labels = []
+        all_action_labels = []
+
+        # Action names in order
+        action_names = [
+            "favorite_score", "reply_score", "repost_score", "photo_expand_score",
+            "click_score", "profile_click_score", "vqv_score", "share_score",
+            "share_via_dm_score", "share_via_copy_link_score", "dwell_score",
+            "quote_score", "quoted_click_score", "follow_author_score",
+            "not_interested_score", "block_author_score", "mute_author_score",
+            "report_score",
+        ]
 
         for idx in indices:
             eng = self.train_engagements[idx]
@@ -553,11 +565,19 @@ class SyntheticTwitterPhoenixAdapter:
             candidate_ids = [positive_post_id] + negative_post_ids
             labels = [1.0] + [0.0] * neg_ratio
 
+            # Extract action labels from engagement
+            action_labels = []
+            for action_name in action_names:
+                # Convert to the format in engagement.actions
+                short_name = action_name.replace("_score", "")
+                action_labels.append(eng.actions.get(short_name, 0.0))
+
             batch, _ = self.create_batch_for_user(
                 user_id, candidate_ids, num_candidates_override=len(candidate_ids)
             )
             batches.append(batch)
             all_labels.append(labels)
+            all_action_labels.append(action_labels)
 
         if not batches:
             raise ValueError("Could not create any valid training samples")
@@ -565,8 +585,9 @@ class SyntheticTwitterPhoenixAdapter:
         # Stack batches
         combined_batch = self._stack_batches(batches)
         labels_array = np.array(all_labels, dtype=np.float32)
+        action_labels_array = np.array(all_action_labels, dtype=np.float32)
 
-        return combined_batch, self.get_embedding_params(), labels_array
+        return combined_batch, self.get_embedding_params(), labels_array, action_labels_array
 
     def _stack_batches(self, batches: List[RecsysBatch]) -> RecsysBatch:
         """Stack multiple single-sample batches into one.

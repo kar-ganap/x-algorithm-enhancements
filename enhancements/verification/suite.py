@@ -141,34 +141,40 @@ class VerificationResults:
 
     def to_dict(self) -> Dict:
         """Convert to dictionary for JSON serialization."""
+        def to_float(v):
+            """Convert numpy/jax values to Python float."""
+            if v is None:
+                return None
+            return float(v)
+
         return {
             "embedding_probes": {
-                "user_silhouette": self.embedding_probes.user_silhouette if self.embedding_probes else None,
-                "topic_silhouette": self.embedding_probes.topic_silhouette if self.embedding_probes else None,
+                "user_silhouette": to_float(self.embedding_probes.user_silhouette) if self.embedding_probes else None,
+                "topic_silhouette": to_float(self.embedding_probes.topic_silhouette) if self.embedding_probes else None,
                 "user_pass": self.embedding_probes.user_clustering_pass if self.embedding_probes else None,
                 "topic_pass": self.embedding_probes.topic_clustering_pass if self.embedding_probes else None,
             },
             "behavioral_tests": {
-                "accuracy": self.behavioral_tests.overall_accuracy if self.behavioral_tests else None,
-                "mean_error": self.behavioral_tests.mean_error if self.behavioral_tests else None,
-                "correlation": self.behavioral_tests.correlation if self.behavioral_tests else None,
+                "accuracy": to_float(self.behavioral_tests.overall_accuracy) if self.behavioral_tests else None,
+                "mean_error": to_float(self.behavioral_tests.mean_error) if self.behavioral_tests else None,
+                "correlation": to_float(self.behavioral_tests.correlation) if self.behavioral_tests else None,
             },
             "action_tests": {
                 "tests_passed": self.action_tests.tests_passed if self.action_tests else None,
                 "tests_total": self.action_tests.tests_total if self.action_tests else None,
-                "lurker_rt_ratio": self.action_tests.lurker_distribution.repost_ratio if self.action_tests else None,
-                "power_rt_ratio": self.action_tests.power_user_distribution.repost_ratio if self.action_tests else None,
+                "lurker_rt_ratio": to_float(self.action_tests.lurker_distribution.repost_ratio) if self.action_tests else None,
+                "power_rt_ratio": to_float(self.action_tests.power_user_distribution.repost_ratio) if self.action_tests else None,
             },
             "counterfactual_tests": {
-                "block_effect_rate": self.counterfactual_tests.block_effect_rate if self.counterfactual_tests else None,
-                "flip_rate": self.counterfactual_tests.archetype_flip_rate if self.counterfactual_tests else None,
+                "block_effect_rate": to_float(self.counterfactual_tests.block_effect_rate) if self.counterfactual_tests else None,
+                "flip_rate": to_float(self.counterfactual_tests.archetype_flip_rate) if self.counterfactual_tests else None,
             },
             "timing": {
-                "total_s": self.total_time_s,
-                "embedding_s": self.embedding_time_s,
-                "behavioral_s": self.behavioral_time_s,
-                "action_s": self.action_time_s,
-                "counterfactual_s": self.counterfactual_time_s,
+                "total_s": to_float(self.total_time_s),
+                "embedding_s": to_float(self.embedding_time_s),
+                "behavioral_s": to_float(self.behavioral_time_s),
+                "action_s": to_float(self.action_time_s),
+                "counterfactual_s": to_float(self.counterfactual_time_s),
             },
             "all_passed": self.all_tests_passed,
         }
