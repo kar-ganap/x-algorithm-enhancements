@@ -170,7 +170,7 @@ def _get_score_for_post(
     output = runner.rank_candidates(params["model"], batch, embeddings)
 
     # Mean score across actions
-    return float(jnp.mean(output.logits[0, 0]))
+    return float(jnp.mean(output.scores[0, 0]))
 
 
 def _get_score_with_block(
@@ -218,7 +218,7 @@ def _get_score_with_block(
     embeddings = adapter.compute_embeddings_from_params(params["embeddings"], batch)
     output = runner.rank_candidates(params["model"], batch, embeddings)
 
-    return float(jnp.mean(output.logits[0, 0]))
+    return float(jnp.mean(output.scores[0, 0]))
 
 
 def test_archetype_flip(
@@ -354,7 +354,7 @@ def _get_score_with_donor_history(
     embeddings = adapter.compute_embeddings_from_params(params["embeddings"], batch)
     output = runner.rank_candidates(params["model"], batch, embeddings)
 
-    return float(jnp.mean(output.logits[0, 0]))
+    return float(jnp.mean(output.scores[0, 0]))
 
 
 def run_counterfactual_tests(

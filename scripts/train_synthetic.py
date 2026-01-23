@@ -140,7 +140,7 @@ def make_bpr_loss_fn(
 
         # Forward pass
         output = forward_fn(model_params, batch, embeddings)
-        logits = output.logits  # [batch, candidates, actions]
+        logits = output.scores  # [batch, candidates, actions]
 
         # Use mean across actions as relevance score
         scores = jnp.mean(logits, axis=-1)  # [batch, candidates]
@@ -305,7 +305,7 @@ class SyntheticTrainer:
             total_acc += float(metrics["accuracy"])
 
             if (step + 1) % 50 == 0:
-                print(f"    Step {step+1}/{num_batches}: loss={metrics['loss']:.4f}")
+                print(f"    Step {step+1}/{num_batches}: loss={float(metrics['loss']):.4f}")
 
         return total_loss / num_batches, total_acc / num_batches
 
@@ -340,7 +340,7 @@ class SyntheticTrainer:
 
             # Forward pass
             output = self.runner.rank_candidates(self.params["model"], batch, embeddings)
-            scores = np.array(jnp.mean(output.logits[0], axis=-1))  # [num_candidates]
+            scores = np.array(jnp.mean(output.scores[0], axis=-1))  # [num_candidates]
 
             labels = np.array([1.0] + [0.0] * len(neg_post_ids))
             all_scores.append(scores)

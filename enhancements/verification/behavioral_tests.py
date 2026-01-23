@@ -124,7 +124,7 @@ def predict_engagement_probabilities(
 
         # Forward pass
         output = runner.rank_candidates(params["model"], batch, embeddings)
-        logits = output.logits  # [1, 1, num_actions]
+        logits = output.scores  # [1, 1, num_actions]
 
         # Convert logits to probabilities using sigmoid
         probs = 1.0 / (1.0 + np.exp(-np.array(logits[0, 0])))

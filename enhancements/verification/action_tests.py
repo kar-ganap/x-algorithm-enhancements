@@ -150,7 +150,7 @@ def predict_action_distribution(
         )
 
         output = runner.rank_candidates(params["model"], batch, embeddings)
-        logits = output.logits[0, 0]  # [num_actions]
+        logits = output.scores[0, 0]  # [num_actions]
 
         # Convert to probabilities
         probs = 1.0 / (1.0 + np.exp(-np.array(logits)))
