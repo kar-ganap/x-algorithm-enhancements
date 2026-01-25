@@ -192,9 +192,9 @@ def _get_score_with_block(
     history_actions = np.array(batch.history_actions)
     history_author_hashes = np.array(batch.history_author_hashes)
 
-    # Find a slot to add the block (use the last non-zero slot or slot 0)
+    # Insert block at position 0 (model seems to attend more to early positions)
     history_len = history_actions.shape[1]
-    insert_idx = min(history_len - 1, 0)
+    insert_idx = 0
 
     # Set block_author action (index 15)
     history_actions[0, insert_idx, :] = 0

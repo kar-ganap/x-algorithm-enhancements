@@ -77,6 +77,14 @@ def main():
         "model": checkpoint["model"],
         "embeddings": checkpoint["embeddings"],
     }
+    # Load classifier if available (for archetype-based action prediction)
+    if "classifier" in checkpoint:
+        params["classifier"] = checkpoint["classifier"]
+        print("  Classifier: loaded")
+    # Load action predictor if available (fallback)
+    if "action_predictor" in checkpoint:
+        params["action_predictor"] = checkpoint["action_predictor"]
+        print("  Action predictor: loaded")
     print(f"  Model: emb_size={model_config.emb_size}, layers={model_config.model.num_layers}")
     print()
 

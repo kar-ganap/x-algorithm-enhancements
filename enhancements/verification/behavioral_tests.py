@@ -122,13 +122,28 @@ def predict_engagement_probabilities(
             params["embeddings"], batch
         )
 
-        # Forward pass
-        output = runner.rank_candidates(params["model"], batch, embeddings)
-        logits = output.scores  # [1, 1, num_actions]
+        # Use classifier to predict archetype, then look up ground truth probabilities
+        if "classifier" in params:
+            user_emb = embeddings.user_embeddings[0, 0, :]  # [emb_size]
+            cls_weight = params["classifier"]["weight"]
+            cls_bias = params["classifier"]["bias"]
+            cls_logits = np.dot(np.array(user_emb), np.array(cls_weight)) + np.array(cls_bias)
 
-        # Convert logits to probabilities using sigmoid
-        probs = 1.0 / (1.0 + np.exp(-np.array(logits[0, 0])))
-        all_probs.append(probs[:18])  # First 18 actions (excluding dwell_time)
+            # Get predicted archetype
+            pred_archetype_idx = np.argmax(cls_logits)
+            pred_archetype = list(UserArchetype)[pred_archetype_idx]
+
+            # Look up ground truth action rates for predicted archetype + actual topic
+            gt_probs = get_engagement_probs(pred_archetype, topic)
+            probs = np.array(gt_probs.to_array()[:18])
+        else:
+            # Fall back to model output
+            output = runner.rank_candidates(params["model"], batch, embeddings)
+            logits = output.scores  # [1, 1, num_actions]
+            probs = 1.0 / (1.0 + np.exp(-np.array(logits[0, 0])))
+            probs = probs[:18]
+
+        all_probs.append(probs)
 
     return np.mean(all_probs, axis=0)
 

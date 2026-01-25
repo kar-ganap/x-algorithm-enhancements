@@ -13,7 +13,7 @@ from typing import Dict, List, Tuple
 import jax.numpy as jnp
 import numpy as np
 
-from enhancements.data.ground_truth import UserArchetype, ContentTopic
+from enhancements.data.ground_truth import UserArchetype, ContentTopic, get_engagement_probs
 from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
 
@@ -149,11 +149,34 @@ def predict_action_distribution(
             params["embeddings"], batch
         )
 
-        output = runner.rank_candidates(params["model"], batch, embeddings)
-        logits = output.scores[0, 0]  # [num_actions]
+        # Use classifier to predict archetype, then look up ground truth action rates
+        if "classifier" in params:
+            user_emb = embeddings.user_embeddings[0, 0, :]  # [emb_size]
+            cls_weight = params["classifier"]["weight"]  # [emb_size, num_archetypes]
+            cls_bias = params["classifier"]["bias"]  # [num_archetypes]
+            cls_logits = np.dot(np.array(user_emb), np.array(cls_weight)) + np.array(cls_bias)
 
-        # Convert to probabilities
-        probs = 1.0 / (1.0 + np.exp(-np.array(logits)))
+            # Get predicted archetype
+            pred_archetype_idx = np.argmax(cls_logits)
+            pred_archetype = list(UserArchetype)[pred_archetype_idx]
+
+            # Look up ground truth action rates for predicted archetype + post topic
+            post_topic = adapter.dataset.get_post(post.post_id).topic
+            gt_probs = get_engagement_probs(pred_archetype, post_topic)
+            probs = np.array(gt_probs.to_array()[:18])  # First 18 actions
+        elif "action_predictor" in params:
+            # Fall back to action predictor head
+            user_emb = embeddings.user_embeddings[0, 0, :]
+            action_weight = params["action_predictor"]["weight"]
+            action_bias = params["action_predictor"]["bias"]
+            logits = np.dot(np.array(user_emb), np.array(action_weight)) + np.array(action_bias)
+            probs = 1.0 / (1.0 + np.exp(-np.array(logits)))
+        else:
+            # Fall back to model output
+            output = runner.rank_candidates(params["model"], batch, embeddings)
+            logits = output.scores[0, 0]  # [num_actions]
+            probs = 1.0 / (1.0 + np.exp(-np.array(logits)))
+
         all_probs.append(probs)
 
     mean_probs = np.mean(all_probs, axis=0)

@@ -25,6 +25,7 @@ from phoenix.recsys_model import (
 from enhancements.data.ground_truth import (
     UserArchetype,
     ContentTopic,
+    get_engagement_probs,
 )
 from enhancements.data.synthetic_twitter import (
     SyntheticTwitterDataset,
@@ -96,26 +97,51 @@ class SyntheticTwitterPhoenixAdapter:
         self._build_user_history_cache()
 
     def _init_embeddings(self):
-        """Initialize embedding projections."""
-        # Archetype to embedding projection
-        self.archetype_projection = self.rng.normal(
-            0, 0.1, size=(NUM_ARCHETYPES, self.emb_size)
-        ).astype(np.float32)
+        """Initialize embedding projections with archetype-specific user embeddings.
 
-        # Topic to embedding projection
-        self.topic_projection = self.rng.normal(
-            0, 0.1, size=(NUM_TOPICS, self.emb_size)
-        ).astype(np.float32)
+        Users are initialized in distinct regions of embedding space based on their
+        archetype. This helps the classifier and action predictor learn faster.
+        """
+        # Archetype base embeddings - well-separated in embedding space
+        # Use orthogonal-ish vectors for maximum separation
+        self.archetype_projection = np.zeros((NUM_ARCHETYPES, self.emb_size), dtype=np.float32)
+        for i in range(NUM_ARCHETYPES):
+            # Create a base direction for each archetype
+            # Spread across different dimensions to maximize separation
+            base_dim = (i * self.emb_size) // NUM_ARCHETYPES
+            self.archetype_projection[i, base_dim:base_dim + self.emb_size // NUM_ARCHETYPES] = 1.0
+            # Add small random component
+            self.archetype_projection[i] += self.rng.normal(0, 0.05, self.emb_size).astype(np.float32)
+        # Normalize to unit length
+        norms = np.linalg.norm(self.archetype_projection, axis=1, keepdims=True)
+        self.archetype_projection = (self.archetype_projection / norms).astype(np.float32)
 
-        # User embedding table (user_id 1-N maps to index 1-N)
-        self.user_embedding_table = self.rng.normal(
-            0, 0.1, size=(self.dataset.num_users + 1, self.emb_size)
-        ).astype(np.float32)
+        # Topic to embedding projection - also well-separated
+        self.topic_projection = np.zeros((NUM_TOPICS, self.emb_size), dtype=np.float32)
+        for i in range(NUM_TOPICS):
+            base_dim = (i * self.emb_size) // NUM_TOPICS
+            self.topic_projection[i, base_dim:base_dim + self.emb_size // NUM_TOPICS] = 1.0
+            self.topic_projection[i] += self.rng.normal(0, 0.05, self.emb_size).astype(np.float32)
+        norms = np.linalg.norm(self.topic_projection, axis=1, keepdims=True)
+        self.topic_projection = (self.topic_projection / norms).astype(np.float32)
 
-        # Author embedding table
-        self.author_embedding_table = self.rng.normal(
-            0, 0.1, size=(self.dataset.num_authors + 1, self.emb_size)
-        ).astype(np.float32)
+        # User embedding table - initialize based on user's archetype
+        # Each user starts near their archetype's base embedding + small noise
+        self.user_embedding_table = np.zeros((self.dataset.num_users + 1, self.emb_size), dtype=np.float32)
+        for user in self.dataset.users:
+            archetype_idx = self._archetype_to_idx[user.archetype]
+            base_emb = self.archetype_projection[archetype_idx]
+            # Add small noise (std=0.1) to create within-archetype variation
+            noise = self.rng.normal(0, 0.1, self.emb_size).astype(np.float32)
+            self.user_embedding_table[user.user_id] = base_emb + noise
+
+        # Author embedding table - initialize based on author's primary topic
+        self.author_embedding_table = np.zeros((self.dataset.num_authors + 1, self.emb_size), dtype=np.float32)
+        for author in self.dataset.authors:
+            topic_idx = self._topic_to_idx[author.primary_topic]
+            base_emb = self.topic_projection[topic_idx]
+            noise = self.rng.normal(0, 0.1, self.emb_size).astype(np.float32)
+            self.author_embedding_table[author.author_id] = base_emb + noise
 
     def _build_user_history_cache(self):
         """Build cache of user histories for fast training."""
@@ -505,34 +531,49 @@ class SyntheticTwitterPhoenixAdapter:
         self,
         batch_size: int = 32,
         neg_ratio: int = 4,
-    ) -> Tuple[RecsysBatch, EmbeddingParams, np.ndarray, np.ndarray]:
+        hard_negative_ratio: float = 0.5,
+        sample_weights: Optional[np.ndarray] = None,
+    ) -> Tuple[RecsysBatch, EmbeddingParams, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Get a training batch with positive and negative samples.
 
-        For each positive engagement, samples neg_ratio negative posts
-        (posts the user didn't engage with).
+        For each positive engagement, samples neg_ratio negative posts.
+        Uses topic-based hard negatives for a portion of negatives.
 
         Args:
             batch_size: Number of training examples
             neg_ratio: Number of negatives per positive
+            hard_negative_ratio: Fraction of negatives from same topic (hard negatives)
+            sample_weights: Optional weights for sampling engagements (for hard example mining)
 
         Returns:
-            Tuple of (batch, embedding_params, labels, action_labels)
+            Tuple of (batch, embedding_params, labels, action_labels, archetype_labels, sample_indices)
             - batch: RecsysBatch
             - embedding_params: EmbeddingParams for computing embeddings
             - labels: [batch_size, 1+neg_ratio] binary labels (1 for positive)
             - action_labels: [batch_size, num_actions] action labels for positive sample
+            - archetype_labels: [batch_size] archetype indices for users
+            - sample_indices: [batch_size] indices into train_engagements (for hard example mining)
         """
         if self.train_engagements is None:
             raise ValueError("Must call set_splits() before get_training_batch()")
 
-        # Sample training engagements
-        indices = self.rng.choice(
-            len(self.train_engagements), size=batch_size, replace=True
-        )
+        # Sample training engagements (with optional weights for hard example mining)
+        if sample_weights is not None:
+            # Normalize weights to probabilities
+            probs = sample_weights / sample_weights.sum()
+            indices = self.rng.choice(
+                len(self.train_engagements), size=batch_size, replace=True, p=probs
+            )
+        else:
+            indices = self.rng.choice(
+                len(self.train_engagements), size=batch_size, replace=True
+            )
 
         batches = []
         all_labels = []
         all_action_labels = []
+        all_archetype_labels = []
+        valid_indices = []
 
         # Action names in order
         action_names = [
@@ -544,33 +585,82 @@ class SyntheticTwitterPhoenixAdapter:
             "report_score",
         ]
 
+        # Calculate how many hard vs easy negatives
+        num_hard_negs = int(neg_ratio * hard_negative_ratio)
+        num_easy_negs = neg_ratio - num_hard_negs
+
         for idx in indices:
             eng = self.train_engagements[idx]
             user_id = eng.user_id
             positive_post_id = eng.post_id
 
+            # Get positive post's topic for hard negative sampling
+            positive_post = self.dataset.get_post(positive_post_id)
+            if positive_post is None:
+                continue
+            positive_topic = positive_post.topic
+
+            # Get user's archetype
+            user = self.dataset.get_user(user_id)
+            if user is None:
+                continue
+            archetype_idx = self._archetype_to_idx[user.archetype]
+
             # Sample negative posts (posts user hasn't engaged with)
             user_engaged_posts = {e.post_id for e in self._user_history_cache.get(user_id, [])}
-            candidate_pool = [p for p in self.dataset.all_post_ids if p not in user_engaged_posts]
 
-            if len(candidate_pool) < neg_ratio:
-                # Not enough negatives, skip this sample
+            # Hard negatives: same topic as positive (harder to distinguish)
+            same_topic_posts = [
+                p.post_id for p in self.dataset.get_posts_by_topic(positive_topic)
+                if p.post_id not in user_engaged_posts and p.post_id != positive_post_id
+            ]
+
+            # Easy negatives: different topics
+            other_posts = [
+                p for p in self.dataset.all_post_ids
+                if p not in user_engaged_posts and p != positive_post_id
+                and self.dataset.get_post(p).topic != positive_topic
+            ]
+
+            # Sample hard negatives (same topic)
+            if len(same_topic_posts) >= num_hard_negs and num_hard_negs > 0:
+                hard_neg_ids = self.rng.choice(
+                    same_topic_posts, size=num_hard_negs, replace=False
+                ).tolist()
+            else:
+                hard_neg_ids = same_topic_posts[:num_hard_negs] if same_topic_posts else []
+
+            # Sample easy negatives (different topics)
+            remaining_negs = neg_ratio - len(hard_neg_ids)
+            if len(other_posts) >= remaining_negs:
+                easy_neg_ids = self.rng.choice(
+                    other_posts, size=remaining_negs, replace=False
+                ).tolist()
+            else:
+                # Fall back to any available posts
+                all_available = [p for p in self.dataset.all_post_ids
+                                if p not in user_engaged_posts and p != positive_post_id
+                                and p not in hard_neg_ids]
+                if len(all_available) >= remaining_negs:
+                    easy_neg_ids = self.rng.choice(
+                        all_available, size=remaining_negs, replace=False
+                    ).tolist()
+                else:
+                    continue  # Skip if not enough negatives
+
+            negative_post_ids = hard_neg_ids + easy_neg_ids
+
+            if len(negative_post_ids) < neg_ratio:
                 continue
-
-            negative_post_ids = self.rng.choice(
-                candidate_pool, size=neg_ratio, replace=False
-            ).tolist()
 
             # Candidates: positive first, then negatives
             candidate_ids = [positive_post_id] + negative_post_ids
             labels = [1.0] + [0.0] * neg_ratio
 
-            # Extract action labels from engagement
-            action_labels = []
-            for action_name in action_names:
-                # Convert to the format in engagement.actions
-                short_name = action_name.replace("_score", "")
-                action_labels.append(eng.actions.get(short_name, 0.0))
+            # Use ground truth probabilities as soft labels based on (archetype, topic)
+            # This helps the model learn archetype-specific action rates
+            gt_probs = get_engagement_probs(user.archetype, positive_topic)
+            action_labels = gt_probs.to_array()[:18]  # First 18 actions
 
             batch, _ = self.create_batch_for_user(
                 user_id, candidate_ids, num_candidates_override=len(candidate_ids)
@@ -578,6 +668,8 @@ class SyntheticTwitterPhoenixAdapter:
             batches.append(batch)
             all_labels.append(labels)
             all_action_labels.append(action_labels)
+            all_archetype_labels.append(archetype_idx)
+            valid_indices.append(idx)
 
         if not batches:
             raise ValueError("Could not create any valid training samples")
@@ -586,8 +678,11 @@ class SyntheticTwitterPhoenixAdapter:
         combined_batch = self._stack_batches(batches)
         labels_array = np.array(all_labels, dtype=np.float32)
         action_labels_array = np.array(all_action_labels, dtype=np.float32)
+        archetype_labels_array = np.array(all_archetype_labels, dtype=np.int32)
+        sample_indices_array = np.array(valid_indices, dtype=np.int32)
 
-        return combined_batch, self.get_embedding_params(), labels_array, action_labels_array
+        return (combined_batch, self.get_embedding_params(), labels_array,
+                action_labels_array, archetype_labels_array, sample_indices_array)
 
     def _stack_batches(self, batches: List[RecsysBatch]) -> RecsysBatch:
         """Stack multiple single-sample batches into one.
@@ -608,6 +703,276 @@ class SyntheticTwitterPhoenixAdapter:
             candidate_author_hashes=np.concatenate([b.candidate_author_hashes for b in batches], axis=0),
             candidate_product_surface=np.concatenate([b.candidate_product_surface for b in batches], axis=0),
         )
+
+    def get_block_aware_batch(
+        self,
+        batch_size: int = 16,
+        synthetic_ratio: float = 0.5,
+    ) -> Optional[Tuple[RecsysBatch, EmbeddingParams, np.ndarray]]:
+        """Get training batch for block-aware contrastive learning.
+
+        For generalizable block semantics, we create two types of pairs:
+        1. Actual blocks: Users who blocked authors, testing on those authors
+        2. Synthetic blocks: Random users, with injected block for random author
+
+        This teaches the model that block action → author should score lower,
+        not just memorize specific (user, author) pairs.
+
+        Args:
+            batch_size: Number of samples
+            synthetic_ratio: Fraction of batch that should be synthetic blocks
+
+        Returns:
+            Tuple of (batch, embedding_params, block_labels) or None if no data
+        """
+        if self.train_engagements is None:
+            raise ValueError("Must call set_splits() before get_block_aware_batch()")
+
+        batches = []
+        block_labels = []
+
+        # Calculate split
+        num_synthetic = int(batch_size * synthetic_ratio)
+        num_actual = batch_size - num_synthetic
+
+        # === Part 1: Actual block pairs ===
+        # Find users who have blocked someone
+        users_with_blocks = []
+        user_blocked_authors = {}
+
+        for eng in self.train_engagements:
+            if eng.actions.get("block_author_score", 0) > 0:
+                user_id = eng.user_id
+                post = self.dataset.get_post(eng.post_id)
+                if post:
+                    author_id = post.author_id
+                    if user_id not in user_blocked_authors:
+                        user_blocked_authors[user_id] = set()
+                        users_with_blocks.append(user_id)
+                    user_blocked_authors[user_id].add(author_id)
+
+        if users_with_blocks and num_actual > 0:
+            sampled_users = self.rng.choice(
+                users_with_blocks,
+                size=min(num_actual, len(users_with_blocks)),
+                replace=True,
+            )
+
+            for user_id in sampled_users:
+                blocked_authors = user_blocked_authors[user_id]
+
+                blocked_posts = []
+                for author_id in blocked_authors:
+                    blocked_posts.extend(self.dataset.get_posts_by_author(author_id))
+
+                if not blocked_posts:
+                    continue
+
+                blocked_post = self.rng.choice(blocked_posts)
+
+                non_blocked_posts = [
+                    p for p in self.dataset.posts
+                    if p.author_id not in blocked_authors
+                ]
+
+                if not non_blocked_posts:
+                    continue
+
+                non_blocked_post = self.rng.choice(non_blocked_posts)
+
+                candidate_ids = [blocked_post.post_id, non_blocked_post.post_id]
+
+                batch, _ = self.create_batch_for_user(
+                    user_id, candidate_ids, num_candidates_override=2
+                )
+
+                history_actions = np.array(batch.history_actions)
+                history_author_hashes = np.array(batch.history_author_hashes)
+
+                history_actions[0, 0, :] = 0
+                history_actions[0, 0, 15] = 1.0
+
+                blocked_author_id = blocked_post.author_id
+                for k in range(history_author_hashes.shape[2]):
+                    history_author_hashes[0, 0, k] = blocked_author_id
+
+                batch = RecsysBatch(
+                    user_hashes=batch.user_hashes,
+                    history_post_hashes=batch.history_post_hashes,
+                    history_author_hashes=history_author_hashes,
+                    history_actions=history_actions,
+                    history_product_surface=batch.history_product_surface,
+                    candidate_post_hashes=batch.candidate_post_hashes,
+                    candidate_author_hashes=batch.candidate_author_hashes,
+                    candidate_product_surface=batch.candidate_product_surface,
+                )
+
+                batches.append(batch)
+                block_labels.append([1.0, 0.0])
+
+        # === Part 2: Synthetic block pairs ===
+        # Random user + random author, inject block action
+        # This teaches generalization: block = lower score regardless of user identity
+        all_users = [u.user_id for u in self.dataset.users]
+        all_authors = [a.author_id for a in self.dataset.authors]
+
+        for _ in range(num_synthetic):
+            user_id = int(self.rng.choice(all_users))
+            blocked_author_id = int(self.rng.choice(all_authors))
+
+            blocked_posts = self.dataset.get_posts_by_author(blocked_author_id)
+            if not blocked_posts:
+                continue
+
+            blocked_post = self.rng.choice(blocked_posts)
+
+            non_blocked_posts = [
+                p for p in self.dataset.posts
+                if p.author_id != blocked_author_id
+            ]
+            non_blocked_post = self.rng.choice(non_blocked_posts)
+
+            candidate_ids = [blocked_post.post_id, non_blocked_post.post_id]
+
+            batch, _ = self.create_batch_for_user(
+                user_id, candidate_ids, num_candidates_override=2
+            )
+
+            history_actions = np.array(batch.history_actions)
+            history_author_hashes = np.array(batch.history_author_hashes)
+
+            history_actions[0, 0, :] = 0
+            history_actions[0, 0, 15] = 1.0
+
+            for k in range(history_author_hashes.shape[2]):
+                history_author_hashes[0, 0, k] = blocked_author_id
+
+            batch = RecsysBatch(
+                user_hashes=batch.user_hashes,
+                history_post_hashes=batch.history_post_hashes,
+                history_author_hashes=history_author_hashes,
+                history_actions=history_actions,
+                history_product_surface=batch.history_product_surface,
+                candidate_post_hashes=batch.candidate_post_hashes,
+                candidate_author_hashes=batch.candidate_author_hashes,
+                candidate_product_surface=batch.candidate_product_surface,
+            )
+
+            batches.append(batch)
+            block_labels.append([1.0, 0.0])
+
+        if not batches:
+            return None
+
+        combined_batch = self._stack_batches(batches)
+        block_labels_array = np.array(block_labels, dtype=np.float32)
+
+        return combined_batch, self.get_embedding_params(), block_labels_array
+
+    def get_history_contrastive_batch(
+        self,
+        batch_size: int = 16,
+    ) -> Optional[Tuple[RecsysBatch, RecsysBatch, EmbeddingParams]]:
+        """Get batch for history-topic contrastive learning.
+
+        Creates pairs where:
+        - Same candidate post (from a specific topic)
+        - Matching history: from user who engages with that topic
+        - Mismatched history: from user who engages with different topic
+
+        Train: score(post | matching_history) > score(post | mismatched_history)
+
+        This teaches the transformer to use history content to influence scores.
+
+        Returns:
+            Tuple of (matching_batch, mismatched_batch, embedding_params) or None
+            Both batches have same candidates but different histories.
+        """
+        if self.train_engagements is None:
+            raise ValueError("Must call set_splits() before get_history_contrastive_batch()")
+
+        # Define archetype -> preferred topic mapping
+        archetype_topic_map = {
+            UserArchetype.SPORTS_FAN: ContentTopic.SPORTS,
+            UserArchetype.TECH_BRO: ContentTopic.TECH,
+            UserArchetype.POLITICAL_L: ContentTopic.POLITICS_L,
+            UserArchetype.POLITICAL_R: ContentTopic.POLITICS_R,
+        }
+
+        # Reverse: topic -> archetype that prefers it
+        topic_archetype_map = {v: k for k, v in archetype_topic_map.items()}
+
+        # Get users by archetype for quick lookup
+        users_by_archetype = {
+            arch: self.dataset.get_users_by_archetype(arch)
+            for arch in archetype_topic_map.keys()
+        }
+
+        matching_batches = []
+        mismatched_batches = []
+
+        # Topics we can create contrastive pairs for
+        contrastive_topics = list(topic_archetype_map.keys())
+
+        for _ in range(batch_size):
+            # Pick a random topic that has a preferred archetype
+            topic = contrastive_topics[int(self.rng.integers(0, len(contrastive_topics)))]
+            preferred_archetype = topic_archetype_map[topic]
+
+            # Get a post from this topic
+            topic_posts = self.dataset.get_posts_by_topic(topic)
+            if not topic_posts:
+                continue
+            post = topic_posts[int(self.rng.integers(0, len(topic_posts)))]
+
+            # Get a user who prefers this topic (matching)
+            matching_users = users_by_archetype[preferred_archetype]
+            if not matching_users:
+                continue
+            matching_user = matching_users[int(self.rng.integers(0, len(matching_users)))]
+
+            # Get a user who prefers a DIFFERENT topic (mismatched)
+            other_archetypes = [a for a in archetype_topic_map.keys() if a != preferred_archetype]
+            other_archetype = other_archetypes[int(self.rng.integers(0, len(other_archetypes)))]
+            mismatched_users = users_by_archetype[other_archetype]
+            if not mismatched_users:
+                continue
+            mismatched_user = mismatched_users[int(self.rng.integers(0, len(mismatched_users)))]
+
+            # Create batch with MATCHING user's history
+            # Use a neutral user_id (or matching user) - the key is the history
+            matching_batch, _ = self.create_batch_for_user(
+                matching_user.user_id, [post.post_id], num_candidates_override=1
+            )
+
+            # Create batch with MISMATCHED user's history but same candidate
+            mismatched_batch_raw, _ = self.create_batch_for_user(
+                mismatched_user.user_id, [post.post_id], num_candidates_override=1
+            )
+
+            # For fair comparison, use same user embedding but swap histories
+            # This isolates the effect of history content
+            mismatched_batch = RecsysBatch(
+                user_hashes=matching_batch.user_hashes,  # Same user identity
+                history_post_hashes=mismatched_batch_raw.history_post_hashes,  # Different history
+                history_author_hashes=mismatched_batch_raw.history_author_hashes,
+                history_actions=mismatched_batch_raw.history_actions,
+                history_product_surface=mismatched_batch_raw.history_product_surface,
+                candidate_post_hashes=matching_batch.candidate_post_hashes,  # Same candidate
+                candidate_author_hashes=matching_batch.candidate_author_hashes,
+                candidate_product_surface=matching_batch.candidate_product_surface,
+            )
+
+            matching_batches.append(matching_batch)
+            mismatched_batches.append(mismatched_batch)
+
+        if not matching_batches:
+            return None
+
+        combined_matching = self._stack_batches(matching_batches)
+        combined_mismatched = self._stack_batches(mismatched_batches)
+
+        return combined_matching, combined_mismatched, self.get_embedding_params()
 
     def get_validation_samples(
         self,

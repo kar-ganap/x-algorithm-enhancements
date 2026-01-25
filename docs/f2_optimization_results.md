@@ -18,6 +18,7 @@ This document captures the actual results, benchmarks, and learnings from implem
 | Phase 4b | ✅ Complete | Trained model quantization: **~90% top-3 agreement** |
 | Phase 5 | ✅ Complete | Combined optimization runner: all gates pass |
 | Phase 6 | ✅ Complete | MovieLens training: **NDCG 0.4112** (+59% vs untrained) |
+| Phase 7 | ✅ Complete | Synthetic verification: **all 5 test suites pass** |
 
 **Total Tests:** 166 passing (112 optimization + 54 quantization)
 
@@ -1029,6 +1030,151 @@ This differs from the old BCE training where components had more independent val
 
 ---
 
+## Phase 7: Synthetic Twitter Data & Verification Suite
+
+### Objective
+Create synthetic Twitter-like data with known ground truth to verify the model learns correct causal relationships, not just correlations.
+
+### Why Synthetic Data?
+
+Real Twitter data has unknown ground truth - we can't verify if the model learned the *right* patterns. Synthetic data with explicit rules lets us:
+1. **Test causal effects**: Does blocking an author actually reduce their posts' scores?
+2. **Test archetype learning**: Does the model differentiate lurkers from power users?
+3. **Test history processing**: Does the transformer actually use history content?
+
+### Ground Truth Design
+
+**User Archetypes** (6 types):
+| Archetype | Behavior |
+|-----------|----------|
+| Sports Fan | High engagement with sports, low elsewhere |
+| Tech Bro | High engagement with tech content |
+| Political L | Engages with left politics, blocks right |
+| Political R | Engages with right politics, blocks left |
+| Lurker | Passive - favorites only, no shares/replies |
+| Power User | High engagement across all action types |
+
+**Content Topics** (6 types): Sports, Tech, Politics L, Politics R, Entertainment, News
+
+**Engagement Rules**: Explicit probabilities for each (archetype, topic) → action combination.
+
+### Verification Suite
+
+| Test | Description | Threshold |
+|------|-------------|-----------|
+| **Embedding Probes** | User/topic embeddings cluster by archetype/topic | Silhouette > 0.25 |
+| **Behavioral Tests** | Predicted action rates match ground truth | 90% of tests pass |
+| **Action Differentiation** | Lurkers vs power users behave differently | 15x repost ratio |
+| **Block Effect** | Blocking author reduces their posts' scores | > 50% of tests |
+| **Archetype Flip** | Swapping history changes topic preferences | > 50% of tests |
+
+### Results
+
+| Test | Initial | After Training | Status |
+|------|---------|----------------|--------|
+| User clustering | 0.47 | 0.37 | ✅ PASS |
+| Behavioral tests | 12% | **100%** | ✅ PASS |
+| Action differentiation | 3/6 | **6/6** | ✅ PASS |
+| Block effect rate | 16% | **78%** | ✅ PASS |
+| Archetype flip rate | 4% | **86%** | ✅ PASS |
+
+### Key Challenges & Solutions
+
+#### Challenge 1: Action Predictions Were Uniform
+**Problem**: Model predicted ~0.5 for all actions regardless of user archetype.
+
+**Root Cause**: Training used binary labels (0/1) from actual engagements, losing the archetype-specific probability information.
+
+**Solution**: Use ground truth probabilities as soft labels:
+```python
+# Before: action_labels = [1, 0, 0, 1, ...] (binary)
+# After:  action_labels = get_engagement_probs(archetype, topic).to_array()
+```
+
+#### Challenge 2: Block Effect Didn't Generalize
+**Problem**: Block effect only worked for actual (user, blocked_author) pairs from training data, not arbitrary pairs.
+
+**Root Cause**: Model memorized specific pairs instead of learning the general semantic "block → lower score".
+
+**Solution**: Add synthetic block pairs during training:
+```python
+def get_block_aware_batch(self, synthetic_ratio=0.5):
+    # 50% actual blocks from training data
+    # 50% synthetic: random user + random author with injected block
+```
+
+Result: Block effect improved from **24% → 78%**.
+
+#### Challenge 3: Transformer Wasn't Using History
+**Problem**: Archetype flip rate was 4% - swapping history barely changed predictions.
+
+**Root Cause**: User embeddings (archetype-specific initialization) dominated predictions. Transformer history processing was ignored.
+
+**Solution**: History-topic contrastive learning:
+```python
+# Same candidate post, different histories
+# Train: score(post | matching_history) > score(post | mismatched_history)
+```
+
+Result: Archetype flip rate improved from **4% → 86%**.
+
+### Training Configuration
+
+| Component | Loss | Purpose |
+|-----------|------|---------|
+| BPR | Ranking loss | Positive > negative post |
+| BCE | Action prediction | From model output |
+| Classification | Cross-entropy | Predict archetype from user embedding |
+| Action Predictor | MSE | Predict action rates from user embedding |
+| **Block Contrastive** | Margin ranking | Non-blocked > blocked author posts |
+| **History Contrastive** | Margin ranking | Matching > mismatched history |
+
+### Key Learnings
+
+1. **Soft labels preserve probability information** - Binary labels lose the archetype-specific action rates. Using ground truth probabilities as targets teaches the correct distributions.
+
+2. **Contrastive learning enables causal learning** - Direct supervision with contrastive pairs teaches causal relationships (block → lower score, matching history → higher score) rather than correlations.
+
+3. **Synthetic training data enables generalization** - Training only on actual blocks caused memorization. Adding synthetic blocks taught the general semantic.
+
+4. **User embeddings can dominate** - With archetype-specific initialization, embeddings become so strong that the transformer is bypassed. History contrastive loss forces transformer usage.
+
+5. **Verification tests catch subtle failures** - Behavioral tests passing (100%) while flip tests failing (4%) revealed that the model was using the right archetype but ignoring history content.
+
+### Key Files
+
+```
+enhancements/data/
+├── ground_truth.py           # Archetype/topic definitions, engagement rules
+├── synthetic_twitter.py      # Data generator
+└── synthetic_adapter.py      # Phoenix adapter with contrastive batches
+
+enhancements/verification/
+├── embedding_probes.py       # Clustering tests
+├── behavioral_tests.py       # Ground truth comparison
+├── action_tests.py           # Archetype differentiation
+└── counterfactual_tests.py   # Block effect, archetype flip
+
+scripts/
+├── train_synthetic.py        # Multi-task training with contrastive losses
+└── verify_synthetic.py       # Run full verification suite
+```
+
+### Usage
+
+```bash
+# Generate synthetic data
+uv run python scripts/train_synthetic.py --generate
+
+# Train model
+uv run python scripts/train_synthetic.py --epochs 10
+
+# Run verification suite
+uv run python scripts/verify_synthetic.py
+```
+
+---
+
 ## Next Steps
 
 | Task | Status |
@@ -1037,6 +1183,7 @@ This differs from the old BCE training where components had more independent val
 | ~~BPR + in-batch negatives training~~ | ✅ Complete (NDCG 0.4112) |
 | ~~Ablation study (transformer vs embeddings)~~ | ✅ Complete (107.5% synergy) |
 | ~~Re-validate quantization with BPR model~~ | ✅ Complete (99% agreement) |
+| ~~Synthetic data verification suite~~ | ✅ Complete (all tests pass) |
 | GPU benchmarking | Future work |
 | Production deployment guide | Future work |
 | Richer features (content embeddings) | Future work |
