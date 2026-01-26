@@ -364,41 +364,260 @@ graph TB
 
 ## Feature 4 (F4): RL Reward Modeling
 
+### Vision: Beyond Simple Reward Weights
+
+F4 goes beyond basic RLHF reward learning to address fundamental limitations:
+
+1. **Pluralistic Values**: Different users have different reward functions (sports fans vs political users)
+2. **Causal Verification**: Rewards should capture causation, not just correlation
+3. **Multi-Stakeholder**: Balance user engagement, platform health, and societal impact
+
+### Risk-Tiered Approach
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Tier 3: Game-Theoretic Analysis (if time permits)             │
+│    - Equilibrium analysis                                       │
+│    - Mechanism design                                           │
+├─────────────────────────────────────────────────────────────────┤
+│  Tier 2: Multi-Stakeholder Framework                            │
+│    - D2: Stakeholder utility functions                          │
+│    - D1: Pareto frontier visualization                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Tier 1: Pluralistic Causal Rewards (Core Contribution)         │
+│    - B: Causal verification (intervention tests)                │
+│    - A: Pluralistic rewards (K value systems)                   │
+├─────────────────────────────────────────────────────────────────┤
+│  Foundation: Basic Reward Learning                              │
+│    - Context-dependent weights (per-archetype)                  │
+│    - Bradley-Terry preference learning                          │
+│    - Single reward function baseline                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### F2 → F4 Integration
+
+F4 leverages the full power of F2:
+
+| F2 Component | F4 Use |
+|--------------|--------|
+| **Synthetic Twitter Data** | Ground truth archetypes = true pluralistic structure |
+| **Ground Truth Probabilities** | True reward weights per archetype for verification |
+| **Verification Suite** | Extend to test reward model properties |
+| **Trained Phoenix Model** | Base model outputting P(actions) |
+| **KV-Cache** | 3-4x speedup for reward training (same user, many candidates) |
+| **JIT Compilation** | Fast reward computation in training loop |
+
 ### Architecture
 
 ```mermaid
 graph TB
-    subgraph phoenix["Phoenix (Existing)"]
-        runner["RecsysInferenceRunner"]
-        output["RankingOutput<br/>19 action probabilities"]
-        runner --> output
+    subgraph f2["F2: Foundation"]
+        phoenix["Phoenix Model<br/>(trained on synthetic)"]
+        synthetic["Synthetic Data<br/>(6 archetypes, ground truth)"]
+        optim["Optimized Runner<br/>(JIT + KV-Cache)"]
+        verify["Verification Suite"]
     end
 
-    subgraph reward_model["Reward Model (Our Enhancement)"]
-        wrapper["PhoenixRewardModel"]
-        weights["RewardWeights<br/>[w₁, w₂, ..., w₁₉]"]
-
-        subgraph computation["Reward Computation"]
-            probs["P(action_i) for each candidate"]
-            combine["R = Σ wᵢ × P(action_i)"]
-            probs --> combine
-        end
-
-        wrapper --> weights
-        weights --> computation
+    subgraph f4_foundation["F4: Foundation"]
+        reward_base["Basic Reward Model<br/>R = w · P(actions)"]
+        context["Context-Dependent<br/>R = w[archetype] · P(actions)"]
     end
 
-    subgraph training["Preference Training"]
-        pairs["Preference Pairs<br/>(preferred, rejected)"]
-        loss["Bradley-Terry Loss<br/>-log σ(R_pref - R_rej)"]
-        optim["Optimizer<br/>(Adam)"]
-
-        pairs --> loss
-        loss --> optim
-        optim -->|"update"| weights
+    subgraph f4_core["F4: Core (Pluralistic + Causal)"]
+        plural["Pluralistic Rewards<br/>K value systems"]
+        causal["Causal Verification<br/>Intervention tests"]
     end
 
-    output --> wrapper
+    subgraph f4_advanced["F4: Advanced (Multi-Stakeholder)"]
+        multi_obj["Multi-Objective<br/>Pareto frontier"]
+        stakeholder["Stakeholder Utilities<br/>User/Platform/Society"]
+        game["Game Theory<br/>(optional)"]
+    end
+
+    phoenix --> reward_base
+    synthetic --> plural
+    optim --> reward_base
+    verify --> causal
+
+    reward_base --> context
+    context --> plural
+    plural --> causal
+    causal --> multi_obj
+    multi_obj --> stakeholder
+    stakeholder --> game
+```
+
+### Pluralistic Reward Model
+
+```mermaid
+graph LR
+    subgraph input["Input"]
+        user["User"]
+        post["Candidate Post"]
+    end
+
+    subgraph phoenix["Phoenix"]
+        probs["P(actions)<br/>[19 values]"]
+    end
+
+    subgraph pluralistic["Pluralistic Reward"]
+        mixture["Mixture Weights<br/>π(user) → K systems"]
+        weights["K Reward Functions<br/>w₁, w₂, ..., wₖ"]
+        combine["R = Σₖ πₖ(user) × wₖ · P(actions)"]
+    end
+
+    user --> mixture
+    post --> phoenix
+    phoenix --> probs
+    mixture --> combine
+    weights --> combine
+    probs --> combine
+```
+
+### Causal Verification
+
+```mermaid
+sequenceDiagram
+    participant Test as Causal Test
+    participant RM as Reward Model
+    participant Data as Synthetic Data
+
+    Note over Test,Data: Block Intervention Test
+    Test->>Data: Get (user, author) pair
+    Test->>RM: score_before = R(user, author_post)
+    Test->>Data: Inject synthetic block
+    Test->>RM: score_after = R(user_with_block, author_post)
+    Test->>Test: Assert score_after < score_before
+
+    Note over Test,Data: History Intervention Test
+    Test->>Data: Get post with known topic
+    Test->>RM: score_match = R(matching_history, post)
+    Test->>RM: score_mismatch = R(mismatched_history, post)
+    Test->>Test: Assert score_match > score_mismatch
+```
+
+### Multi-Stakeholder Analysis
+
+```mermaid
+graph TB
+    subgraph objectives["Objectives"]
+        user_obj["User Utility<br/>engagement - discomfort"]
+        platform_obj["Platform Utility<br/>total engagement + retention"]
+        society_obj["Society Utility<br/>-polarization + diversity"]
+    end
+
+    subgraph analysis["Analysis"]
+        pareto["Pareto Frontier<br/>Engagement vs Polarization"]
+        impact["Stakeholder Impact<br/>Who wins/loses?"]
+        tradeoff["Quantified Tradeoffs<br/>X% engagement = Y% polarization"]
+    end
+
+    subgraph output["Output"]
+        viz["Tradeoff Visualization"]
+        policy["Policy Recommendations"]
+    end
+
+    objectives --> analysis
+    analysis --> output
+```
+
+### Testing Strategy
+
+```mermaid
+graph TB
+    subgraph tests["Test Categories"]
+        unit["Unit Tests"]
+        struct["Structural Tests"]
+        causal["Causal Tests"]
+        stake["Stakeholder Tests"]
+    end
+
+    subgraph unit_detail["Unit Tests"]
+        u1["test_reward_computation"]
+        u2["test_loss_computes"]
+        u3["test_gradients_finite"]
+    end
+
+    subgraph struct_detail["Structural Tests"]
+        s1["test_pluralistic_recovery<br/>(K clusters match archetypes)"]
+        s2["test_weight_correlation<br/>(learned ≈ ground truth)"]
+    end
+
+    subgraph causal_detail["Causal Tests"]
+        c1["test_block_reduces_reward"]
+        c2["test_history_affects_reward"]
+    end
+
+    subgraph stake_detail["Stakeholder Tests"]
+        st1["test_pareto_frontier"]
+        st2["test_utility_tradeoffs"]
+    end
+
+    tests --> unit_detail
+    tests --> struct_detail
+    tests --> causal_detail
+    tests --> stake_detail
+```
+
+### Output & Visualization
+
+**Pluralistic Weights Recovery:**
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║           PLURALISTIC REWARD RECOVERY                             ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  Value System    │ Correlation │ Key Weights                      ║
+╠══════════════════╪═════════════╪══════════════════════════════════╣
+║  Sports Fan      │    0.91     │ +repost(sports), -politics       ║
+║  Political L     │    0.88     │ +engage(L), -expose(R), +block(R)║
+║  Political R     │    0.87     │ +engage(R), -expose(L), +block(L)║
+║  Tech Enthusiast │    0.92     │ +share(tech), +follow(tech)      ║
+║  Lurker          │    0.94     │ +favorite, -repost, -reply       ║
+║  Power User      │    0.89     │ +repost, +reply, +quote          ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Average Recovery: 0.90                                           ║
+║  Causal Tests Passed: 78% (block), 86% (history)                 ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**Multi-Stakeholder Tradeoffs:**
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║           ENGAGEMENT vs POLARIZATION TRADEOFF                     ║
+╠═══════════════════════════════════════════════════════════════════╣
+║                                                                   ║
+║  Engagement                                                       ║
+║      ↑                                                            ║
+║  100%│ ●                                                          ║
+║      │   ●  ← Max engagement (high polarization)                 ║
+║   90%│     ●                                                      ║
+║      │       ● ← Pareto frontier                                 ║
+║   80%│         ●                                                  ║
+║      │           ●                                                ║
+║   70%│             ● ← Balanced                                  ║
+║      │               ●                                            ║
+║   60%│                 ● ← Min polarization                      ║
+║      └──────────────────────────────────→                        ║
+║        High ←── Polarization ──→ Low                             ║
+║                                                                   ║
+║  Finding: 20% polarization reduction costs only 8% engagement    ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+**Stakeholder Impact Analysis:**
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║           STAKEHOLDER IMPACT BY POLICY                            ║
+╠═══════════════════════════════════════════════════════════════════╣
+║                    │ User    │ Platform │ Society │               ║
+║  Policy            │ Utility │ Utility  │ Utility │ Notes         ║
+╠════════════════════╪═════════╪══════════╪═════════╪═══════════════╣
+║  Max Engagement    │  +12%   │   +18%   │  -34%   │ Status quo    ║
+║  Max User Utility  │  +15%   │   +10%   │  -20%   │ Better balance║
+║  Max Society       │   -8%   │   -15%   │  +45%   │ Costly        ║
+║  Balanced          │   +8%   │   +12%   │  +15%   │ ← Sweet spot  ║
+╚═══════════════════════════════════════════════════════════════════╝
 ```
 
 ### Reward Model Data Flow

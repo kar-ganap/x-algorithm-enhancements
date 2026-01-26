@@ -32,13 +32,21 @@ x-algorithm-enhancements/
 │   │   ├── quantization.py
 │   │   └── optimized_runner.py
 │   │
-│   ├── reward_modeling/              # F4: RL Reward Modeling
+│   ├── reward_modeling/              # F4: RL Reward Modeling (Pluralistic + Multi-Stakeholder)
 │   │   ├── __init__.py
-│   │   ├── reward_model.py
-│   │   ├── weights.py
-│   │   ├── preference_data.py
-│   │   ├── training.py
-│   │   └── evaluation.py
+│   │   ├── reward_model.py           # Basic + Contextual reward models
+│   │   ├── pluralistic.py            # Pluralistic (mixture) reward model
+│   │   ├── weights.py                # RewardWeights dataclass
+│   │   ├── preference_data.py        # Preference pair handling
+│   │   ├── training.py               # Training loops
+│   │   ├── structural_recovery.py    # Ground truth verification
+│   │   ├── causal_verification.py    # Intervention tests
+│   │   ├── objectives.py             # Multi-stakeholder objectives
+│   │   ├── pareto.py                 # Pareto frontier computation
+│   │   ├── stakeholders.py           # Stakeholder definitions
+│   │   ├── policy_analysis.py        # Policy impact analysis
+│   │   ├── game_theory.py            # (Optional) Game-theoretic models
+│   │   └── visualization.py          # Tradeoff visualizations
 │   │
 │   └── multimodal/                   # F1: Multimodal Retrieval
 │       ├── __init__.py
@@ -57,9 +65,13 @@ x-algorithm-enhancements/
 │   │   ├── test_attention.py
 │   │   └── test_quantization.py
 │   ├── test_reward_modeling/
-│   │   ├── test_reward_model.py
-│   │   ├── test_training.py
-│   │   └── test_evaluation.py
+│   │   ├── test_reward_model.py      # Basic + contextual reward tests
+│   │   ├── test_pluralistic.py       # Pluralistic model tests
+│   │   ├── test_training.py          # Training loop tests
+│   │   ├── test_structural.py        # Structural recovery tests
+│   │   ├── test_causal.py            # Causal verification tests
+│   │   ├── test_multi_objective.py   # Pareto frontier tests
+│   │   └── test_stakeholders.py      # Stakeholder analysis tests
 │   └── test_multimodal/
 │       ├── test_clip_encoder.py
 │       ├── test_towers.py
@@ -935,196 +947,1087 @@ def test_archetype_flip():
 
 # F4: RL Reward Modeling - Testable Phases
 
-## Phase 0: Reward Model Wrapper (Gate: Can compute rewards?)
+## Overview: Risk-Tiered Approach
+
+F4 builds progressively from basic reward learning to novel multi-stakeholder analysis:
+
+```
+Day 13+:   Phase 6 (Game Theory) ─────────────── Tier 3: Novel (optional)
+Day 11-12: Phase 5 (Stakeholder Utilities) ──── Tier 2: Multi-Stakeholder
+Day 9-10:  Phase 4 (Multi-Objective) ─────────── Tier 2: Multi-Stakeholder
+Day 7-8:   Phase 3 (Causal Verification) ─────── Tier 1: Core
+Day 5-6:   Phase 2 (Pluralistic Rewards) ─────── Tier 1: Core
+Day 3-4:   Phase 1 (Context-Dependent) ───────── Foundation: Ambitious
+Day 1-2:   Phase 0 (Basic Reward) ────────────── Foundation: Table Stakes
+```
+
+**Key Principle:** Each phase is a valid exit point with publishable deliverables.
+
+### F2 Integration
+
+F4 leverages F2 components throughout:
+
+| F2 Component | F4 Phase | How Used |
+|--------------|----------|----------|
+| Trained Phoenix | All | Base model for action probabilities |
+| Synthetic Data | Phase 2+ | Ground truth archetypes |
+| Ground Truth | Phase 2+ | True reward functions for verification |
+| Verification Suite | Phase 3 | Extended for causal reward tests |
+| KV-Cache | All | 3-4x speedup in reward training |
+| JIT | All | Fast reward computation |
+
+---
+
+## Phase 0: Basic Reward Model (Gate: Can compute rewards?)
 
 ### Objective
-Create clean reward model interface around Phoenix predictions.
+Create reward model that computes scalar rewards from Phoenix action probabilities.
 
 ### Deliverables
 ```
 enhancements/reward_modeling/
 ├── __init__.py
-├── reward_model.py
-└── weights.py
+├── reward_model.py          # PhoenixRewardModel
+├── weights.py               # RewardWeights dataclass
+└── preference_data.py       # Preference pair handling
 
 tests/test_reward_modeling/
 └── test_reward_model.py
 ```
 
+### Implementation
+```python
+# enhancements/reward_modeling/reward_model.py
+
+from enhancements.optimization import OptimizedPhoenixRunner  # F2 integration
+
+@dataclass
+class RewardWeights:
+    """Learnable reward weights for 19 actions."""
+    weights: jnp.ndarray  # [19]
+
+    @classmethod
+    def default(cls) -> 'RewardWeights':
+        """Default weights: positive for engagement, negative for block/mute."""
+        w = jnp.array([
+            1.0,   # favorite
+            0.5,   # reply
+            0.8,   # repost
+            0.1,   # photo_expand
+            0.2,   # click
+            0.3,   # profile_click
+            0.1,   # vqv
+            0.6,   # share
+            0.4,   # share_via_dm
+            0.3,   # share_via_copy_link
+            0.1,   # dwell
+            0.7,   # quote
+            0.2,   # quoted_click
+            1.2,   # follow_author
+            -0.5,  # not_interested
+            -1.5,  # block_author
+            -1.0,  # mute_author
+            -2.0,  # report
+        ])
+        return cls(weights=w)
+
+class PhoenixRewardModel:
+    """Reward model wrapping Phoenix for RL training."""
+
+    def __init__(
+        self,
+        phoenix_runner: OptimizedPhoenixRunner,  # Use F2's optimized runner
+        weights: Optional[RewardWeights] = None,
+    ):
+        self.runner = phoenix_runner
+        self.weights = weights or RewardWeights.default()
+
+    def get_action_probs(self, batch, embeddings) -> jnp.ndarray:
+        """Get action probabilities from Phoenix. Shape: [B, C, 19]"""
+        output = self.runner.rank(batch, embeddings)
+        return output.scores  # Already probabilities from sigmoid
+
+    def compute_reward(self, batch, embeddings) -> jnp.ndarray:
+        """Compute scalar reward per candidate. Shape: [B, C]"""
+        probs = self.get_action_probs(batch, embeddings)
+        # Weighted sum: R = w · P(actions)
+        rewards = jnp.einsum('bca,a->bc', probs, self.weights.weights)
+        return rewards
+```
+
 ### Tests
 ```python
+# tests/test_reward_modeling/test_reward_model.py
+
 def test_reward_model_initialization():
-    """Verify reward model initializes with Phoenix runner."""
-    reward_model = PhoenixRewardModel(phoenix_runner)
+    """Verify reward model initializes with optimized Phoenix runner."""
+    from enhancements.optimization import OptimizedPhoenixRunner
+
+    opt_runner = OptimizedPhoenixRunner(phoenix_runner, use_kv_cache=True)
+    reward_model = PhoenixRewardModel(opt_runner)
     assert reward_model.weights is not None
+    assert reward_model.weights.weights.shape == (19,)  # Changed from 18 to 19
 
 def test_get_action_probs_shape():
     """Verify action probabilities have correct shape."""
     probs = reward_model.get_action_probs(batch, embeddings)
-    assert probs.shape == (batch_size, num_candidates, num_actions)
+    assert probs.shape == (batch_size, num_candidates, 19)
+    assert jnp.all((probs >= 0) & (probs <= 1))  # Valid probabilities
 
 def test_compute_reward_shape():
     """Verify rewards have correct shape."""
     rewards = reward_model.compute_reward(batch, embeddings)
     assert rewards.shape == (batch_size, num_candidates)
 
-def test_reward_ordering_matches_weights():
-    """Verify higher weighted actions increase reward."""
-    # Create batch where one candidate has high P(like), another has high P(block)
-    # Verify the liker gets higher reward
-    ...
-```
+def test_reward_reflects_weights():
+    """Verify reward ordering matches weight signs."""
+    # High P(favorite) should give higher reward than high P(block)
+    probs_like = jnp.zeros((1, 2, 19)).at[0, 0, 0].set(0.9)   # High favorite
+    probs_block = jnp.zeros((1, 2, 19)).at[0, 1, 15].set(0.9)  # High block
 
-### Go/No-Go Gate
-| Criterion | Required |
-|-----------|----------|
-| Reward model initializes | ✅ |
-| Action probs correct shape | ✅ |
-| Rewards correct shape | ✅ |
-| Reward ordering sensible | ✅ |
-
----
-
-## Phase 1: Preference Data & Loss (Gate: Loss computes and decreases?)
-
-### Objective
-Implement preference data format and Bradley-Terry loss.
-
-### Deliverables
-```
-enhancements/reward_modeling/
-├── preference_data.py    # NEW
-└── training.py           # NEW (partial)
-```
-
-### Tests
-```python
-def test_preference_pair_creation():
-    """Verify preference pairs can be created."""
-    pairs = generate_synthetic_preferences(phoenix_runner, num_pairs=10)
-    assert len(pairs) == 10
-    assert all(p.preferred_idx != p.rejected_idx for p in pairs)
-
-def test_preference_loss_computes():
-    """Verify loss function runs without error."""
-    loss = preference_loss(weights, phoenix_runner, batch_of_pairs)
-    assert jnp.isfinite(loss)
-    assert loss > 0  # Cross-entropy loss should be positive
-
-def test_preference_loss_gradient():
-    """Verify loss has valid gradients."""
-    loss, grads = jax.value_and_grad(preference_loss)(weights, ...)
-    assert all(jnp.isfinite(g).all() for g in jax.tree_util.tree_leaves(grads))
-```
-
-### Go/No-Go Gate
-| Criterion | Required |
-|-----------|----------|
-| Preference pairs generate | ✅ |
-| Loss computes (finite) | ✅ |
-| Gradients are finite | ✅ |
-
----
-
-## Phase 2: Training Loop (Gate: Can recover known weights?)
-
-### Objective
-Implement training loop and validate with weight recovery experiment.
-
-### Deliverables
-```
-enhancements/reward_modeling/
-└── training.py           # COMPLETE
-```
-
-### Tests
-```python
-def test_training_loop_runs():
-    """Verify training loop completes without error."""
-    learned_weights, history = train_reward_weights(
-        phoenix_runner,
-        synthetic_preferences,
-        num_epochs=10
+    rewards = reward_model._compute_reward_from_probs(
+        jnp.concatenate([probs_like, probs_block], axis=1)
     )
-    assert len(history) > 0
+    assert rewards[0, 0] > rewards[0, 1]  # Like > Block
 
-def test_loss_decreases():
-    """Verify loss decreases during training."""
-    _, history = train_reward_weights(..., num_epochs=50)
-    assert history[-1] < history[0]  # Final loss < initial loss
-
-def test_weight_recovery():
-    """Verify we can recover known ground-truth weights."""
-    # Generate preferences using known weights
-    true_weights = RewardWeights.default()
-    preferences = generate_synthetic_preferences(phoenix_runner, true_weights, num_pairs=1000)
-
-    # Train from random initialization
-    init_weights = RewardWeights(jnp.zeros(num_actions))
-    learned_weights, _ = train_reward_weights(..., init_weights=init_weights)
-
-    # Check recovery (correlation, not exact match)
-    correlation = jnp.corrcoef(true_weights.weights, learned_weights.weights)[0, 1]
-    assert correlation > 0.8  # Strong correlation
+def test_kv_cache_speedup():
+    """Verify F2's KV-cache provides speedup in reward computation."""
+    # Same user, different candidates - should hit cache
+    t1 = time_fn(lambda: reward_model.compute_reward(batch1, emb1))  # Cache miss
+    t2 = time_fn(lambda: reward_model.compute_reward(batch2, emb2))  # Cache hit
+    assert t2 < t1 * 0.5  # At least 2x faster
 ```
 
 ### Go/No-Go Gate
-| Criterion | Required |
-|-----------|----------|
-| Training completes | ✅ |
-| Loss decreases | ✅ |
-| Weight recovery correlation > 0.8 | ✅ |
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Reward model initializes | ✅ | `test_reward_model_initialization` |
+| Action probs correct shape | ✅ | `test_get_action_probs_shape` |
+| Rewards correct shape | ✅ | `test_compute_reward_shape` |
+| Reward ordering sensible | ✅ | `test_reward_reflects_weights` |
+| KV-cache integration works | ✅ | `test_kv_cache_speedup` |
 
 ---
 
-## Phase 3: Evaluation (Gate: Preference accuracy > 70%?)
+## Phase 1: Context-Dependent Rewards (Gate: Per-archetype weights learned?)
 
 ### Objective
-Implement evaluation metrics and test on held-out data.
+Extend reward model to learn archetype-specific weights using F2's synthetic data.
 
 ### Deliverables
 ```
 enhancements/reward_modeling/
-└── evaluation.py         # NEW
+├── reward_model.py          # UPDATED: ContextualRewardModel
+├── training.py              # NEW: Training loop
+└── preference_data.py       # UPDATED: Load from synthetic data
+
+tests/test_reward_modeling/
+├── test_reward_model.py     # UPDATED
+└── test_training.py         # NEW
+```
+
+### Implementation
+```python
+# enhancements/reward_modeling/reward_model.py
+
+class ContextualRewardModel:
+    """Reward model with archetype-specific weights."""
+
+    def __init__(
+        self,
+        phoenix_runner: OptimizedPhoenixRunner,
+        num_archetypes: int = 6,
+        num_actions: int = 19,
+    ):
+        self.runner = phoenix_runner
+        self.num_archetypes = num_archetypes
+        # Weight matrix: [K, 19] - one weight vector per archetype
+        self.weights = jnp.zeros((num_archetypes, num_actions))
+
+    def compute_reward(
+        self,
+        batch,
+        embeddings,
+        archetype_ids: jnp.ndarray,  # [B] archetype index per user
+    ) -> jnp.ndarray:
+        """Compute reward using archetype-specific weights."""
+        probs = self.get_action_probs(batch, embeddings)  # [B, C, 19]
+
+        # Select weights for each user's archetype
+        user_weights = self.weights[archetype_ids]  # [B, 19]
+
+        # Compute reward: R = w[archetype] · P(actions)
+        rewards = jnp.einsum('bca,ba->bc', probs, user_weights)
+        return rewards
+
+
+# enhancements/reward_modeling/training.py
+
+from enhancements.data import SyntheticTwitterAdapter  # F2 integration
+
+def train_contextual_rewards(
+    reward_model: ContextualRewardModel,
+    adapter: SyntheticTwitterAdapter,
+    num_epochs: int = 50,
+    lr: float = 0.01,
+) -> Tuple[jnp.ndarray, List[float]]:
+    """Train archetype-specific reward weights."""
+
+    optimizer = optax.adam(lr)
+    opt_state = optimizer.init(reward_model.weights)
+
+    history = []
+    for epoch in range(num_epochs):
+        epoch_loss = 0
+        for batch_data in adapter.get_preference_batches():
+            batch, embeddings, archetype_ids, preferred, rejected = batch_data
+
+            loss, grads = jax.value_and_grad(preference_loss)(
+                reward_model.weights,
+                reward_model,
+                batch,
+                embeddings,
+                archetype_ids,
+                preferred,
+                rejected,
+            )
+
+            updates, opt_state = optimizer.update(grads, opt_state)
+            reward_model.weights = optax.apply_updates(reward_model.weights, updates)
+            epoch_loss += loss
+
+        history.append(epoch_loss)
+
+    return reward_model.weights, history
+```
+
+### Tests
+```python
+# tests/test_reward_modeling/test_training.py
+
+def test_contextual_reward_shape():
+    """Verify contextual rewards have correct shape."""
+    archetype_ids = jnp.array([0, 1, 2, 3])  # 4 users, different archetypes
+    rewards = contextual_model.compute_reward(batch, embeddings, archetype_ids)
+    assert rewards.shape == (4, num_candidates)
+
+def test_different_archetypes_different_rewards():
+    """Verify different archetypes produce different rewards for same content."""
+    sports_post_batch = create_sports_post_batch()
+
+    # Sports fan should reward sports content higher than political user
+    rewards_sports_fan = contextual_model.compute_reward(
+        sports_post_batch, emb, archetype_ids=jnp.array([0])  # Sports fan
+    )
+    rewards_political = contextual_model.compute_reward(
+        sports_post_batch, emb, archetype_ids=jnp.array([1])  # Political L
+    )
+
+    assert rewards_sports_fan[0, 0] > rewards_political[0, 0]
+
+def test_training_loss_decreases():
+    """Verify loss decreases during training."""
+    _, history = train_contextual_rewards(model, adapter, num_epochs=20)
+    assert history[-1] < history[0] * 0.5  # At least 50% reduction
+
+def test_archetype_weight_differentiation():
+    """Verify learned weights differ across archetypes."""
+    weights, _ = train_contextual_rewards(model, adapter, num_epochs=50)
+
+    # Weights should not be identical across archetypes
+    for i in range(6):
+        for j in range(i+1, 6):
+            assert not jnp.allclose(weights[i], weights[j])
+```
+
+### Go/No-Go Gate
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Contextual rewards compute | ✅ | `test_contextual_reward_shape` |
+| Archetypes produce different rewards | ✅ | `test_different_archetypes_different_rewards` |
+| Training loss decreases | ✅ | `test_training_loss_decreases` |
+| Weights differentiate | ✅ | `test_archetype_weight_differentiation` |
+
+---
+
+## Phase 2: Pluralistic Rewards (Gate: Structural recovery > 0.8?)
+
+### Objective
+Model rewards as mixture over K value systems, verify structural recovery against F2's ground truth.
+
+### Deliverables
+```
+enhancements/reward_modeling/
+├── pluralistic.py           # NEW: Mixture model
+├── structural_recovery.py   # NEW: Verification against ground truth
+└── training.py              # UPDATED
+
+tests/test_reward_modeling/
+├── test_pluralistic.py      # NEW
+└── test_structural.py       # NEW
+```
+
+### Implementation
+```python
+# enhancements/reward_modeling/pluralistic.py
+
+class PluralRewardModel:
+    """Pluralistic reward model with K latent value systems."""
+
+    def __init__(
+        self,
+        phoenix_runner: OptimizedPhoenixRunner,
+        num_value_systems: int = 6,
+        num_actions: int = 19,
+        embedding_dim: int = 64,
+    ):
+        self.runner = phoenix_runner
+        self.K = num_value_systems
+
+        # K reward functions (value systems)
+        self.reward_weights = jnp.zeros((num_value_systems, num_actions))
+
+        # Mixture weights predictor: user_embedding -> π(k)
+        self.mixture_mlp = hk.Sequential([
+            hk.Linear(embedding_dim),
+            jax.nn.relu,
+            hk.Linear(num_value_systems),
+            jax.nn.softmax,
+        ])
+
+    def compute_mixture_weights(self, user_embeddings: jnp.ndarray) -> jnp.ndarray:
+        """Predict mixture weights π(user) over K value systems. Shape: [B, K]"""
+        return self.mixture_mlp(user_embeddings)
+
+    def compute_reward(self, batch, embeddings) -> jnp.ndarray:
+        """Compute pluralistic reward as mixture over value systems."""
+        probs = self.get_action_probs(batch, embeddings)  # [B, C, 19]
+
+        # Get user embeddings and predict mixture
+        user_emb = embeddings.user_embeddings  # [B, D]
+        mixture = self.compute_mixture_weights(user_emb)  # [B, K]
+
+        # Reward for each value system
+        system_rewards = jnp.einsum('bca,ka->bck', probs, self.reward_weights)  # [B, C, K]
+
+        # Final reward: mixture over systems
+        rewards = jnp.einsum('bck,bk->bc', system_rewards, mixture)  # [B, C]
+        return rewards
+
+    def get_dominant_system(self, user_embeddings: jnp.ndarray) -> jnp.ndarray:
+        """Get dominant value system for each user. Shape: [B]"""
+        mixture = self.compute_mixture_weights(user_embeddings)
+        return jnp.argmax(mixture, axis=-1)
+
+
+# enhancements/reward_modeling/structural_recovery.py
+
+from enhancements.data.ground_truth import (
+    UserArchetype, get_engagement_probs, ENGAGEMENT_RULES
+)
+
+def compute_ground_truth_weights(archetype: UserArchetype) -> jnp.ndarray:
+    """Derive ground truth reward weights from F2's engagement rules."""
+    weights = jnp.zeros(19)
+
+    # Average over all topics for this archetype
+    for topic in ContentTopic:
+        probs = get_engagement_probs(archetype, topic)
+        action_array = jnp.array(probs.to_array())
+
+        # Weight by engagement value (positive) or disengagement (negative)
+        # Positive: favorite, repost, reply, follow, share, etc.
+        # Negative: block, mute, report, not_interested
+        weights = weights + action_array
+
+    return weights / len(ContentTopic)  # Average
+
+def measure_structural_recovery(
+    learned_model: PluralRewardModel,
+    adapter: SyntheticTwitterAdapter,
+) -> dict:
+    """Measure how well learned value systems match ground truth archetypes."""
+
+    results = {
+        'system_to_archetype': {},
+        'correlations': [],
+        'assignment_accuracy': 0.0,
+    }
+
+    # Get ground truth weights for each archetype
+    gt_weights = {
+        arch: compute_ground_truth_weights(arch)
+        for arch in UserArchetype
+    }
+
+    # Match learned systems to archetypes (Hungarian algorithm)
+    correlation_matrix = jnp.zeros((learned_model.K, len(UserArchetype)))
+    for k in range(learned_model.K):
+        for i, arch in enumerate(UserArchetype):
+            corr = jnp.corrcoef(
+                learned_model.reward_weights[k],
+                gt_weights[arch]
+            )[0, 1]
+            correlation_matrix = correlation_matrix.at[k, i].set(corr)
+
+    # Find best matching (greedy for simplicity)
+    matched = []
+    for k in range(learned_model.K):
+        best_arch_idx = jnp.argmax(correlation_matrix[k])
+        matched.append((k, list(UserArchetype)[best_arch_idx], correlation_matrix[k, best_arch_idx]))
+
+    results['correlations'] = [m[2] for m in matched]
+    results['mean_correlation'] = jnp.mean(jnp.array(results['correlations']))
+
+    # Measure user assignment accuracy
+    correct = 0
+    total = 0
+    for user in adapter.get_all_users():
+        true_archetype = user.archetype
+        predicted_system = learned_model.get_dominant_system(user.embedding)
+        # Check if predicted system maps to correct archetype
+        if matched[predicted_system][1] == true_archetype:
+            correct += 1
+        total += 1
+
+    results['assignment_accuracy'] = correct / total
+
+    return results
+```
+
+### Tests
+```python
+# tests/test_reward_modeling/test_pluralistic.py
+
+def test_mixture_weights_sum_to_one():
+    """Verify mixture weights form valid distribution."""
+    mixture = plural_model.compute_mixture_weights(user_embeddings)
+    assert mixture.shape == (batch_size, 6)
+    np.testing.assert_allclose(mixture.sum(axis=-1), 1.0, atol=1e-5)
+
+def test_pluralistic_reward_shape():
+    """Verify pluralistic rewards have correct shape."""
+    rewards = plural_model.compute_reward(batch, embeddings)
+    assert rewards.shape == (batch_size, num_candidates)
+
+def test_structural_recovery():
+    """Verify learned value systems recover ground truth archetypes."""
+    # Train model
+    trained_model = train_pluralistic_rewards(model, adapter, epochs=100)
+
+    # Measure recovery
+    results = measure_structural_recovery(trained_model, adapter)
+
+    # Key gate: mean correlation > 0.8
+    assert results['mean_correlation'] > 0.8
+
+    # Secondary: assignment accuracy > 70%
+    assert results['assignment_accuracy'] > 0.7
+
+def test_value_systems_interpretable():
+    """Verify each value system has interpretable weights."""
+    for k in range(plural_model.K):
+        weights = plural_model.reward_weights[k]
+
+        # Block (index 15) should be negative
+        assert weights[15] < 0
+
+        # Favorite (index 0) should be positive
+        assert weights[0] > 0
+```
+
+### Go/No-Go Gate
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Mixture weights valid | ✅ | `test_mixture_weights_sum_to_one` |
+| Rewards compute correctly | ✅ | `test_pluralistic_reward_shape` |
+| Structural recovery > 0.8 | ✅ | `test_structural_recovery` |
+| Value systems interpretable | ✅ | `test_value_systems_interpretable` |
+
+---
+
+## Phase 3: Causal Verification (Gate: Intervention tests pass?)
+
+### Objective
+Verify reward model captures causal relationships, not just correlations, using F2's verification methodology.
+
+### Deliverables
+```
+enhancements/reward_modeling/
+├── causal_verification.py   # NEW: Intervention tests for rewards
+└── training.py              # UPDATED: Contrastive objectives
+
+tests/test_reward_modeling/
+└── test_causal.py           # NEW
+```
+
+### Implementation
+```python
+# enhancements/reward_modeling/causal_verification.py
+
+from enhancements.verification import CounterfactualTests  # Extend F2's suite
+
+class RewardCausalVerification:
+    """Causal verification tests for reward models."""
+
+    def __init__(
+        self,
+        reward_model: PluralRewardModel,
+        adapter: SyntheticTwitterAdapter,
+    ):
+        self.model = reward_model
+        self.adapter = adapter
+
+    def test_block_reduces_reward(self, num_tests: int = 100) -> dict:
+        """Test: blocking an author should reduce their posts' reward."""
+        passed = 0
+
+        for _ in range(num_tests):
+            # Get random user and author
+            user, author = self.adapter.get_random_user_author_pair()
+            author_post = self.adapter.get_post_by_author(author)
+
+            # Compute reward before block
+            batch_before, emb_before = self.adapter.create_batch(user, [author_post])
+            reward_before = self.model.compute_reward(batch_before, emb_before)[0, 0]
+
+            # Inject synthetic block (not in training data)
+            user_with_block = self.adapter.inject_block(user, author)
+            batch_after, emb_after = self.adapter.create_batch(user_with_block, [author_post])
+            reward_after = self.model.compute_reward(batch_after, emb_after)[0, 0]
+
+            # Causal test: reward should decrease
+            if reward_after < reward_before:
+                passed += 1
+
+        return {
+            'test': 'block_reduces_reward',
+            'passed': passed,
+            'total': num_tests,
+            'rate': passed / num_tests,
+        }
+
+    def test_history_affects_reward(self, num_tests: int = 100) -> dict:
+        """Test: matching history should give higher reward than mismatched."""
+        passed = 0
+
+        for _ in range(num_tests):
+            # Get post with known topic
+            post, topic = self.adapter.get_post_with_topic()
+
+            # Create matching history (same topic preference)
+            matching_history = self.adapter.create_history_for_topic(topic)
+
+            # Create mismatched history (different topic)
+            other_topic = self.adapter.get_different_topic(topic)
+            mismatched_history = self.adapter.create_history_for_topic(other_topic)
+
+            # Compute rewards
+            batch_match, emb_match = self.adapter.create_batch_with_history(
+                matching_history, [post]
+            )
+            batch_mismatch, emb_mismatch = self.adapter.create_batch_with_history(
+                mismatched_history, [post]
+            )
+
+            reward_match = self.model.compute_reward(batch_match, emb_match)[0, 0]
+            reward_mismatch = self.model.compute_reward(batch_mismatch, emb_mismatch)[0, 0]
+
+            # Causal test: matching history should give higher reward
+            if reward_match > reward_mismatch:
+                passed += 1
+
+        return {
+            'test': 'history_affects_reward',
+            'passed': passed,
+            'total': num_tests,
+            'rate': passed / num_tests,
+        }
+
+    def run_all_tests(self) -> dict:
+        """Run all causal verification tests."""
+        results = {}
+        results['block'] = self.test_block_reduces_reward()
+        results['history'] = self.test_history_affects_reward()
+        results['all_passed'] = (
+            results['block']['rate'] > 0.5 and
+            results['history']['rate'] > 0.5
+        )
+        return results
+```
+
+### Tests
+```python
+# tests/test_reward_modeling/test_causal.py
+
+def test_block_intervention():
+    """Verify blocking causally reduces reward."""
+    verification = RewardCausalVerification(trained_model, adapter)
+    result = verification.test_block_reduces_reward(num_tests=50)
+
+    # Gate: >50% of interventions should work
+    assert result['rate'] > 0.5
+
+def test_history_intervention():
+    """Verify history causally affects reward."""
+    verification = RewardCausalVerification(trained_model, adapter)
+    result = verification.test_history_affects_reward(num_tests=50)
+
+    # Gate: >50% of interventions should work
+    assert result['rate'] > 0.5
+
+def test_causal_vs_correlational():
+    """Compare causal model vs correlational baseline."""
+    # Train without contrastive loss (correlational)
+    corr_model = train_pluralistic_rewards(model, adapter, use_contrastive=False)
+
+    # Train with contrastive loss (causal)
+    causal_model = train_pluralistic_rewards(model, adapter, use_contrastive=True)
+
+    # Verify causal model passes more intervention tests
+    corr_results = RewardCausalVerification(corr_model, adapter).run_all_tests()
+    causal_results = RewardCausalVerification(causal_model, adapter).run_all_tests()
+
+    assert causal_results['block']['rate'] > corr_results['block']['rate']
+```
+
+### Go/No-Go Gate
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Block intervention > 50% | ✅ | `test_block_intervention` |
+| History intervention > 50% | ✅ | `test_history_intervention` |
+| Causal > Correlational | ✅ | `test_causal_vs_correlational` |
+
+---
+
+## Phase 4: Multi-Objective Analysis (Gate: Pareto frontier computed?)
+
+### Objective
+Define multiple objectives (user, platform, society) and compute Pareto frontier.
+
+### Deliverables
+```
+enhancements/reward_modeling/
+├── objectives.py            # NEW: Objective function definitions
+├── pareto.py                # NEW: Pareto frontier computation
+└── visualization.py         # NEW: Tradeoff visualization
 
 results/f4/
-├── weight_recovery.json
-└── preference_accuracy.json
+├── pareto_frontier.json
+└── tradeoff_analysis.json
+```
+
+### Implementation
+```python
+# enhancements/reward_modeling/objectives.py
+
+from enhancements.data.ground_truth import get_engagement_probs
+
+class ObjectiveFunctions:
+    """Multi-stakeholder objective functions."""
+
+    def __init__(self, adapter: SyntheticTwitterAdapter):
+        self.adapter = adapter
+
+    def user_engagement(self, user, recommendations) -> float:
+        """User wants content they engage with positively."""
+        total = 0
+        for post in recommendations:
+            probs = get_engagement_probs(user.archetype, post.topic)
+            # Positive engagement
+            total += probs.favorite + probs.repost + probs.reply
+        return total / len(recommendations)
+
+    def user_satisfaction(self, user, recommendations) -> float:
+        """User engagement minus discomfort."""
+        engagement = self.user_engagement(user, recommendations)
+
+        discomfort = 0
+        for post in recommendations:
+            probs = get_engagement_probs(user.archetype, post.topic)
+            discomfort += probs.block_author + probs.mute_author + probs.not_interested
+
+        return engagement - discomfort / len(recommendations)
+
+    def platform_utility(self, all_users, all_recommendations) -> float:
+        """Platform wants total engagement across all users."""
+        total = sum(
+            self.user_engagement(u, recs)
+            for u, recs in zip(all_users, all_recommendations)
+        )
+        return total
+
+    def society_utility(self, all_users, all_recommendations) -> float:
+        """Society wants low polarization (cross-group hostility)."""
+        cross_blocks = 0
+
+        for user, recs in zip(all_users, all_recommendations):
+            for post in recs:
+                # Count cross-group blocks (L blocking R content or vice versa)
+                if self._is_cross_group(user.archetype, post.topic):
+                    probs = get_engagement_probs(user.archetype, post.topic)
+                    cross_blocks += probs.block_author
+
+        # Negative because lower is better
+        return -cross_blocks
+
+    def _is_cross_group(self, archetype, topic) -> bool:
+        """Check if this is a cross-group interaction (e.g., political L seeing R)."""
+        cross_pairs = [
+            (UserArchetype.POLITICAL_L, ContentTopic.POLITICS_R),
+            (UserArchetype.POLITICAL_R, ContentTopic.POLITICS_L),
+        ]
+        return (archetype, topic) in cross_pairs
+
+
+# enhancements/reward_modeling/pareto.py
+
+def compute_pareto_frontier(
+    reward_model: PluralRewardModel,
+    adapter: SyntheticTwitterAdapter,
+    objectives: ObjectiveFunctions,
+    num_weightings: int = 20,
+) -> List[dict]:
+    """Compute Pareto frontier by varying objective weights."""
+
+    frontier = []
+
+    for alpha in np.linspace(0, 1, num_weightings):
+        # Train model with weighted objective
+        # R = alpha * user_engagement + (1-alpha) * society_utility
+        model = train_with_weighted_objective(
+            reward_model, adapter,
+            user_weight=alpha,
+            society_weight=(1 - alpha),
+        )
+
+        # Evaluate on all objectives
+        recs = generate_recommendations(model, adapter)
+
+        point = {
+            'alpha': alpha,
+            'user_engagement': objectives.user_engagement_total(recs),
+            'user_satisfaction': objectives.user_satisfaction_total(recs),
+            'platform_utility': objectives.platform_utility(recs),
+            'society_utility': objectives.society_utility(recs),
+        }
+        frontier.append(point)
+
+    return frontier
 ```
 
 ### Tests
 ```python
-def test_preference_accuracy_computation():
-    """Verify accuracy metric computes correctly."""
-    # Create pairs where we know the answer
-    acc = compute_preference_accuracy(reward_model, test_pairs)
-    assert 0 <= acc <= 1
+# tests/test_reward_modeling/test_multi_objective.py
 
-def test_learned_model_beats_random():
-    """Verify learned model beats random baseline."""
-    random_acc = 0.5  # Random guessing
-    learned_acc = compute_preference_accuracy(learned_reward_model, test_pairs)
-    assert learned_acc > random_acc + 0.1  # At least 10% better than random
+def test_objectives_compute():
+    """Verify all objective functions compute correctly."""
+    objs = ObjectiveFunctions(adapter)
 
-def test_interpretability_analysis():
-    """Verify weight analysis produces sensible results."""
-    analysis = analyze_learned_weights(learned_weights)
+    user = adapter.get_random_user()
+    recs = adapter.get_random_posts(10)
 
-    # Negative actions should have negative weights
-    assert 'block_author_score' in analysis['negative_actions']
-    assert 'report_score' in analysis['negative_actions']
+    eng = objs.user_engagement(user, recs)
+    sat = objs.user_satisfaction(user, recs)
 
-    # Positive actions should have positive weights
-    assert 'favorite_score' in analysis['positive_actions']
+    assert 0 <= eng <= 1
+    assert sat <= eng  # Satisfaction <= engagement (discomfort subtracted)
+
+def test_pareto_frontier_shape():
+    """Verify Pareto frontier has correct structure."""
+    frontier = compute_pareto_frontier(model, adapter, objectives, num_weightings=10)
+
+    assert len(frontier) == 10
+    assert all('user_engagement' in p for p in frontier)
+    assert all('society_utility' in p for p in frontier)
+
+def test_pareto_tradeoff_exists():
+    """Verify there's a tradeoff between engagement and society."""
+    frontier = compute_pareto_frontier(model, adapter, objectives, num_weightings=20)
+
+    # Extract engagement and society values
+    eng = [p['user_engagement'] for p in frontier]
+    soc = [p['society_utility'] for p in frontier]
+
+    # Should see tradeoff: max engagement != max society
+    max_eng_idx = np.argmax(eng)
+    max_soc_idx = np.argmax(soc)
+
+    assert max_eng_idx != max_soc_idx  # Different optimal points
+
+def test_quantified_tradeoff():
+    """Compute specific tradeoff ratio."""
+    frontier = compute_pareto_frontier(model, adapter, objectives, num_weightings=50)
+
+    # Find balanced point
+    balanced = frontier[len(frontier) // 2]
+    max_eng_point = max(frontier, key=lambda p: p['user_engagement'])
+
+    eng_cost = (max_eng_point['user_engagement'] - balanced['user_engagement']) / max_eng_point['user_engagement']
+    soc_gain = (balanced['society_utility'] - max_eng_point['society_utility']) / abs(max_eng_point['society_utility'])
+
+    print(f"Trading {eng_cost:.1%} engagement for {soc_gain:.1%} society improvement")
 ```
 
-### Final Go/No-Go Gate (F4 Complete)
-| Criterion | Required | Target |
-|-----------|----------|--------|
-| Preference accuracy (synthetic) | ✅ | > 85% |
-| Weight recovery correlation | ✅ | > 0.8 |
-| Interpretable weights | ✅ | Signs match intuition |
-| All tests pass | ✅ | 100% |
+### Go/No-Go Gate
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Objectives compute | ✅ | `test_objectives_compute` |
+| Pareto frontier generates | ✅ | `test_pareto_frontier_shape` |
+| Tradeoff exists | ✅ | `test_pareto_tradeoff_exists` |
+| Tradeoff quantified | ✅ | `test_quantified_tradeoff` |
+
+---
+
+## Phase 5: Stakeholder Utility Analysis (Gate: Impact table generated?)
+
+### Objective
+Attribute objectives to stakeholders, analyze who wins/loses under different policies.
+
+### Deliverables
+```
+enhancements/reward_modeling/
+├── stakeholders.py          # NEW: Stakeholder definitions
+├── policy_analysis.py       # NEW: Policy impact analysis
+└── visualization.py         # UPDATED: Impact tables
+
+results/f4/
+├── stakeholder_impact.json
+└── policy_recommendations.json
+```
+
+### Implementation
+```python
+# enhancements/reward_modeling/stakeholders.py
+
+@dataclass
+class Stakeholder:
+    """A stakeholder with utility function."""
+    name: str
+    utility_fn: Callable
+    description: str
+
+class StakeholderRegistry:
+    """Registry of all stakeholders."""
+
+    def __init__(self, adapter: SyntheticTwitterAdapter):
+        self.adapter = adapter
+        self.objectives = ObjectiveFunctions(adapter)
+
+        self.stakeholders = {
+            'user_L': Stakeholder(
+                name='Political L Users',
+                utility_fn=lambda recs: self._user_group_utility(recs, UserArchetype.POLITICAL_L),
+                description='Left-leaning users want engaging left content',
+            ),
+            'user_R': Stakeholder(
+                name='Political R Users',
+                utility_fn=lambda recs: self._user_group_utility(recs, UserArchetype.POLITICAL_R),
+                description='Right-leaning users want engaging right content',
+            ),
+            'platform': Stakeholder(
+                name='Platform',
+                utility_fn=self.objectives.platform_utility,
+                description='Platform wants total engagement + retention',
+            ),
+            'society': Stakeholder(
+                name='Society',
+                utility_fn=self.objectives.society_utility,
+                description='Society wants low polarization',
+            ),
+        }
+
+
+# enhancements/reward_modeling/policy_analysis.py
+
+def analyze_policy_impact(
+    policies: Dict[str, PluralRewardModel],
+    stakeholders: StakeholderRegistry,
+    adapter: SyntheticTwitterAdapter,
+) -> pd.DataFrame:
+    """Analyze impact of different policies on each stakeholder."""
+
+    results = []
+
+    for policy_name, model in policies.items():
+        # Generate recommendations under this policy
+        recs = generate_recommendations(model, adapter)
+
+        row = {'policy': policy_name}
+        for stake_name, stakeholder in stakeholders.stakeholders.items():
+            utility = stakeholder.utility_fn(recs)
+            row[stake_name] = utility
+
+        results.append(row)
+
+    df = pd.DataFrame(results)
+
+    # Normalize to show % change from baseline
+    baseline = df[df['policy'] == 'max_engagement'].iloc[0]
+    for col in df.columns[1:]:
+        df[f'{col}_pct'] = (df[col] - baseline[col]) / abs(baseline[col]) * 100
+
+    return df
+```
+
+### Tests
+```python
+# tests/test_reward_modeling/test_stakeholders.py
+
+def test_stakeholder_utilities_compute():
+    """Verify all stakeholder utilities compute."""
+    registry = StakeholderRegistry(adapter)
+    recs = generate_recommendations(model, adapter)
+
+    for name, stakeholder in registry.stakeholders.items():
+        utility = stakeholder.utility_fn(recs)
+        assert np.isfinite(utility)
+
+def test_policy_impact_analysis():
+    """Verify policy impact table generates correctly."""
+    policies = {
+        'max_engagement': train_with_objective(model, 'engagement'),
+        'max_society': train_with_objective(model, 'society'),
+        'balanced': train_with_objective(model, 'balanced'),
+    }
+
+    impact = analyze_policy_impact(policies, stakeholders, adapter)
+
+    assert len(impact) == 3
+    assert 'user_L' in impact.columns
+    assert 'society' in impact.columns
+
+def test_stakeholder_conflicts():
+    """Verify stakeholder conflicts are captured."""
+    impact = analyze_policy_impact(policies, stakeholders, adapter)
+
+    # Max engagement should hurt society
+    max_eng = impact[impact['policy'] == 'max_engagement'].iloc[0]
+    assert max_eng['society_pct'] < 0  # Society worse off
+
+    # Max society should hurt platform
+    max_soc = impact[impact['policy'] == 'max_society'].iloc[0]
+    assert max_soc['platform_pct'] < 0  # Platform worse off
+
+def test_balanced_policy_exists():
+    """Verify balanced policy improves all stakeholders vs worst case."""
+    impact = analyze_policy_impact(policies, stakeholders, adapter)
+
+    balanced = impact[impact['policy'] == 'balanced'].iloc[0]
+
+    # Balanced should be positive for society (vs max_engagement baseline)
+    # and not terrible for platform
+    assert balanced['society_pct'] > 0
+    assert balanced['platform_pct'] > -20  # Not more than 20% worse
+```
+
+### Go/No-Go Gate
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Stakeholder utilities compute | ✅ | `test_stakeholder_utilities_compute` |
+| Impact table generates | ✅ | `test_policy_impact_analysis` |
+| Conflicts captured | ✅ | `test_stakeholder_conflicts` |
+| Balanced policy exists | ✅ | `test_balanced_policy_exists` |
+
+---
+
+## Phase 6: Game-Theoretic Analysis (Optional) (Gate: Equilibrium characterized?)
+
+### Objective
+Model stakeholders as strategic agents, analyze equilibria.
+
+### Deliverables
+```
+enhancements/reward_modeling/
+├── game_theory.py           # NEW: Game-theoretic models
+├── equilibrium.py           # NEW: Equilibrium computation
+└── mechanism_design.py      # NEW: Mechanism analysis
+
+results/f4/
+├── equilibrium_analysis.json
+└── mechanism_insights.json
+```
+
+### Implementation (Sketch)
+```python
+# enhancements/reward_modeling/game_theory.py
+
+class RecommendationGame:
+    """Game-theoretic model of recommendation ecosystem."""
+
+    def __init__(self, stakeholders: StakeholderRegistry):
+        self.stakeholders = stakeholders
+
+    def user_best_response(self, platform_policy, user_type):
+        """Given platform policy, what's user's best response?"""
+        # User can: engage, reduce engagement, or leave
+        options = ['full_engage', 'selective_engage', 'leave']
+        utilities = [
+            self._user_utility(platform_policy, user_type, opt)
+            for opt in options
+        ]
+        return options[np.argmax(utilities)]
+
+    def find_nash_equilibrium(self):
+        """Find Nash equilibrium of the game."""
+        # Iterative best response
+        platform_policy = 'max_engagement'  # Start
+        user_responses = {}
+
+        for _ in range(100):  # Max iterations
+            # Users best respond to platform
+            for user_type in UserArchetype:
+                user_responses[user_type] = self.user_best_response(
+                    platform_policy, user_type
+                )
+
+            # Platform best responds to users
+            new_policy = self.platform_best_response(user_responses)
+
+            if new_policy == platform_policy:
+                break  # Equilibrium found
+            platform_policy = new_policy
+
+        return {
+            'platform_policy': platform_policy,
+            'user_responses': user_responses,
+            'is_equilibrium': new_policy == platform_policy,
+        }
+```
+
+### Go/No-Go Gate (Optional Phase)
+| Criterion | Required | How to Test |
+|-----------|----------|-------------|
+| Game model defined | ⚠️ | Code compiles |
+| Best responses compute | ⚠️ | Unit tests |
+| Equilibrium found | ⚠️ | `find_nash_equilibrium` terminates |
+| Insights documented | ⚠️ | Results JSON generated |
+
+---
+
+## Summary: F4 Gates
+
+| Phase | Gate Criterion | Required | Target |
+|-------|---------------|----------|--------|
+| 0 | Can compute rewards | ✅ | Basic reward model works |
+| 1 | Per-archetype weights learned | ✅ | Weights differentiate |
+| 2 | Structural recovery > 0.8 | ✅ | Pluralistic structure recovered |
+| 3 | Intervention tests > 50% | ✅ | Causal understanding verified |
+| 4 | Pareto frontier computed | ✅ | Tradeoffs quantified |
+| 5 | Impact table generated | ✅ | Stakeholder analysis complete |
+| 6 | Equilibrium characterized | ⚠️ | (Optional) Game theory insights |
+
+## F4 Exit Points
+
+| After Phase | Deliverable | Value |
+|-------------|-------------|-------|
+| 0 | Basic reward model | Table stakes |
+| 1 | Context-dependent rewards | Ambitious |
+| 2 | Pluralistic rewards + verification | Novel (structural) |
+| 3 | + Causal verification | Novel (causal) |
+| 4 | + Pareto frontier | Multi-stakeholder |
+| 5 | + Stakeholder impact | Full framework |
+| 6 | + Game theory | Research contribution |
 
 ---
 
@@ -1351,13 +2254,16 @@ def test_comparison_with_clip():
 | 6 | MovieLens training, NDCG > random | ✅ |
 | 7 | Synthetic verification: patterns recovered | ⬜ |
 
-## F4: RL Reward Modeling
+## F4: RL Reward Modeling (Pluralistic + Multi-Stakeholder)
 | Phase | Gate Criterion | Required |
 |-------|---------------|----------|
-| 0 | Can compute rewards | ✅ |
-| 1 | Loss computes, gradients finite | ✅ |
-| 2 | Weight recovery correlation > 0.8 | ✅ |
-| 3 | Preference accuracy > 85% | ✅ |
+| 0 | Basic rewards compute, KV-cache integrated | ✅ |
+| 1 | Context-dependent (per-archetype) weights | ✅ |
+| 2 | Pluralistic structural recovery > 0.8 | ✅ |
+| 3 | Causal intervention tests > 50% | ✅ |
+| 4 | Pareto frontier computed | ✅ |
+| 5 | Stakeholder impact table generated | ✅ |
+| 6 | Game-theoretic equilibrium (optional) | ⚠️ |
 
 ## F1: Multimodal Retrieval
 | Phase | Gate Criterion | Required |
