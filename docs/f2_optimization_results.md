@@ -1319,6 +1319,155 @@ uv run pytest tests/test_analysis/ -v
 uv run pytest tests/ -v
 ```
 
+---
+
+# F4: Reward Modeling - Results & Learnings
+
+## Phase 1: Bradley-Terry Preference Learning
+
+### Objective
+Implement Bradley-Terry preference learning with per-archetype weights and establish baseline performance.
+
+### Model Architecture
+
+- **ContextualRewardModel**: Per-archetype weight matrix `[K, 18]` where K=6 archetypes
+- **Reward computation**: `R[b,c] = weights[archetype[b]] · P[b,c,:]` via einsum
+- **Loss function**: Bradley-Terry: `-log(σ(R_preferred - R_rejected))`
+
+### Training Results
+
+| Metric | Value |
+|--------|-------|
+| Final Training Accuracy | 99.84% |
+| Final Validation Accuracy | 99.29% |
+| Training pairs | 5,600 |
+| Epochs | 100 |
+
+### Sensitivity Analysis: Key Findings
+
+#### 1. Noise Sensitivity (Train Clean, Test with Noise)
+
+| Test Noise (std) | Accuracy |
+|------------------|----------|
+| 0.00 | 98.7% |
+| 0.10 | 93.7% |
+| 0.20 | 86.0% |
+| 0.30 | 83.3% |
+
+**Finding**: ~15% accuracy degradation with 30% feature noise.
+
+#### 2. Label Flip Sensitivity (Critical Finding)
+
+| Label Flip Rate | Accuracy |
+|-----------------|----------|
+| 0% | 93.7% |
+| 10% | 90.0% |
+| 20% | 79.7% |
+| 30% | 68.7% |
+
+**Finding**: Label flips (simulating human disagreement) are MORE damaging than feature noise. 30% flip rate approaches random guessing.
+
+#### 3. Does Noisy Training Help? (Key Experiment)
+
+Test condition: 15% feature noise + 15% label flips
+
+| Training Condition | Accuracy on Noisy Test |
+|-------------------|------------------------|
+| Clean | 78.7% |
+| Matched noise (0.15/0.15) | 75.2% |
+| **Feature noise only (0.15/0.00)** | **82.0%** |
+| Label flip only (0.00/0.15) | 70.8% |
+
+**Critical Insight**:
+- **Feature noise during training HELPS** - acts as data augmentation
+- **Label flips during training HURT** - teaches wrong preferences
+- Best strategy: Add feature noise but keep labels clean
+
+#### 4. Held-Out Archetype Generalization
+
+| Held Out Count | Accuracy |
+|----------------|----------|
+| Hold 1 | 88.0% |
+| Hold 2 | 82.0% |
+| Hold 3 | 86.0% |
+| Hold 4 | 93.0% |
+
+**Finding**: Generalization varies based on which archetypes are held out, not just the count. Model learns similar weights across archetypes on this synthetic data.
+
+#### 5. Cross-Archetype Transfer
+
+| Transfer | Accuracy |
+|----------|----------|
+| Sports → Tech | 100% |
+| Political L → Political R | 100% |
+| Tech → Lurker | 92% |
+| Power User → Lurker | 98% |
+
+**Finding**: Model generalizes well across archetypes because learned weights are similar (0.997 cosine similarity).
+
+### Implications for Phase 2+
+
+The sensitivity to **label flips (human disagreement)** is the critical limitation. Real human preference data has:
+- **Inconsistent labels**: Different humans disagree on preferences
+- **Context-dependent preferences**: Same user prefers different things in different contexts
+- **Noisy feedback**: Accidental clicks, changed minds
+
+This motivates more sophisticated approaches:
+1. **Noise-aware models** that explicitly model label uncertainty
+2. **Confidence-weighted training** to downweight uncertain labels
+3. **Ensemble methods** to capture preference distribution
+
+### Go/No-Go Assessment
+
+| Gate | Threshold | Result | Status |
+|------|-----------|--------|--------|
+| Standard accuracy | > 95% | 100.0% | PASS |
+| Hard negatives | > 60% | 99.0% | PASS |
+| Adversarial | > 75% | 95.0% | PASS |
+| Noisy (10%) | > 85% | 91.3% | PASS |
+| Held-out generalization | > 70% | 88.0% | PASS |
+
+### Key Files
+
+```
+enhancements/reward_modeling/
+├── reward_model.py          # ContextualRewardModel
+├── training.py              # Bradley-Terry loss and training
+├── weights.py               # RewardWeights dataclass
+└── __init__.py
+
+scripts/
+├── train_reward_model.py    # Baseline training
+├── evaluate_reward_model.py # Comprehensive evaluation
+└── sensitivity_analysis.py  # Sensitivity study
+
+results/f4_phase1/
+├── baseline_weights.npy     # Trained weights
+├── training_metrics.json    # Training history
+├── comprehensive_evaluation.json
+├── sensitivity_analysis.json
+├── training_curves.png
+└── sensitivity_analysis.png
+```
+
+### Usage
+
+```bash
+# Train baseline model
+uv run python scripts/train_reward_model.py
+
+# Run comprehensive evaluation
+uv run python scripts/evaluate_reward_model.py
+
+# Run sensitivity analysis
+uv run python scripts/sensitivity_analysis.py
+
+# Run tests (45 tests)
+uv run pytest tests/test_reward_modeling/ -v
+```
+
+---
+
 ## Running the Analysis Tools
 
 ```bash

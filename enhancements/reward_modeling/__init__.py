@@ -1,25 +1,30 @@
 """F4: RL Reward Modeling with preference learning on engagement data.
 
 This module provides reward modeling capabilities for Phoenix:
-- PhoenixRewardModel: Computes scalar rewards from action probabilities
+- PhoenixRewardModel: Computes scalar rewards from action probabilities (Phase 0)
+- ContextualRewardModel: Per-archetype learned weights (Phase 1)
 - RewardWeights: Learnable/configurable weights for reward computation
 - PreferencePair: Data structure for pairwise preference learning
 
 Phase 0 (Basic): Fixed-weight reward computation
-Phase 1+: Learned weights via preference training
+Phase 1 (Contextual): Per-archetype learned weights via Bradley-Terry
+Phase 2+: Pluralistic rewards, causal verification, multi-stakeholder
 
 Example:
-    >>> from enhancements.optimization import OptimizedPhoenixRunner
+    >>> from enhancements.optimization.optimized_runner import OptimizedPhoenixRunner
     >>> from enhancements.reward_modeling import PhoenixRewardModel, RewardWeights
     >>>
-    >>> # Create reward model with F2's optimized runner
+    >>> # Phase 0: Basic reward model with fixed weights
     >>> runner = OptimizedPhoenixRunner(config)
     >>> runner.initialize()
     >>> reward_model = PhoenixRewardModel(runner)
-    >>>
-    >>> # Compute rewards for candidates
     >>> rewards = reward_model.compute_reward(batch, embeddings)
-    >>> best_idx = reward_model.get_best_candidate(batch, embeddings)
+    >>>
+    >>> # Phase 1: Contextual model with per-archetype weights
+    >>> from enhancements.reward_modeling import ContextualRewardModel
+    >>> ctx_model = ContextualRewardModel(runner, num_archetypes=6)
+    >>> ctx_model.initialize_from_default()
+    >>> rewards = ctx_model.compute_reward(batch, embeddings, archetype_ids)
 """
 
 from enhancements.reward_modeling.preference_data import (
@@ -28,7 +33,21 @@ from enhancements.reward_modeling.preference_data import (
     create_preferences_from_ground_truth,
     create_preferences_from_rewards,
 )
-from enhancements.reward_modeling.reward_model import PhoenixRewardModel
+from enhancements.reward_modeling.reward_model import (
+    ContextualRewardModel,
+    PhoenixRewardModel,
+)
+from enhancements.reward_modeling.training import (
+    TrainingConfig,
+    TrainingMetrics,
+    TrainingState,
+    bradley_terry_loss,
+    compute_preference_accuracy,
+    contextual_bradley_terry_loss,
+    create_synthetic_preference_batch,
+    train_contextual_weights,
+    train_single_weights,
+)
 from enhancements.reward_modeling.weights import (
     ACTION_INDICES,
     ACTION_NAMES,
@@ -37,9 +56,21 @@ from enhancements.reward_modeling.weights import (
 )
 
 __all__ = [
-    # Core classes
+    # Phase 0: Basic reward model
     "PhoenixRewardModel",
     "RewardWeights",
+    # Phase 1: Contextual reward model
+    "ContextualRewardModel",
+    # Training
+    "TrainingConfig",
+    "TrainingMetrics",
+    "TrainingState",
+    "bradley_terry_loss",
+    "contextual_bradley_terry_loss",
+    "train_single_weights",
+    "train_contextual_weights",
+    "compute_preference_accuracy",
+    "create_synthetic_preference_batch",
     # Preference data
     "PreferencePair",
     "PreferenceBatch",
