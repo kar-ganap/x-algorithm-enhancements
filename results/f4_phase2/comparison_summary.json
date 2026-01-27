@@ -1,0 +1,72 @@
+{
+  "em": {
+    "final_accuracy": 0.9934462308883667,
+    "mean_correlation": 0.38655272126197815,
+    "assignment_accuracy": 0.17531403604587656,
+    "interpretability": 1.0,
+    "diversity": 0.0010145147098228335,
+    "gates_passed": 1,
+    "gates_total": 4,
+    "supervised": false
+  },
+  "auxiliary": {
+    "final_accuracy": 0.9952384545359501,
+    "mean_correlation": 0.15266968309879303,
+    "assignment_accuracy": 0.18113963225923904,
+    "interpretability": 0.6481481481481481,
+    "diversity": 0.9374762177467346,
+    "gates_passed": 2,
+    "gates_total": 4,
+    "supervised": false
+  },
+  "hybrid": {
+    "final_accuracy": 0.9730566740036011,
+    "mean_correlation": 0.5096593499183655,
+    "assignment_accuracy": 0.0764609503003823,
+    "interpretability": 0.8148148148148149,
+    "diversity": 0.4262590706348419,
+    "gates_passed": 2,
+    "gates_total": 4,
+    "supervised": false
+  },
+  "aux_sup_\u03bb1.0": {
+    "final_accuracy": 0.9834288615126943,
+    "mean_correlation": 0.5591472387313843,
+    "assignment_accuracy": 0.3225923903149463,
+    "interpretability": 0.75,
+    "diversity": 0.7620431184768677,
+    "gates_passed": 2,
+    "gates_total": 4,
+    "supervised": true
+  },
+  "aux_sup_\u03bb5.0": {
+    "final_accuracy": 0.9834288615126943,
+    "mean_correlation": 0.5591588616371155,
+    "assignment_accuracy": 0.3225923903149463,
+    "interpretability": 0.75,
+    "diversity": 0.7620401978492737,
+    "gates_passed": 2,
+    "gates_total": 4,
+    "supervised": true
+  },
+  "aux_sup_\u03bb10.0": {
+    "final_accuracy": 0.9834288615126943,
+    "mean_correlation": 0.5591611266136169,
+    "assignment_accuracy": 0.3225923903149463,
+    "interpretability": 0.75,
+    "diversity": 0.7620398998260498,
+    "gates_passed": 2,
+    "gates_total": 4,
+    "supervised": true
+  },
+  "hybrid_supervised": {
+    "final_accuracy": 0.9466593861579895,
+    "mean_correlation": 0.5096593499183655,
+    "assignment_accuracy": 0.3528126706717641,
+    "interpretability": 0.8148148148148149,
+    "diversity": 0.4262590706348419,
+    "gates_passed": 2,
+    "gates_total": 4,
+    "supervised": true
+  }
+}

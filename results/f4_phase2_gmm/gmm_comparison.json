@@ -1,0 +1,168 @@
+{
+  "kmeans_topic": {
+    "accuracy": 0.9909612800781727,
+    "mean_correlation": 0.510887086391449,
+    "interpretability": 0.9629629629629631,
+    "diversity": 0.08600835502147675,
+    "matches": {
+      "0": [
+        "political_L",
+        0.6407197713851929
+      ],
+      "1": [
+        "political_R",
+        0.46153321862220764
+      ],
+      "2": [
+        "lurker",
+        0.4081600308418274
+      ],
+      "3": [
+        "power_user",
+        0.49463340640068054
+      ],
+      "4": [
+        "sports_fan",
+        0.43912938237190247
+      ],
+      "5": [
+        "tech_bro",
+        0.6211466193199158
+      ]
+    },
+    "num_cross_users": 3788,
+    "clusters_used": 4,
+    "max_concentration": 0.3717001055966209
+  },
+  "kmeans_rich": {
+    "accuracy": 0.9945034811286185,
+    "mean_correlation": 0.5439960360527039,
+    "interpretability": 0.9814814814814815,
+    "diversity": 0.10457213968038559,
+    "matches": {
+      "0": [
+        "sports_fan",
+        0.6281836032867432
+      ],
+      "1": [
+        "political_L",
+        0.628282368183136
+      ],
+      "2": [
+        "power_user",
+        0.6199930906295776
+      ],
+      "3": [
+        "political_R",
+        0.5162572860717773
+      ],
+      "4": [
+        "tech_bro",
+        0.6212168335914612
+      ],
+      "5": [
+        "lurker",
+        0.2500428259372711
+      ]
+    },
+    "num_cross_users": 3788,
+    "clusters_used": 3,
+    "max_concentration": 0.40707497360084477
+  },
+  "gmm_rich": {
+    "accuracy": 0.9943813362648101,
+    "bic": -3862257.463079861,
+    "aic": -4114411.0448303223,
+    "mean_correlation": 0.5428603887557983,
+    "interpretability": 0.9814814814814815,
+    "diversity": 0.10527792572975159,
+    "matches": {
+      "0": [
+        "power_user",
+        0.6124088168144226
+      ],
+      "1": [
+        "political_R",
+        0.5157613754272461
+      ],
+      "2": [
+        "political_L",
+        0.6282748579978943
+      ],
+      "3": [
+        "tech_bro",
+        0.6222535967826843
+      ],
+      "4": [
+        "lurker",
+        0.2512180507183075
+      ],
+      "5": [
+        "sports_fan",
+        0.6272453665733337
+      ]
+    },
+    "num_cross_users": 3788,
+    "clusters_used": 3,
+    "max_concentration": 0.40707497360084477,
+    "cross_entropy": 5.885453550164232e-44,
+    "cross_normalized_entropy": 3.284734168420422e-44,
+    "cross_significant_clusters": 1.0,
+    "pure_entropy": 9.076752149894673e-08,
+    "pure_significant_clusters": 1.0
+  },
+  "gmm_rich_hard_inference": {
+    "accuracy": 0.9943813362648101
+  },
+  "gmm_topic": {
+    "accuracy": 0.9919384389886405,
+    "mean_correlation": 0.5302481055259705,
+    "interpretability": 0.9907407407407408,
+    "diversity": 0.08188097178936005,
+    "matches": {
+      "0": [
+        "sports_fan",
+        0.6278176307678223
+      ],
+      "1": [
+        "political_L",
+        0.629875659942627
+      ],
+      "2": [
+        "political_R",
+        0.5249990820884705
+      ],
+      "3": [
+        "power_user",
+        0.636957585811615
+      ],
+      "4": [
+        "lurker",
+        0.22345496714115143
+      ],
+      "5": [
+        "tech_bro",
+        0.5383836030960083
+      ]
+    },
+    "num_cross_users": 3788,
+    "clusters_used": 4,
+    "max_concentration": 0.39704329461457233,
+    "cross_entropy": 3.0195542422006838e-05,
+    "cross_normalized_entropy": 1.6852453100201002e-05,
+    "cross_significant_clusters": 1.0,
+    "pure_entropy": 0.06572041660547256,
+    "pure_significant_clusters": 1.049556717435781
+  },
+  "gmm_10_clusters": {
+    "accuracy": 0.989006962257237,
+    "num_cross_users": 3788,
+    "clusters_used": 5,
+    "max_concentration": 0.2074973600844773,
+    "cross_entropy": 1.0564750851926874e-07,
+    "cross_normalized_entropy": 4.5882129976745195e-08,
+    "cross_significant_clusters": 1.0,
+    "pure_entropy": 3.4144242988531914e-08,
+    "pure_significant_clusters": 1.0
+  }
+}

@@ -54,6 +54,27 @@ from enhancements.reward_modeling.weights import (
     NUM_ACTIONS,
     RewardWeights,
 )
+from enhancements.reward_modeling.pluralistic import (
+    PluralConfig,
+    PluralMetrics,
+    PluralState,
+    TrainingApproach,
+    compute_mixture_weights,
+    compute_pluralistic_reward,
+    diversity_loss,
+    entropy_loss,
+    init_plural_state,
+    train_auxiliary,
+    train_em,
+    train_hybrid,
+    train_pluralistic,
+)
+from enhancements.reward_modeling.structural_recovery import (
+    RecoveryMetrics,
+    check_recovery_gates,
+    compute_ground_truth_weights,
+    measure_structural_recovery,
+)
 
 __all__ = [
     # Phase 0: Basic reward model
@@ -80,4 +101,23 @@ __all__ = [
     "ACTION_NAMES",
     "ACTION_INDICES",
     "NUM_ACTIONS",
+    # Phase 2: Pluralistic rewards
+    "PluralConfig",
+    "PluralMetrics",
+    "PluralState",
+    "TrainingApproach",
+    "compute_mixture_weights",
+    "compute_pluralistic_reward",
+    "diversity_loss",
+    "entropy_loss",
+    "init_plural_state",
+    "train_auxiliary",
+    "train_em",
+    "train_hybrid",
+    "train_pluralistic",
+    # Structural recovery
+    "RecoveryMetrics",
+    "check_recovery_gates",
+    "compute_ground_truth_weights",
+    "measure_structural_recovery",
 ]
