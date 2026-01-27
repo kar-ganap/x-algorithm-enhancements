@@ -1,0 +1,42 @@
+{
+  "Original (avg action probs)": {
+    "accuracy": 0.9937820043891734,
+    "correlation": 0.5538580417633057,
+    "assignment": 0.14795171909290417,
+    "interpretability": 0.9629629629629629,
+    "diversity": 0.08604557067155838,
+    "avg_purity": 0.7085441966977603
+  },
+  "Topic-aware (per-topic engagement)": {
+    "accuracy": 0.9934616781692699,
+    "correlation": 0.6044630408287048,
+    "assignment": 0.17816926988739556,
+    "interpretability": 0.9722222222222223,
+    "diversity": 0.11888081580400467,
+    "avg_purity": 1.0
+  },
+  "Stress: Topic-only": {
+    "accuracy": 0.9998333333333334,
+    "correlation": 0.4166446924209595,
+    "assignment": 0.28833333333333333,
+    "interpretability": 1.0,
+    "diversity": 0.014374947175383568,
+    "avg_purity": 0.7026456527651005
+  },
+  "Stress: Topic\u00d7Action": {
+    "accuracy": 0.9998333333333334,
+    "correlation": 0.4074964225292206,
+    "assignment": 0.5,
+    "interpretability": 1.0,
+    "diversity": 0.014543954282999039,
+    "avg_purity": 1.0
+  },
+  "Cross-topic users": {
+    "accuracy": 0.9914101646385111,
+    "correlation": 0.5103759169578552,
+    "assignment": 0.07086614173228346,
+    "interpretability": 0.9537037037037037,
+    "diversity": 0.08926606178283691,
+    "avg_purity": 0.7724792128473122
+  }
+}
