@@ -1,0 +1,50 @@
+{
+  "results": {
+    "standard": {
+      "name": "Standard",
+      "accuracy": 1.0,
+      "loss": 0.03587482124567032,
+      "num_samples": 300,
+      "description": "Same distribution as training - baseline sanity check"
+    },
+    "noisy_10pct": {
+      "name": "Noisy (10% flip)",
+      "accuracy": 0.9133333563804626,
+      "loss": 1.351927399635315,
+      "num_samples": 300,
+      "description": "Action probs with noise + 10% label flips"
+    },
+    "noisy_20pct": {
+      "name": "Noisy (20% flip)",
+      "accuracy": 0.8233333826065063,
+      "loss": 2.9651639461517334,
+      "num_samples": 300,
+      "description": "Higher noise + 20% label flips"
+    },
+    "hard_negatives": {
+      "name": "Hard Negatives",
+      "accuracy": 0.9900000095367432,
+      "loss": 0.02465873211622238,
+      "num_samples": 300,
+      "description": "Same topic, subtle quality differences"
+    },
+    "adversarial": {
+      "name": "Adversarial",
+      "accuracy": 0.949999988079071,
+      "loss": 0.24081994593143463,
+      "num_samples": 100,
+      "description": "Rejected has higher positive but also negative signals"
+    },
+    "conflicting": {
+      "name": "Conflicting Signals",
+      "accuracy": 1.0,
+      "loss": 7.977490895427763e-06,
+      "num_samples": 100,
+      "description": "Both have mixed positive/negative signals"
+    }
+  },
+  "held_out_results": {
+    "held_out_political_r_power_user": 0.8799999952316284,
+    "political_l_to_r": 1.0
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "standard_tests": {
+    "standard": {
+      "accuracy": 1.0,
+      "loss": 0.03587482124567032,
+      "samples": 300
+    },
+    "noisy_10pct": {
+      "accuracy": 0.9133333563804626,
+      "loss": 1.351927399635315,
+      "samples": 300
+    },
+    "noisy_20pct": {
+      "accuracy": 0.8233333826065063,
+      "loss": 2.9651639461517334,
+      "samples": 300
+    },
+    "hard_negatives": {
+      "accuracy": 0.9900000095367432,
+      "loss": 0.02465873211622238,
+      "samples": 300
+    },
+    "adversarial": {
+      "accuracy": 0.949999988079071,
+      "loss": 0.24081994593143463,
+      "samples": 100
+    },
+    "conflicting": {
+      "accuracy": 1.0,
+      "loss": 7.977490895427763e-06,
+      "samples": 100
+    }
+  },
+  "held_out_tests": {
+    "held_out_political_r_power_user": 0.8799999952316284,
+    "political_l_to_r": 1.0
+  },
+  "summary": {
+    "standard_accuracy": 1.0,
+    "hard_negatives_accuracy": 0.9900000095367432,
+    "adversarial_accuracy": 0.949999988079071,
+    "noisy_accuracy": 0.9133333563804626,
+    "held_out_accuracy": 0.8799999952316284,
+    "all_gates_passed": true
+  }
+}

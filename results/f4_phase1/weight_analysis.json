@@ -1,0 +1,332 @@
+{
+  "sports_fan": {
+    "top_positive_weights": [
+      [
+        "quote",
+        20.851829528808594
+      ],
+      [
+        "follow_author",
+        20.404260635375977
+      ],
+      [
+        "share_via_dm",
+        20.265094757080078
+      ],
+      [
+        "dwell",
+        20.123929977416992
+      ],
+      [
+        "photo_expand",
+        20.01308250427246
+      ]
+    ],
+    "top_negative_weights": [
+      [
+        "mute_author",
+        -37.967960357666016
+      ],
+      [
+        "report",
+        -37.75934600830078
+      ],
+      [
+        "not_interested",
+        -37.34031295776367
+      ],
+      [
+        "block_author",
+        -35.48826217651367
+      ],
+      [
+        "profile_click",
+        16.529022216796875
+      ]
+    ],
+    "positive_actions_sum": 267.81634521484375,
+    "negative_actions_sum": -148.55587768554688,
+    "weight_range": [
+      -37.967960357666016,
+      20.851829528808594
+    ]
+  },
+  "political_L": {
+    "top_positive_weights": [
+      [
+        "share",
+        21.50005531311035
+      ],
+      [
+        "photo_expand",
+        20.3526668548584
+      ],
+      [
+        "follow_author",
+        19.392250061035156
+      ],
+      [
+        "favorite",
+        19.232820510864258
+      ],
+      [
+        "repost",
+        19.051347732543945
+      ]
+    ],
+    "top_negative_weights": [
+      [
+        "mute_author",
+        -39.92731475830078
+      ],
+      [
+        "block_author",
+        -38.51820755004883
+      ],
+      [
+        "not_interested",
+        -36.27999496459961
+      ],
+      [
+        "report",
+        -35.88548278808594
+      ],
+      [
+        "quoted_click",
+        15.454719543457031
+      ]
+    ],
+    "positive_actions_sum": 256.6627502441406,
+    "negative_actions_sum": -150.61099243164062,
+    "weight_range": [
+      -39.92731475830078,
+      21.50005531311035
+    ]
+  },
+  "political_R": {
+    "top_positive_weights": [
+      [
+        "repost",
+        20.331790924072266
+      ],
+      [
+        "share_via_copy_link",
+        20.063493728637695
+      ],
+      [
+        "profile_click",
+        19.941312789916992
+      ],
+      [
+        "follow_author",
+        19.837926864624023
+      ],
+      [
+        "share_via_dm",
+        19.698017120361328
+      ]
+    ],
+    "top_negative_weights": [
+      [
+        "report",
+        -40.30752944946289
+      ],
+      [
+        "not_interested",
+        -38.14719772338867
+      ],
+      [
+        "block_author",
+        -37.53030014038086
+      ],
+      [
+        "mute_author",
+        -37.298248291015625
+      ],
+      [
+        "share",
+        16.95979881286621
+      ]
+    ],
+    "positive_actions_sum": 267.13916015625,
+    "negative_actions_sum": -153.2832794189453,
+    "weight_range": [
+      -40.30752944946289,
+      20.331790924072266
+    ]
+  },
+  "tech_bro": {
+    "top_positive_weights": [
+      [
+        "photo_expand",
+        23.529268264770508
+      ],
+      [
+        "dwell",
+        22.865238189697266
+      ],
+      [
+        "profile_click",
+        22.42029571533203
+      ],
+      [
+        "repost",
+        21.836017608642578
+      ],
+      [
+        "follow_author",
+        21.43442726135254
+      ]
+    ],
+    "top_negative_weights": [
+      [
+        "not_interested",
+        -44.37040710449219
+      ],
+      [
+        "block_author",
+        -42.933067321777344
+      ],
+      [
+        "report",
+        -42.56813049316406
+      ],
+      [
+        "mute_author",
+        -40.12358093261719
+      ],
+      [
+        "reply",
+        19.20180892944336
+      ]
+    ],
+    "positive_actions_sum": 294.7179260253906,
+    "negative_actions_sum": -169.99517822265625,
+    "weight_range": [
+      -44.37040710449219,
+      23.529268264770508
+    ]
+  },
+  "lurker": {
+    "top_positive_weights": [
+      [
+        "profile_click",
+        20.52196502685547
+      ],
+      [
+        "share",
+        19.109811782836914
+      ],
+      [
+        "reply",
+        18.790651321411133
+      ],
+      [
+        "quoted_click",
+        18.24234390258789
+      ],
+      [
+        "follow_author",
+        18.113937377929688
+      ]
+    ],
+    "top_negative_weights": [
+      [
+        "mute_author",
+        -35.31465530395508
+      ],
+      [
+        "block_author",
+        -35.22938537597656
+      ],
+      [
+        "report",
+        -33.484031677246094
+      ],
+      [
+        "not_interested",
+        -33.220191955566406
+      ],
+      [
+        "share_via_dm",
+        14.632543563842773
+      ]
+    ],
+    "positive_actions_sum": 245.35267639160156,
+    "negative_actions_sum": -137.24826049804688,
+    "weight_range": [
+      -35.31465530395508,
+      20.52196502685547
+    ]
+  },
+  "power_user": {
+    "top_positive_weights": [
+      [
+        "share_via_copy_link",
+        18.75571060180664
+      ],
+      [
+        "favorite",
+        18.139545440673828
+      ],
+      [
+        "profile_click",
+        17.82969093322754
+      ],
+      [
+        "share_via_dm",
+        17.60288429260254
+      ],
+      [
+        "repost",
+        17.137720108032227
+      ]
+    ],
+    "top_negative_weights": [
+      [
+        "report",
+        -35.812416076660156
+      ],
+      [
+        "not_interested",
+        -35.43120193481445
+      ],
+      [
+        "mute_author",
+        -35.05775451660156
+      ],
+      [
+        "block_author",
+        -33.029396057128906
+      ],
+      [
+        "photo_expand",
+        14.11324405670166
+      ]
+    ],
+    "positive_actions_sum": 233.44517517089844,
+    "negative_actions_sum": -139.33078002929688,
+    "weight_range": [
+      -35.812416076660156,
+      18.75571060180664
+    ]
+  },
+  "pairwise_similarities": {
+    "sports_fan_vs_political_L": 0.9958921074867249,
+    "sports_fan_vs_political_R": 0.998132050037384,
+    "sports_fan_vs_tech_bro": 0.9978033900260925,
+    "sports_fan_vs_lurker": 0.9951139688491821,
+    "sports_fan_vs_power_user": 0.9967819452285767,
+    "political_L_vs_political_R": 0.995370626449585,
+    "political_L_vs_tech_bro": 0.9963473081588745,
+    "political_L_vs_lurker": 0.9965893030166626,
+    "political_L_vs_power_user": 0.995514988899231,
+    "political_R_vs_tech_bro": 0.9987059235572815,
+    "political_R_vs_lurker": 0.9968818426132202,
+    "political_R_vs_power_user": 0.998521089553833,
+    "tech_bro_vs_lurker": 0.996708869934082,
+    "tech_bro_vs_power_user": 0.9971392154693604,
+    "lurker_vs_power_user": 0.9959418773651123
+  },
+  "avg_pairwise_similarity": 0.9967628717422485
+}
