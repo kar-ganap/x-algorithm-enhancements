@@ -1,0 +1,180 @@
+{
+  "default_weights": {
+    "Effect Scaling": {
+      "passed": true,
+      "message": "Monotonic: True, Effects: ['-0.349', '-0.714', '-1.078', '-1.442', '-1.807']",
+      "details": {
+        "strengths": [
+          0.2,
+          0.4,
+          0.6,
+          0.8,
+          1.0
+        ],
+        "mean_effects": [
+          -0.3494181868433952,
+          -0.71374636054039,
+          -1.0780745398998262,
+          -1.4424027162790298,
+          -1.8067308348417281
+        ],
+        "is_monotonic": true,
+        "significant_at_max": 1
+      }
+    },
+    "Compound Interventions": {
+      "passed": true,
+      "message": "Single: -1.186, Compound: -2.311, Ratio: 1.95x",
+      "details": {
+        "mean_single_effect": -1.186250957250595,
+        "mean_compound_effect": -2.3113637840747834,
+        "compound_stronger": 1,
+        "ratio": 1.948461048606352
+      }
+    },
+    "Conflicting Signals": {
+      "passed": true,
+      "message": "Block effect preserved in 100.0% of conflicting cases",
+      "details": {
+        "pass_rate": 1.0,
+        "samples_correct": 50,
+        "total_samples": 50
+      }
+    },
+    "Cross-Preference": {
+      "passed": true,
+      "message": "Matched: -1.378, Mismatched: -1.388",
+      "details": {
+        "mean_matched_effect": -1.377785878777504,
+        "mean_mismatched_effect": -1.3878191167116165,
+        "both_negative": 1,
+        "similar_magnitude": 1
+      }
+    },
+    "Reversibility": {
+      "passed": true,
+      "message": "Max restoration error: 0.00e+00",
+      "details": {
+        "mean_restoration_error": 0.0,
+        "max_restoration_error": 0.0
+      }
+    },
+    "Noise Robustness": {
+      "passed": true,
+      "message": "Pass rates: ['100.0%', '100.0%', '100.0%', '100.0%'], Min: 100.0%",
+      "details": {
+        "pass_rates_by_noise": {
+          "0.05": 1.0,
+          "0.1": 1.0,
+          "0.15": 1.0,
+          "0.2": 1.0
+        },
+        "min_pass_rate": 1.0
+      }
+    },
+    "Threshold Sensitivity": {
+      "passed": true,
+      "message": "Rates: ['100.0%', '100.0%', '100.0%', '100.0%', '100.0%'], Max drop: 0.0%",
+      "details": {
+        "pass_rates": {
+          "0.01": 1.0,
+          "0.05": 1.0,
+          "0.1": 1.0,
+          "0.2": 1.0,
+          "0.5": 1.0
+        },
+        "max_drop_between_adjacent": 0.0,
+        "graceful_degradation": true
+      }
+    }
+  },
+  "two_stage": {
+    "Effect Scaling": {
+      "passed": true,
+      "message": "Monotonic: True, Effects: ['-0.354', '-0.720', '-1.085', '-1.451', '-1.817']",
+      "details": {
+        "strengths": [
+          0.2,
+          0.4,
+          0.6,
+          0.8,
+          1.0
+        ],
+        "mean_effects": [
+          -0.354069842658937,
+          -0.7197461388632655,
+          -1.0854224909469485,
+          -1.4510987679287792,
+          -1.8167750452086329
+        ],
+        "is_monotonic": true,
+        "significant_at_max": 1
+      }
+    },
+    "Compound Interventions": {
+      "passed": true,
+      "message": "Single: -1.019, Compound: -3.427, Ratio: 3.36x",
+      "details": {
+        "mean_single_effect": -1.019443566799164,
+        "mean_compound_effect": -3.427453937828541,
+        "compound_stronger": 1,
+        "ratio": 3.362083051433654
+      }
+    },
+    "Conflicting Signals": {
+      "passed": true,
+      "message": "Block effect preserved in 100.0% of conflicting cases",
+      "details": {
+        "pass_rate": 1.0,
+        "samples_correct": 50,
+        "total_samples": 50
+      }
+    },
+    "Cross-Preference": {
+      "passed": true,
+      "message": "Matched: -0.745, Mismatched: -0.760",
+      "details": {
+        "mean_matched_effect": -0.7449340961873532,
+        "mean_mismatched_effect": -0.7603179091215133,
+        "both_negative": 1,
+        "similar_magnitude": 1
+      }
+    },
+    "Reversibility": {
+      "passed": true,
+      "message": "Max restoration error: 0.00e+00",
+      "details": {
+        "mean_restoration_error": 0.0,
+        "max_restoration_error": 0.0
+      }
+    },
+    "Noise Robustness": {
+      "passed": true,
+      "message": "Pass rates: ['100.0%', '100.0%', '100.0%', '100.0%'], Min: 100.0%",
+      "details": {
+        "pass_rates_by_noise": {
+          "0.05": 1.0,
+          "0.1": 1.0,
+          "0.15": 1.0,
+          "0.2": 1.0
+        },
+        "min_pass_rate": 1.0
+      }
+    },
+    "Threshold Sensitivity": {
+      "passed": true,
+      "message": "Rates: ['100.0%', '100.0%', '100.0%', '100.0%', '100.0%'], Max drop: 0.0%",
+      "details": {
+        "pass_rates": {
+          "0.01": 1.0,
+          "0.05": 1.0,
+          "0.1": 1.0,
+          "0.2": 1.0,
+          "0.5": 1.0
+        },
+        "max_drop_between_adjacent": 0.0,
+        "graceful_degradation": true
+      }
+    }
+  }
+}
