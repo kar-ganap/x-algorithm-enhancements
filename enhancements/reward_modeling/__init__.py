@@ -75,6 +75,15 @@ from enhancements.reward_modeling.structural_recovery import (
     compute_ground_truth_weights,
     measure_structural_recovery,
 )
+from enhancements.reward_modeling.causal_verification import (
+    CausalTestConfig,
+    CausalTestResults,
+    CausalVerificationSuite,
+    InterventionResult,
+    InterventionType,
+    create_reward_fn_from_two_stage,
+    create_reward_fn_from_weights,
+)
 
 __all__ = [
     # Phase 0: Basic reward model
@@ -120,4 +129,12 @@ __all__ = [
     "check_recovery_gates",
     "compute_ground_truth_weights",
     "measure_structural_recovery",
+    # Phase 3: Causal verification
+    "CausalTestConfig",
+    "CausalTestResults",
+    "CausalVerificationSuite",
+    "InterventionResult",
+    "InterventionType",
+    "create_reward_fn_from_two_stage",
+    "create_reward_fn_from_weights",
 ]

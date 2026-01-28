@@ -1,0 +1,65 @@
+{
+  "default_weights": {
+    "block_intervention": {
+      "passed": true,
+      "pass_rate": 1.0,
+      "mean_effect_size": -1.7285379114747048,
+      "std_effect_size": 0.13454073690486182
+    },
+    "follow_intervention": {
+      "passed": true,
+      "pass_rate": 1.0,
+      "mean_effect_size": 1.647226891219616,
+      "std_effect_size": 0.013097721565844885
+    },
+    "history_intervention": {
+      "passed": false,
+      "pass_rate": 0.0,
+      "mean_effect_size": 0.0,
+      "std_effect_size": 0.0
+    }
+  },
+  "trained_two_stage": {
+    "training_accuracy": 0.834,
+    "tests": {
+      "block_intervention": {
+        "passed": true,
+        "pass_rate": 1.0,
+        "mean_effect_size": -1.40319028288126,
+        "std_effect_size": 1.1180727775861294
+      },
+      "follow_intervention": {
+        "passed": true,
+        "pass_rate": 1.0,
+        "mean_effect_size": 1.1797106349468232,
+        "std_effect_size": 0.5061254262342489
+      },
+      "history_intervention": {
+        "passed": false,
+        "pass_rate": 0.5,
+        "mean_effect_size": 0.07766584448516368,
+        "std_effect_size": 1.613645809399589
+      }
+    }
+  },
+  "adversarial_weights": {
+    "correctly_detected": true,
+    "tests": {
+      "block_intervention": {
+        "passed": false,
+        "pass_rate": 0.0,
+        "mean_effect_size": 1.3730009963225165
+      },
+      "follow_intervention": {
+        "passed": false,
+        "pass_rate": 0.0,
+        "mean_effect_size": -0.9471930778407841
+      },
+      "history_intervention": {
+        "passed": false,
+        "pass_rate": 0.0,
+        "mean_effect_size": 0.0
+      }
+    }
+  }
+}
