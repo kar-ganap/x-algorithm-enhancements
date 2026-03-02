@@ -11,7 +11,6 @@ Usage:
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -19,15 +18,14 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from enhancements.analysis.trajectory_simulation import (
+    TrajectoryPath,
+    TrajectorySimulator,
+)
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from phoenix.grok import TransformerConfig
 from phoenix.recsys_model import HashConfig, PhoenixModelConfig
 from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
-from enhancements.analysis.trajectory_simulation import (
-    TrajectorySimulator,
-    TrajectoryPath,
-)
 
 
 def create_test_config():
@@ -62,15 +60,15 @@ class SensitivityMetrics:
     def __init__(self, num_candidates: int):
         self.num_candidates = num_candidates
         # How often each candidate was engaged across all runs
-        self.engagement_counts: Dict[int, int] = defaultdict(int)
+        self.engagement_counts: dict[int, int] = defaultdict(int)
         # How often each candidate remained at end
-        self.final_remaining_counts: Dict[int, int] = defaultdict(int)
+        self.final_remaining_counts: dict[int, int] = defaultdict(int)
         # Position frequencies: position -> {candidate -> count}
-        self.position_frequencies: Dict[int, Dict[int, int]] = defaultdict(
+        self.position_frequencies: dict[int, dict[int, int]] = defaultdict(
             lambda: defaultdict(int)
         )
         # All engagement sequences
-        self.sequences: List[List[int]] = []
+        self.sequences: list[list[int]] = []
         self.num_runs = 0
 
     def add_trajectory(self, trajectory: TrajectoryPath):
@@ -133,7 +131,7 @@ class SensitivityMetrics:
         unique_sequences = set(tuple(s) for s in self.sequences)
         return len(unique_sequences) / self.num_runs if self.num_runs > 0 else 0.0
 
-    def get_position_stability(self, position: int) -> Tuple[int, float]:
+    def get_position_stability(self, position: int) -> tuple[int, float]:
         """Get most common candidate at position and its frequency."""
         if position not in self.position_frequencies:
             return (-1, 0.0)
@@ -333,26 +331,26 @@ def interpret_results(
 
     print("\n1. OUTCOME SPACE CONSTRAINT")
     if bias_div < rand_div * 0.5:
-        print(f"   → Strong constraint: Following recommendations reduces outcome")
+        print("   → Strong constraint: Following recommendations reduces outcome")
         print(f"     diversity by {(1 - bias_div/rand_div)*100:.0f}%")
-        print(f"   → This suggests the system funnels users toward specific outcomes")
+        print("   → This suggests the system funnels users toward specific outcomes")
     elif bias_div < rand_div * 0.8:
-        print(f"   → Moderate constraint: Some reduction in outcome diversity")
+        print("   → Moderate constraint: Some reduction in outcome diversity")
         print(f"     ({(1 - bias_div/rand_div)*100:.0f}% reduction)")
     else:
-        print(f"   → Weak constraint: Outcome diversity similar regardless of strategy")
-        print(f"   → System allows exploration even when following recommendations")
+        print("   → Weak constraint: Outcome diversity similar regardless of strategy")
+        print("   → System allows exploration even when following recommendations")
 
     print("\n2. ENGAGEMENT CONCENTRATION")
     entropy_ratio = bias_ent / rand_ent if rand_ent > 0 else 1.0
     if entropy_ratio < 0.7:
-        print(f"   → High concentration: Biased strategy engages with fewer")
+        print("   → High concentration: Biased strategy engages with fewer")
         print(f"     distinct candidates (entropy {entropy_ratio:.0%} of random)")
-        print(f"   → Potential filter bubble risk")
+        print("   → Potential filter bubble risk")
     elif entropy_ratio < 0.9:
-        print(f"   → Moderate concentration: Some narrowing of engagement")
+        print("   → Moderate concentration: Some narrowing of engagement")
     else:
-        print(f"   → Low concentration: Engagement spread similarly across candidates")
+        print("   → Low concentration: Engagement spread similarly across candidates")
 
     print("\n3. EARLY CHOICE IMPACT")
     # Check if first position is more stable in biased vs random
@@ -360,12 +358,12 @@ def interpret_results(
     _, bias_p0_freq = biased_metrics.get_position_stability(0)
 
     if bias_p0_freq > rand_p0_freq * 1.5:
-        print(f"   → First choice is significantly more predictable with top-biased")
+        print("   → First choice is significantly more predictable with top-biased")
         print(f"     strategy ({bias_p0_freq*100:.0f}% vs {rand_p0_freq*100:.0f}%)")
-        print(f"   → Early recommendations have strong influence")
+        print("   → Early recommendations have strong influence")
     else:
-        print(f"   → First choice predictability similar between strategies")
-        print(f"   → Early choices have moderate influence")
+        print("   → First choice predictability similar between strategies")
+        print("   → Early choices have moderate influence")
 
 
 def run_analysis():
@@ -431,7 +429,7 @@ def run_analysis():
     print(f"Each trajectory made {num_engagements} engagements")
     print(f"Top-biased strategy chose top with probability {top_probability}")
 
-    print(f"\nUnique outcomes observed:")
+    print("\nUnique outcomes observed:")
     rand_unique = len(set(tuple(s) for s in random_metrics.sequences))
     bias_unique = len(set(tuple(s) for s in biased_metrics.sequences))
     print(f"  Random strategy: {rand_unique}/{num_runs} unique sequences")

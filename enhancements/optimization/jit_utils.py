@@ -10,11 +10,11 @@ Key concepts:
 """
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, NamedTuple, Optional
+from typing import NamedTuple
 
 import jax
-import jax.numpy as jnp
 import numpy as np
 
 from phoenix.recsys_model import RecsysBatch, RecsysEmbeddings
@@ -311,7 +311,7 @@ class StaticJITRunner:
     def __init__(
         self,
         base_runner: RecsysInferenceRunner,
-        config: Optional[StaticShapeConfig] = None,
+        config: StaticShapeConfig | None = None,
         warmup_iterations: int = 3,
     ):
         """Initialize the static JIT runner.
@@ -323,8 +323,8 @@ class StaticJITRunner:
         """
         self.base_runner = base_runner
         self.config = config or StaticShapeConfig()
-        self._jit_fn: Optional[Callable] = None
-        self._stats: Optional[JITStats] = None
+        self._jit_fn: Callable | None = None
+        self._stats: JITStats | None = None
         self._warmup_iterations = warmup_iterations
 
     def _ensure_compiled(self) -> None:
@@ -337,7 +337,7 @@ class StaticJITRunner:
             )
 
     @property
-    def stats(self) -> Optional[JITStats]:
+    def stats(self) -> JITStats | None:
         """Get JIT compilation statistics."""
         return self._stats
 

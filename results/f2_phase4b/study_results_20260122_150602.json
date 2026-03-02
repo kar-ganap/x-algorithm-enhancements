@@ -1,0 +1,181 @@
+{
+  "timestamp": "2026-01-22T15:06:02.429347",
+  "model_config": {
+    "emb_size": 128,
+    "num_layers": 4,
+    "history_len": 16,
+    "candidate_len": 8
+  },
+  "study_config": {
+    "num_eval_batches": 50,
+    "num_timing_runs": 20,
+    "min_top3_preserved": 0.9,
+    "min_memory_reduction": 0.4,
+    "max_latency_ratio": 1.2
+  },
+  "results": [
+    {
+      "config_name": "fp16_baseline",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.06640625,
+      "mean_score_diff": 0.0031280517578125,
+      "memory_reduction_ratio": 0.3958099978320566,
+      "latency_p50_ms": 64.9001965066418,
+      "latency_ratio": 1.0687857999022299,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_tensor_sym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.162109375,
+      "mean_score_diff": 0.0084228515625,
+      "memory_reduction_ratio": 0.5937432251770487,
+      "latency_p50_ms": 74.2327404441312,
+      "latency_ratio": 1.2224754799686304,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_channel_sym",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.203125,
+      "mean_score_diff": 0.0084228515625,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 74.33988654520363,
+      "latency_ratio": 1.224239977420181,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_channel_asym",
+      "kendall_tau": -0.07142857142857142,
+      "top3_preserved_rate": 0.0,
+      "max_score_diff": 1.0,
+      "mean_score_diff": 0.03369140625,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 86.05939708650112,
+      "latency_ratio": 1.4172385679107569,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int4_tensor_sym",
+      "kendall_tau": -0.14285714285714285,
+      "top3_preserved_rate": 0.0,
+      "max_score_diff": 0.8203125,
+      "mean_score_diff": 0.03369140625,
+      "memory_reduction_ratio": 0.5937432251770487,
+      "latency_p50_ms": 84.80269846040756,
+      "latency_ratio": 1.3965430736191795,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int4_channel_asym",
+      "kendall_tau": 0.14285714285714285,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.828125,
+      "mean_score_diff": 0.03369140625,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 83.54120189324021,
+      "latency_ratio": 1.3757685661417502,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_channel_kv8",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.203125,
+      "mean_score_diff": 0.0084228515625,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 79.62639047764242,
+      "latency_ratio": 1.3112988869188549,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "mixed_int4_ffn_int8_attn",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.3984375,
+      "mean_score_diff": 0.016845703125,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 76.56985998619348,
+      "latency_ratio": 1.2609635017880179,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int4_pergroup128_sym",
+      "kendall_tau": -0.07142857142857142,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.78515625,
+      "mean_score_diff": 0.03369140625,
+      "memory_reduction_ratio": 0.5814288553259142,
+      "latency_p50_ms": 78.16220098175108,
+      "latency_ratio": 1.2871864030465678,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_channel_sym_kv8",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.203125,
+      "mean_score_diff": 0.0084228515625,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 75.03379648551345,
+      "latency_ratio": 1.2356673864348555,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "mixed_int4_int8_kv8",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.3984375,
+      "mean_score_diff": 0.016845703125,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 74.72249760758132,
+      "latency_ratio": 1.2305408715987207,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int4_pergroup_kv8",
+      "kendall_tau": -0.07142857142857142,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.78515625,
+      "mean_score_diff": 0.03369140625,
+      "memory_reduction_ratio": 0.5814288553259142,
+      "latency_p50_ms": 94.31932203006,
+      "latency_ratio": 1.553264203627137,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "mixed_int4_pergroup_int8_attn",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.322265625,
+      "mean_score_diff": 0.016845703125,
+      "memory_reduction_ratio": 0.5823389398757046,
+      "latency_p50_ms": 99.17226037941873,
+      "latency_ratio": 1.6331830925486024,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "mixed_int4_pergroup_int8_kv8",
+      "kendall_tau": 0.6428571428571429,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.322265625,
+      "mean_score_diff": 0.016845703125,
+      "memory_reduction_ratio": 0.5823389398757046,
+      "latency_p50_ms": 99.67515198513865,
+      "latency_ratio": 1.6414647840690353,
+      "passes_all_gates": false
+    }
+  ],
+  "winner": {
+    "config_name": null,
+    "score": null
+  },
+  "selection_details": {
+    "error": "No configurations pass all required gates",
+    "num_total": 14,
+    "num_passing": 0
+  }
+}

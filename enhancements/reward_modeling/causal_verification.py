@@ -11,13 +11,37 @@ From design doc:
     "Rewards should capture causation, not just correlation"
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 import numpy as np
 
-from enhancements.reward_modeling.weights import ACTION_INDICES, NUM_ACTIONS
+# Define constants locally to avoid import chain that triggers grok
+ACTION_NAMES: list[str] = [
+    "favorite",
+    "reply",
+    "repost",
+    "photo_expand",
+    "click",
+    "profile_click",
+    "vqv",
+    "share",
+    "share_via_dm",
+    "share_via_copy_link",
+    "dwell",
+    "quote",
+    "quoted_click",
+    "follow_author",
+    "not_interested",
+    "block_author",
+    "mute_author",
+    "report",
+]
+
+NUM_ACTIONS = len(ACTION_NAMES)
+ACTION_INDICES: dict[str, int] = {name: i for i, name in enumerate(ACTION_NAMES)}
 
 
 class InterventionType(Enum):
@@ -67,7 +91,7 @@ class CausalTestResults(NamedTuple):
     mean_effect_size: float
     std_effect_size: float
     passed: bool  # Overall test passed?
-    individual_results: List[InterventionResult]
+    individual_results: list[InterventionResult]
 
 
 # Type alias for reward function
@@ -477,10 +501,10 @@ class CausalVerificationSuite:
         reward_fn: RewardFunction,
         user_histories: np.ndarray,
         action_probs_batch: np.ndarray,
-        post_topics: Optional[np.ndarray] = None,
+        post_topics: np.ndarray | None = None,
         num_topics: int = 6,
         verbose: bool = True,
-    ) -> Dict[str, CausalTestResults]:
+    ) -> dict[str, CausalTestResults]:
         """Run all causal verification tests.
 
         Args:
@@ -565,7 +589,7 @@ class CausalVerificationSuite:
         reward_fn: RewardFunction,
         user_histories: np.ndarray,
         action_probs_batch: np.ndarray,
-        post_topics: Optional[np.ndarray] = None,
+        post_topics: np.ndarray | None = None,
         num_topics: int = 6,
     ) -> bool:
         """Quick verification that returns True/False.

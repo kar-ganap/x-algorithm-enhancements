@@ -10,24 +10,22 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
-from enhancements.analysis.trajectory_simulation import (
-    TrajectorySimulator,
-    TrajectoryPath,
-    TrajectoryStep,
-    CandidateScore,
-    compare_trajectories,
-    format_trajectory_table,
-)
 from enhancements.analysis.sensitivity_analysis import (
     SensitivityMetrics,
     run_random_trajectories,
     run_top_biased_trajectories,
 )
+from enhancements.analysis.trajectory_simulation import (
+    CandidateScore,
+    TrajectoryPath,
+    TrajectorySimulator,
+    compare_trajectories,
+    format_trajectory_table,
+)
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
+from phoenix.runners import ACTIONS, create_example_batch
 
 
 def create_test_config(candidate_seq_len: int = 8):

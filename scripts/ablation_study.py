@@ -17,7 +17,6 @@ Usage:
 import pickle
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -27,14 +26,13 @@ sys.path.insert(0, str(project_root / "phoenix"))
 import jax.numpy as jnp
 import numpy as np
 
+from enhancements.data.movielens import MovieLensDataset
+from enhancements.data.movielens_adapter import MovieLensPhoenixAdapter
 from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
 from phoenix.runners import ModelRunner, RecsysInferenceRunner
 
-from enhancements.data.movielens import MovieLensDataset
-from enhancements.data.movielens_adapter import MovieLensPhoenixAdapter
 
-
-def load_checkpoint(checkpoint_path: str) -> Tuple[Dict, PhoenixModelConfig]:
+def load_checkpoint(checkpoint_path: str) -> tuple[dict, PhoenixModelConfig]:
     """Load trained model checkpoint."""
     with open(checkpoint_path, "rb") as f:
         checkpoint = pickle.load(f)
@@ -284,9 +282,9 @@ def main():
     if synergy > 0.01:
         print(f"\n→ Positive synergy ({100*synergy/total_improvement:.1f}%): Embeddings and transformer work better together")
     elif synergy < -0.01:
-        print(f"\n→ Negative synergy: Some redundancy between embeddings and transformer")
+        print("\n→ Negative synergy: Some redundancy between embeddings and transformer")
     else:
-        print(f"\n→ Contributions are roughly additive (minimal interaction)")
+        print("\n→ Contributions are roughly additive (minimal interaction)")
 
     print()
     print("=" * 70)

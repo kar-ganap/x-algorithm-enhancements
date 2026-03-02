@@ -4,7 +4,7 @@ Provides functions for quantizing and dequantizing tensors with various
 configurations (INT8, INT4, FP16, per-tensor, per-channel, symmetric, asymmetric).
 """
 
-from typing import Dict, NamedTuple, Optional, Tuple, Any, Union
+from typing import Any, NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -12,7 +12,6 @@ import jax.numpy as jnp
 from enhancements.optimization.quantization.config import (
     BitWidth,
     Granularity,
-    MixedPrecisionConfig,
     QuantizationConfig,
     Symmetry,
 )
@@ -32,14 +31,14 @@ class QuantizedTensor(NamedTuple):
     scale: jax.Array
     zero_point: jax.Array
     original_dtype: jnp.dtype
-    original_shape: Optional[Tuple[int, ...]] = None  # For per-group dequantization
+    original_shape: tuple[int, ...] | None = None  # For per-group dequantization
 
 
 def compute_scale_zp_symmetric(
     tensor: jax.Array,
     bit_width: int,
-    axis: Optional[Union[int, Tuple[int, ...]]] = None,
-) -> Tuple[jax.Array, jax.Array]:
+    axis: int | tuple[int, ...] | None = None,
+) -> tuple[jax.Array, jax.Array]:
     """Compute symmetric quantization parameters.
 
     For symmetric quantization, the range is [-qmax, qmax] and zero_point is 0.
@@ -74,8 +73,8 @@ def compute_scale_zp_symmetric(
 def compute_scale_zp_asymmetric(
     tensor: jax.Array,
     bit_width: int,
-    axis: Optional[Union[int, Tuple[int, ...]]] = None,
-) -> Tuple[jax.Array, jax.Array]:
+    axis: int | tuple[int, ...] | None = None,
+) -> tuple[jax.Array, jax.Array]:
     """Compute asymmetric quantization parameters.
 
     For asymmetric quantization, the range is [qmin, qmax] with a non-zero zero_point.
@@ -115,7 +114,7 @@ def compute_scale_zp_per_group(
     bit_width: int,
     group_size: int,
     symmetric: bool = True,
-) -> Tuple[jax.Array, jax.Array, Tuple[int, ...]]:
+) -> tuple[jax.Array, jax.Array, tuple[int, ...]]:
     """Compute per-group quantization parameters.
 
     Reshapes tensor to [num_groups, group_size] and computes scale per group.
@@ -237,7 +236,7 @@ def quantize_tensor(
         )
 
     # Standard per-tensor or per-channel quantization
-    axis: Optional[Union[int, Tuple[int, ...]]] = None
+    axis: int | tuple[int, ...] | None = None
     if granularity == Granularity.PER_CHANNEL and tensor.ndim >= 2:
         # For weight matrices [in, out], quantize per output channel (axis 0)
         # This keeps a scale per row - reduce all dims except first
@@ -306,8 +305,8 @@ def dequantize_tensor(qtensor: QuantizedTensor) -> jax.Array:
 def quantize_tensor_simple(
     tensor: jax.Array,
     config: QuantizationConfig,
-    bit_width_override: Optional[BitWidth] = None,
-    granularity_override: Optional[Granularity] = None,
+    bit_width_override: BitWidth | None = None,
+    granularity_override: Granularity | None = None,
 ) -> QuantizedTensor:
     """Quantize a tensor using a QuantizationConfig.
 
@@ -375,7 +374,7 @@ def get_layer_type(path: str) -> str:
 def get_quant_settings_for_param(
     path: str,
     config: QuantizationConfig,
-) -> Tuple[bool, Optional[BitWidth], Optional[Granularity]]:
+) -> tuple[bool, BitWidth | None, Granularity | None]:
     """Get quantization settings for a specific parameter.
 
     Handles both standard quantization and mixed precision configs.
@@ -410,8 +409,8 @@ def get_quant_settings_for_param(
         return (False, None, None)
 
     # Get layer-specific bit width and granularity for mixed precision
-    bit_width_override: Optional[BitWidth] = None
-    granularity_override: Optional[Granularity] = None
+    bit_width_override: BitWidth | None = None
+    granularity_override: Granularity | None = None
 
     if config.use_mixed_precision and config.mixed_precision:
         mp = config.mixed_precision
@@ -466,9 +465,9 @@ def should_quantize_param(path: str, config: QuantizationConfig) -> bool:
 
 
 def quantize_params(
-    params: Dict[str, Any],
+    params: dict[str, Any],
     config: QuantizationConfig,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Quantize model parameters according to config.
 
     Supports both uniform quantization and mixed precision with
@@ -511,8 +510,8 @@ def quantize_params(
 
 
 def dequantize_params(
-    params: Dict[str, Any],
-) -> Dict[str, Any]:
+    params: dict[str, Any],
+) -> dict[str, Any]:
     """Dequantize all quantized parameters.
 
     Args:
@@ -536,7 +535,7 @@ def dequantize_params(
     return dequantize_recursive(params)
 
 
-def compute_memory_bytes(params: Dict[str, Any]) -> int:
+def compute_memory_bytes(params: dict[str, Any]) -> int:
     """Compute theoretical memory footprint of parameters.
 
     Automatically detects QuantizedTensors and computes their storage size

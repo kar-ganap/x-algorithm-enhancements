@@ -13,33 +13,26 @@ Tests cover:
 import sys
 from pathlib import Path
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
-import jax.numpy as jnp
 
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-from phoenix.runners import (
-    ModelRunner,
-    RecsysInferenceRunner,
-    create_example_batch,
-)
-
 from enhancements.optimization.quantization import (
-    BitWidth,
     EXTENDED_STUDY_CONFIGS,
+    STUDY_CONFIGS,
+    BenchmarkMetrics,
+    BitWidth,
     Granularity,
     LayerType,
     MixedPrecisionConfig,
     QuantizationConfig,
     QuantizedLayerKVCache,
     QuantizedPhoenixRunner,
-    QuantizedTensor,
-    STUDY_CONFIGS,
     Symmetry,
+    WinnerSelectionCriteria,
     compute_kendall_tau,
     compute_memory_bytes,
     compute_scale_zp_per_group,
@@ -53,10 +46,14 @@ from enhancements.optimization.quantization import (
     quantize_kv_cache,
     quantize_tensor,
     select_winner,
-    BenchmarkMetrics,
-    WinnerSelectionCriteria,
 )
-
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
+from phoenix.runners import (
+    ModelRunner,
+    RecsysInferenceRunner,
+    create_example_batch,
+)
 
 # ============================================================================
 # Fixtures

@@ -12,7 +12,6 @@ Usage:
 import pickle
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -22,21 +21,20 @@ sys.path.insert(0, str(project_root / "phoenix"))
 import jax.numpy as jnp
 import numpy as np
 
+from enhancements.data.movielens import MovieLensDataset
+from enhancements.data.movielens_adapter import MovieLensPhoenixAdapter
 from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
 from phoenix.runners import ModelRunner, RecsysInferenceRunner
 
-from enhancements.data.movielens import MovieLensDataset
-from enhancements.data.movielens_adapter import MovieLensPhoenixAdapter
 
-
-def load_checkpoint(checkpoint_path: str) -> Tuple[Dict, PhoenixModelConfig]:
+def load_checkpoint(checkpoint_path: str) -> tuple[dict, PhoenixModelConfig]:
     """Load trained model checkpoint."""
     with open(checkpoint_path, "rb") as f:
         checkpoint = pickle.load(f)
     return checkpoint["params"], checkpoint["model_config"]
 
 
-def compute_kendall_tau(ranking1: List[int], ranking2: List[int]) -> float:
+def compute_kendall_tau(ranking1: list[int], ranking2: list[int]) -> float:
     """Compute Kendall's tau rank correlation coefficient."""
     n = len(ranking1)
     if n != len(ranking2) or n < 2:
@@ -69,11 +67,11 @@ def compute_kendall_tau(ranking1: List[int], ranking2: List[int]) -> float:
 def run_trajectory_analysis(
     runner: RecsysInferenceRunner,
     adapter: MovieLensPhoenixAdapter,
-    model_params: Dict,
+    model_params: dict,
     dataset: MovieLensDataset,
     num_users: int = 10,
     num_steps: int = 5,
-) -> Dict:
+) -> dict:
     """Run trajectory simulation: How do rankings evolve as user engages?
 
     Simulates user engaging with top-ranked items and tracks ranking changes.
@@ -178,8 +176,8 @@ def run_trajectory_analysis(
         avg_stability = np.mean([r["avg_tau"] for r in results])
         print(f"Analyzed {len(results)} user trajectories")
         print(f"Average ranking stability (Kendall's tau): {avg_stability:.3f}")
-        print(f"  1.0 = perfectly stable rankings")
-        print(f"  0.0 = random changes")
+        print("  1.0 = perfectly stable rankings")
+        print("  0.0 = random changes")
         print()
 
         # Show example trajectory
@@ -195,10 +193,10 @@ def run_trajectory_analysis(
 def run_counterfactual_analysis(
     runner: RecsysInferenceRunner,
     adapter: MovieLensPhoenixAdapter,
-    model_params: Dict,
+    model_params: dict,
     dataset: MovieLensDataset,
     num_users: int = 10,
-) -> Dict:
+) -> dict:
     """Run counterfactual analysis: Which history items influence rankings?
 
     Ablates (removes) history items one at a time and measures ranking changes.
@@ -341,13 +339,13 @@ def run_counterfactual_analysis(
                     old_impacts.append(a["score_change"])
 
         if recent_impacts and old_impacts:
-            print(f"Recency analysis:")
+            print("Recency analysis:")
             print(f"  Recent items (pos 0-3) avg impact: {np.mean(recent_impacts):.2e}")
             print(f"  Older items (pos 4+) avg impact: {np.mean(old_impacts):.2e}")
             if np.mean(recent_impacts) > np.mean(old_impacts):
-                print(f"  -> Model shows recency bias (recent items matter more)")
+                print("  -> Model shows recency bias (recent items matter more)")
             else:
-                print(f"  -> Model values older context (no recency bias)")
+                print("  -> Model values older context (no recency bias)")
 
     return {"ablations": results}
 

@@ -1,0 +1,90 @@
+{
+  "timestamp": "2026-01-21T23:45:57.719149",
+  "model_config": {
+    "emb_size": 128,
+    "num_layers": 4,
+    "history_len": 16,
+    "candidate_len": 8
+  },
+  "study_config": {
+    "num_eval_batches": 10,
+    "num_timing_runs": 5,
+    "min_top3_preserved": 0.9,
+    "min_memory_reduction": 0.4,
+    "max_latency_ratio": 1.2
+  },
+  "results": [
+    {
+      "config_name": "fp16_baseline",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.06640625,
+      "mean_score_diff": 0.00689697265625,
+      "memory_reduction_ratio": 0.3958099978320566,
+      "latency_p50_ms": 54.431808879598975,
+      "latency_ratio": 1.024829302983207,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_channel_sym",
+      "kendall_tau": 0.642857142857143,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.203125,
+      "mean_score_diff": 0.0194091796875,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 59.346701949834824,
+      "latency_ratio": 1.1173657544274034,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "mixed_int4_ffn_int8_attn",
+      "kendall_tau": 0.642857142857143,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.3984375,
+      "mean_score_diff": 0.045166015625,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 59.99681004323065,
+      "latency_ratio": 1.1296058367971131,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int4_pergroup128_sym",
+      "kendall_tau": -0.07142857142857142,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.78515625,
+      "mean_score_diff": 0.107421875,
+      "memory_reduction_ratio": 0.5814288553259142,
+      "latency_p50_ms": 62.86144210025668,
+      "latency_ratio": 1.183540455813709,
+      "passes_all_gates": true
+    }
+  ],
+  "winner": {
+    "config_name": "int8_channel_sym",
+    "score": 0.6848537666746979
+  },
+  "selection_details": {
+    "winner_score": 0.6848537666746979,
+    "num_total": 4,
+    "num_passing": 3,
+    "all_scores": [
+      [
+        "int8_channel_sym",
+        0.6848537666746979
+      ],
+      [
+        "mixed_int4_ffn_int8_attn",
+        0.682429379016086
+      ],
+      [
+        "int4_pergroup128_sym",
+        0.38615930407768584
+      ]
+    ],
+    "criteria": {
+      "weight_accuracy": 0.4,
+      "weight_memory": 0.35,
+      "weight_latency": 0.25
+    }
+  }
+}

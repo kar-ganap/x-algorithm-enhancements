@@ -11,30 +11,27 @@ Usage:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import jax.numpy as jnp
 import numpy as np
 
+from enhancements.data.ground_truth import (
+    ContentTopic,
+    UserArchetype,
+    get_engagement_probs,
+)
+from enhancements.data.synthetic_twitter import (
+    SyntheticEngagement,
+    SyntheticTwitterDataset,
+)
 from phoenix.recsys_model import (
     PhoenixModelConfig,
     RecsysBatch,
     RecsysEmbeddings,
 )
 
-from enhancements.data.ground_truth import (
-    UserArchetype,
-    ContentTopic,
-    get_engagement_probs,
-)
-from enhancements.data.synthetic_twitter import (
-    SyntheticTwitterDataset,
-    SyntheticEngagement,
-)
-
-
 # Type alias for embedding parameters
-EmbeddingParams = Dict[str, jnp.ndarray]
+EmbeddingParams = dict[str, jnp.ndarray]
 
 # Embedding dimension for archetype/topic base vectors
 NUM_ARCHETYPES = len(UserArchetype)
@@ -63,19 +60,19 @@ class SyntheticTwitterPhoenixAdapter:
     rng: np.random.Generator = None
 
     # Learned embedding projections (set during training)
-    archetype_projection: Optional[np.ndarray] = None  # [NUM_ARCHETYPES, emb_size]
-    topic_projection: Optional[np.ndarray] = None  # [NUM_TOPICS, emb_size]
-    user_embedding_table: Optional[np.ndarray] = None  # [num_users+1, emb_size]
-    author_embedding_table: Optional[np.ndarray] = None  # [num_authors+1, emb_size]
+    archetype_projection: np.ndarray | None = None  # [NUM_ARCHETYPES, emb_size]
+    topic_projection: np.ndarray | None = None  # [NUM_TOPICS, emb_size]
+    user_embedding_table: np.ndarray | None = None  # [num_users+1, emb_size]
+    author_embedding_table: np.ndarray | None = None  # [num_authors+1, emb_size]
 
     # Training data splits
-    train_engagements: Optional[List[SyntheticEngagement]] = None
-    val_engagements: Optional[List[SyntheticEngagement]] = None
-    test_engagements: Optional[List[SyntheticEngagement]] = None
+    train_engagements: list[SyntheticEngagement] | None = None
+    val_engagements: list[SyntheticEngagement] | None = None
+    test_engagements: list[SyntheticEngagement] | None = None
 
     # Index mappings
-    _archetype_to_idx: Dict[UserArchetype, int] = None
-    _topic_to_idx: Dict[ContentTopic, int] = None
+    _archetype_to_idx: dict[UserArchetype, int] = None
+    _topic_to_idx: dict[ContentTopic, int] = None
 
     def __post_init__(self):
         if self.rng is None:
@@ -151,9 +148,9 @@ class SyntheticTwitterPhoenixAdapter:
 
     def set_splits(
         self,
-        train: List[SyntheticEngagement],
-        val: List[SyntheticEngagement],
-        test: List[SyntheticEngagement],
+        train: list[SyntheticEngagement],
+        val: list[SyntheticEngagement],
+        test: list[SyntheticEngagement],
     ):
         """Set train/val/test splits.
 
@@ -341,10 +338,10 @@ class SyntheticTwitterPhoenixAdapter:
     def create_batch_for_user(
         self,
         user_id: int,
-        candidate_post_ids: List[int],
-        history_limit: Optional[int] = None,
-        num_candidates_override: Optional[int] = None,
-    ) -> Tuple[RecsysBatch, RecsysEmbeddings]:
+        candidate_post_ids: list[int],
+        history_limit: int | None = None,
+        num_candidates_override: int | None = None,
+    ) -> tuple[RecsysBatch, RecsysEmbeddings]:
         """Create Phoenix batch for a single user.
 
         Args:
@@ -532,8 +529,8 @@ class SyntheticTwitterPhoenixAdapter:
         batch_size: int = 32,
         neg_ratio: int = 4,
         hard_negative_ratio: float = 0.5,
-        sample_weights: Optional[np.ndarray] = None,
-    ) -> Tuple[RecsysBatch, EmbeddingParams, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        sample_weights: np.ndarray | None = None,
+    ) -> tuple[RecsysBatch, EmbeddingParams, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Get a training batch with positive and negative samples.
 
         For each positive engagement, samples neg_ratio negative posts.
@@ -684,7 +681,7 @@ class SyntheticTwitterPhoenixAdapter:
         return (combined_batch, self.get_embedding_params(), labels_array,
                 action_labels_array, archetype_labels_array, sample_indices_array)
 
-    def _stack_batches(self, batches: List[RecsysBatch]) -> RecsysBatch:
+    def _stack_batches(self, batches: list[RecsysBatch]) -> RecsysBatch:
         """Stack multiple single-sample batches into one.
 
         Args:
@@ -708,7 +705,7 @@ class SyntheticTwitterPhoenixAdapter:
         self,
         batch_size: int = 16,
         synthetic_ratio: float = 0.5,
-    ) -> Optional[Tuple[RecsysBatch, EmbeddingParams, np.ndarray]]:
+    ) -> tuple[RecsysBatch, EmbeddingParams, np.ndarray] | None:
         """Get training batch for block-aware contrastive learning.
 
         For generalizable block semantics, we create two types of pairs:
@@ -872,7 +869,7 @@ class SyntheticTwitterPhoenixAdapter:
     def get_history_contrastive_batch(
         self,
         batch_size: int = 16,
-    ) -> Optional[Tuple[RecsysBatch, RecsysBatch, EmbeddingParams]]:
+    ) -> tuple[RecsysBatch, RecsysBatch, EmbeddingParams] | None:
         """Get batch for history-topic contrastive learning.
 
         Creates pairs where:
@@ -977,7 +974,7 @@ class SyntheticTwitterPhoenixAdapter:
     def get_validation_samples(
         self,
         num_samples: int = 100,
-    ) -> List[Tuple[int, int, List[int]]]:
+    ) -> list[tuple[int, int, list[int]]]:
         """Get validation samples for evaluation.
 
         Returns tuples of (user_id, positive_post_id, negative_post_ids)

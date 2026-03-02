@@ -5,11 +5,17 @@ and (potentially) faster inference. Supports simulated quantization
 (dequantize on-the-fly) for accuracy evaluation.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 import jax
-import jax.numpy as jnp
 
+from enhancements.optimization.quantization.config import QuantizationConfig
+from enhancements.optimization.quantization.quantize import (
+    QuantizedTensor,
+    compute_memory_bytes,
+    dequantize_params,
+    quantize_params,
+)
 from phoenix.recsys_model import (
     PhoenixModelConfig,
     RecsysBatch,
@@ -19,14 +25,6 @@ from phoenix.runners import (
     ModelRunner,
     RankingOutput,
     RecsysInferenceRunner,
-)
-
-from enhancements.optimization.quantization.config import QuantizationConfig
-from enhancements.optimization.quantization.quantize import (
-    QuantizedTensor,
-    compute_memory_bytes,
-    dequantize_params,
-    quantize_params,
 )
 
 
@@ -126,7 +124,7 @@ class QuantizedPhoenixRunner:
         quantized = self.get_quantized_memory_bytes()
         return original / quantized
 
-    def count_quantized_params(self) -> Dict[str, int]:
+    def count_quantized_params(self) -> dict[str, int]:
         """Count parameters by quantization status.
 
         Returns:
@@ -156,7 +154,7 @@ class QuantizedPhoenixRunner:
 def create_quantized_runner(
     model_config: PhoenixModelConfig,
     quant_config: QuantizationConfig,
-    base_runner: Optional[RecsysInferenceRunner] = None,
+    base_runner: RecsysInferenceRunner | None = None,
 ) -> QuantizedPhoenixRunner:
     """Create a quantized runner, optionally initializing from scratch.
 

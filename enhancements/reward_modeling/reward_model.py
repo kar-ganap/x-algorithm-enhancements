@@ -22,15 +22,14 @@ Architecture:
     └─────────────────────────────────────────────────────────────┘
 """
 
-from typing import Optional, Union
+from typing import Union
 
 import jax
 import jax.numpy as jnp
 
+from enhancements.reward_modeling.weights import NUM_ACTIONS, RewardWeights
 from phoenix.recsys_model import RecsysBatch, RecsysEmbeddings
 from phoenix.runners import RankingOutput, RecsysInferenceRunner
-
-from enhancements.reward_modeling.weights import NUM_ACTIONS, RewardWeights
 
 
 class PhoenixRewardModel:
@@ -57,7 +56,7 @@ class PhoenixRewardModel:
     def __init__(
         self,
         runner: Union[RecsysInferenceRunner, "OptimizedPhoenixRunner"],
-        weights: Optional[RewardWeights] = None,
+        weights: RewardWeights | None = None,
     ):
         """Initialize the reward model.
 

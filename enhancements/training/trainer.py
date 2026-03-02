@@ -9,21 +9,21 @@ Trains Phoenix recommendation model on MovieLens data with:
 import pickle
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
 
-from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
-from phoenix.runners import ModelRunner, RecsysInferenceRunner
-
 from enhancements.data.movielens import MovieLensDataset
 from enhancements.data.movielens_adapter import MovieLensPhoenixAdapter
+from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
+from phoenix.runners import ModelRunner, RecsysInferenceRunner
 
 
 # Register RecsysEmbeddings as a JAX pytree so it can be used with JIT
@@ -82,10 +82,10 @@ def _make_loss_fn_with_embeddings(
         A pure function that computes loss and metrics
     """
     def loss_fn(
-        params: Dict[str, Any],
+        params: dict[str, Any],
         batch: RecsysBatch,
         labels: jnp.ndarray,
-    ) -> Tuple[jnp.ndarray, Dict[str, jnp.ndarray]]:
+    ) -> tuple[jnp.ndarray, dict[str, jnp.ndarray]]:
         """Compute training loss with learnable embeddings.
 
         Args:
@@ -175,11 +175,11 @@ def _make_train_step_with_embeddings(loss_fn: Callable, optimizer: optax.Gradien
     """
     @jax.jit
     def train_step(
-        params: Dict[str, Any],
+        params: dict[str, Any],
         opt_state: Any,
         batch: RecsysBatch,
         labels: jnp.ndarray,
-    ) -> Tuple[Dict[str, Any], Any, Dict[str, jnp.ndarray]]:
+    ) -> tuple[dict[str, Any], Any, dict[str, jnp.ndarray]]:
         """Single training step with learnable embeddings."""
         def compute_loss(p):
             return loss_fn(p, batch, labels)
@@ -214,7 +214,7 @@ class TrainingConfig:
     num_epochs: int = 20
     num_negatives: int = 7  # Random negatives (used when not using in-batch)
     use_in_batch_negatives: bool = True  # Use other positives in batch as negatives
-    max_batches_per_epoch: Optional[int] = None  # Limit batches for testing
+    max_batches_per_epoch: int | None = None  # Limit batches for testing
 
     # Loss function
     loss_type: LossType = LossType.BPR  # BPR for ranking, BCE for classification
@@ -224,7 +224,7 @@ class TrainingConfig:
     eval_every_n_epochs: int = 1
 
     # Early stopping
-    early_stopping_patience: Optional[int] = None  # Stop if no improvement for N epochs
+    early_stopping_patience: int | None = None  # Stop if no improvement for N epochs
     early_stopping_min_delta: float = 0.001  # Minimum improvement to count as progress
 
     # Checkpointing
@@ -242,7 +242,7 @@ class PhoenixTrainer:
         self,
         model_config: PhoenixModelConfig,
         dataset: MovieLensDataset,
-        training_config: Optional[TrainingConfig] = None,
+        training_config: TrainingConfig | None = None,
     ):
         """Initialize trainer.
 
@@ -299,9 +299,9 @@ class PhoenixTrainer:
         # Training state
         self.current_epoch = 0
         self.best_val_ndcg = 0.0
-        self.metrics_history: List[TrainingMetrics] = []
+        self.metrics_history: list[TrainingMetrics] = []
 
-    def train_epoch(self, max_batches: Optional[int] = None) -> float:
+    def train_epoch(self, max_batches: int | None = None) -> float:
         """Train for one epoch.
 
         Args:
@@ -359,7 +359,7 @@ class PhoenixTrainer:
 
         return total_loss / num_batches
 
-    def evaluate(self) -> Tuple[float, float, float]:
+    def evaluate(self) -> tuple[float, float, float]:
         """Evaluate on validation set.
 
         Returns:
@@ -477,7 +477,7 @@ class PhoenixTrainer:
         positive_idx = np.argmax(labels)
         return 1.0 if positive_idx in top_k_indices else 0.0
 
-    def evaluate_test(self) -> Tuple[float, float, float]:
+    def evaluate_test(self) -> tuple[float, float, float]:
         """Evaluate on test set.
 
         Returns:
@@ -557,7 +557,7 @@ class PhoenixTrainer:
             total_hit / num_samples,
         )
 
-    def train(self, resume_from: Optional[str] = None) -> List[TrainingMetrics]:
+    def train(self, resume_from: str | None = None) -> list[TrainingMetrics]:
         """Run full training loop.
 
         Args:

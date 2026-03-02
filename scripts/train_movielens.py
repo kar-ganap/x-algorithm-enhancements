@@ -14,11 +14,10 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "phoenix"))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-
 from enhancements.data.movielens import MovieLensDataset
 from enhancements.training.trainer import LossType, PhoenixTrainer, TrainingConfig
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
 
 
 def create_model_config(size: str = "small") -> PhoenixModelConfig:

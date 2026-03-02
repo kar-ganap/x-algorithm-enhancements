@@ -15,7 +15,6 @@ Go/No-Go Gates:
 
 import sys
 from pathlib import Path
-from typing import Tuple
 
 import jax
 import jax.numpy as jnp
@@ -24,10 +23,6 @@ import pytest
 
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
-
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
-from phoenix.runners import ACTIONS, create_example_batch
 
 from enhancements.optimization.optimized_runner import OptimizationConfig, OptimizedPhoenixRunner
 from enhancements.reward_modeling import (
@@ -42,7 +37,9 @@ from enhancements.reward_modeling import (
     train_single_weights,
 )
 from enhancements.reward_modeling.weights import ACTION_INDICES, RewardWeights
-
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
+from phoenix.runners import ACTIONS, create_example_batch
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -93,7 +90,7 @@ def optimized_runner(model_config: PhoenixModelConfig) -> OptimizedPhoenixRunner
 
 
 @pytest.fixture
-def sample_batch(model_config: PhoenixModelConfig) -> Tuple[RecsysBatch, RecsysEmbeddings]:
+def sample_batch(model_config: PhoenixModelConfig) -> tuple[RecsysBatch, RecsysEmbeddings]:
     """Create a sample batch for testing."""
     batch, embeddings = create_example_batch(
         batch_size=2,
@@ -157,7 +154,7 @@ class TestContextualRewardModel:
     def test_compute_reward_shape(
         self,
         contextual_model: ContextualRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Gate: Contextual rewards have correct shape."""
         batch, embeddings = sample_batch
@@ -170,7 +167,7 @@ class TestContextualRewardModel:
     def test_different_archetypes_different_rewards(
         self,
         optimized_runner: OptimizedPhoenixRunner,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Gate: Different archetypes produce different rewards for same content."""
         batch, embeddings = sample_batch
@@ -486,7 +483,7 @@ class TestIntegration:
     def test_contextual_model_training_pipeline(
         self,
         optimized_runner: OptimizedPhoenixRunner,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Test full training pipeline with contextual model."""
         batch, embeddings = sample_batch

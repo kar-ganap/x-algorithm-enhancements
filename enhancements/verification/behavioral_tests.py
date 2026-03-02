@@ -6,20 +6,18 @@ on the ground truth rules.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 import jax.numpy as jnp
 import numpy as np
 
 from enhancements.data.ground_truth import (
-    UserArchetype,
-    ContentTopic,
-    get_engagement_probs,
     ENGAGEMENT_RULES,
+    ContentTopic,
+    UserArchetype,
+    get_engagement_probs,
 )
-from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
-
+from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 from phoenix.recsys_model import RecsysBatch
 
 
@@ -38,7 +36,7 @@ class BehavioralTestResult:
 @dataclass
 class BehavioralTestResults:
     """Results from all behavioral tests."""
-    individual_tests: List[BehavioralTestResult]
+    individual_tests: list[BehavioralTestResult]
     overall_accuracy: float  # % of tests within tolerance
     mean_error: float  # Average |predicted - expected|
     correlation: float  # Correlation between expected and predicted
@@ -59,7 +57,7 @@ def predict_engagement_probabilities(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     archetype: UserArchetype,
     topic: ContentTopic,
     num_samples: int = 50,
@@ -152,7 +150,7 @@ def run_behavioral_tests(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     tolerance: float = 0.15,
     num_samples: int = 50,
 ) -> BehavioralTestResults:
@@ -250,13 +248,13 @@ def test_topic_preference(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     archetype: UserArchetype,
     preferred_topic: ContentTopic,
     other_topic: ContentTopic,
     action: str = "favorite",
     num_samples: int = 50,
-) -> Tuple[float, float, bool]:
+) -> tuple[float, float, bool]:
     """Test that archetype prefers one topic over another.
 
     Args:

@@ -1,0 +1,949 @@
+{
+  "total_experiments": 117,
+  "by_loss_type": {
+    "posthoc": [
+      {
+        "name": "posthoc_user_a0.3",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_platform_a0.2",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_society_a0.2",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_society_a0.3",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_platform_a0.3",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_user_a0.05",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_platform_a0.05",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_user_a0.2",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_user_a0.9",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_platform_a0.4",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_society_a1.0",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_society_a0.4",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_platform_a1.0",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_user_a0.5",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_user_a0.75",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_platform_a0.75",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_society_a0.9",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_platform_a0.9",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_user_a0.4",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_user_a1.0",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_society_a0.5",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_platform_a0.5",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_society_a0.6",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_platform_a0.6",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_society_a0.05",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_user_a0.6",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_user_a0.1",
+        "accuracy": null,
+        "stakeholder": "user"
+      },
+      {
+        "name": "posthoc_platform_a0.1",
+        "accuracy": null,
+        "stakeholder": "platform"
+      },
+      {
+        "name": "posthoc_society_a0.1",
+        "accuracy": null,
+        "stakeholder": "society"
+      },
+      {
+        "name": "posthoc_society_a0.75",
+        "accuracy": null,
+        "stakeholder": "society"
+      }
+    ],
+    "margin_bt": [
+      {
+        "name": "margin_bt_user_m0.25",
+        "accuracy": 0.9595,
+        "stakeholder": "user",
+        "positive_mean": 1.3513951301574707,
+        "negative_mean": -1.393057107925415,
+        "weight_std": 0.9693869948387146,
+        "weight_range": 2.9529500007629395
+      },
+      {
+        "name": "margin_bt_society_m2.0",
+        "accuracy": 0.9572,
+        "stakeholder": "society",
+        "positive_mean": 1.5156011581420898,
+        "negative_mean": -5.694370269775391,
+        "weight_std": 2.794264554977417,
+        "weight_range": 10.202280044555664
+      },
+      {
+        "name": "margin_bt_user_m0.05",
+        "accuracy": 0.95958,
+        "stakeholder": "user",
+        "positive_mean": 0.8589165806770325,
+        "negative_mean": -0.8804402351379395,
+        "weight_std": 0.6146393418312073,
+        "weight_range": 1.8716402053833008
+      },
+      {
+        "name": "margin_bt_society_m1.5",
+        "accuracy": 0.95996,
+        "stakeholder": "society",
+        "positive_mean": 1.3597139120101929,
+        "negative_mean": -4.791931629180908,
+        "weight_std": 2.3578717708587646,
+        "weight_range": 8.492581367492676
+      },
+      {
+        "name": "margin_bt_society_m0.1",
+        "accuracy": 0.9755,
+        "stakeholder": "society",
+        "positive_mean": 0.3667418956756592,
+        "negative_mean": -1.3048334121704102,
+        "weight_std": 0.6221696734428406,
+        "weight_range": 1.9630377292633057
+      },
+      {
+        "name": "margin_bt_user_m0.15",
+        "accuracy": 0.9598,
+        "stakeholder": "user",
+        "positive_mean": 1.1027473211288452,
+        "negative_mean": -1.1313233375549316,
+        "weight_std": 0.7891976833343506,
+        "weight_range": 2.3982954025268555
+      },
+      {
+        "name": "margin_bt_user_m0.5",
+        "accuracy": 0.95714,
+        "stakeholder": "user",
+        "positive_mean": 1.927079439163208,
+        "negative_mean": -2.0355517864227295,
+        "weight_std": 1.3998987674713135,
+        "weight_range": 4.329555511474609
+      },
+      {
+        "name": "margin_bt_platform_m2.0",
+        "accuracy": 0.92144,
+        "stakeholder": "platform",
+        "positive_mean": 6.777691841125488,
+        "negative_mean": -2.4320058822631836,
+        "weight_std": 3.531243324279785,
+        "weight_range": 10.134695053100586
+      },
+      {
+        "name": "margin_bt_platform_m0.1",
+        "accuracy": 0.92924,
+        "stakeholder": "platform",
+        "positive_mean": 1.4049865007400513,
+        "negative_mean": -0.43844446539878845,
+        "weight_std": 0.7139909267425537,
+        "weight_range": 2.0004546642303467
+      },
+      {
+        "name": "margin_bt_platform_m1.5",
+        "accuracy": 0.92354,
+        "stakeholder": "platform",
+        "positive_mean": 5.677234649658203,
+        "negative_mean": -1.9719926118850708,
+        "weight_std": 2.936342477798462,
+        "weight_range": 8.271830558776855
+      },
+      {
+        "name": "margin_bt_user_m0.35",
+        "accuracy": 0.95868,
+        "stakeholder": "user",
+        "positive_mean": 1.592110514640808,
+        "negative_mean": -1.654464602470398,
+        "weight_std": 1.1467536687850952,
+        "weight_range": 3.5110034942626953
+      },
+      {
+        "name": "margin_bt_user_m0.75",
+        "accuracy": 0.95434,
+        "stakeholder": "user",
+        "positive_mean": 2.414574146270752,
+        "negative_mean": -2.6312575340270996,
+        "weight_std": 1.7835239171981812,
+        "weight_range": 5.617501735687256
+      },
+      {
+        "name": "margin_bt_user_m1.0",
+        "accuracy": 0.95078,
+        "stakeholder": "user",
+        "positive_mean": 2.8325016498565674,
+        "negative_mean": -3.179063081741333,
+        "weight_std": 2.1265335083007812,
+        "weight_range": 6.808752059936523
+      },
+      {
+        "name": "margin_bt_society_m0.5",
+        "accuracy": 0.96968,
+        "stakeholder": "society",
+        "positive_mean": 0.7553994059562683,
+        "negative_mean": -2.548434257507324,
+        "weight_std": 1.2355153560638428,
+        "weight_range": 4.101779937744141
+      },
+      {
+        "name": "margin_bt_platform_m0.35",
+        "accuracy": 0.93004,
+        "stakeholder": "platform",
+        "positive_mean": 2.344683885574341,
+        "negative_mean": -0.7299667596817017,
+        "weight_std": 1.188717246055603,
+        "weight_range": 3.2564072608947754
+      },
+      {
+        "name": "margin_bt_platform_m0.15",
+        "accuracy": 0.92928,
+        "stakeholder": "platform",
+        "positive_mean": 1.5904481410980225,
+        "negative_mean": -0.4933203458786011,
+        "weight_std": 0.8070410490036011,
+        "weight_range": 2.246678352355957
+      },
+      {
+        "name": "margin_bt_society_m0.05",
+        "accuracy": 0.97522,
+        "stakeholder": "society",
+        "positive_mean": 0.3186630606651306,
+        "negative_mean": -1.1438286304473877,
+        "weight_std": 0.5448566675186157,
+        "weight_range": 1.7210826873779297
+      },
+      {
+        "name": "margin_bt_society_m0.25",
+        "accuracy": 0.97418,
+        "stakeholder": "society",
+        "positive_mean": 0.5175024271011353,
+        "negative_mean": -1.7965614795684814,
+        "weight_std": 0.8614782094955444,
+        "weight_range": 2.754396438598633
+      },
+      {
+        "name": "margin_bt_society_m1.0",
+        "accuracy": 0.96372,
+        "stakeholder": "society",
+        "positive_mean": 1.119036078453064,
+        "negative_mean": -3.780578374862671,
+        "weight_std": 1.8545639514923096,
+        "weight_range": 6.494600296020508
+      },
+      {
+        "name": "margin_bt_platform_m0.75",
+        "accuracy": 0.92842,
+        "stakeholder": "platform",
+        "positive_mean": 3.6950812339782715,
+        "negative_mean": -1.1966911554336548,
+        "weight_std": 1.8845988512039185,
+        "weight_range": 5.163638114929199
+      },
+      {
+        "name": "margin_bt_platform_m0.5",
+        "accuracy": 0.93006,
+        "stakeholder": "platform",
+        "positive_mean": 2.8816092014312744,
+        "negative_mean": -0.9097556471824646,
+        "weight_std": 1.4635051488876343,
+        "weight_range": 3.9963459968566895
+      },
+      {
+        "name": "margin_bt_platform_m0.05",
+        "accuracy": 0.9288,
+        "stakeholder": "platform",
+        "positive_mean": 1.2266465425491333,
+        "negative_mean": -0.3869823217391968,
+        "weight_std": 0.6248047351837158,
+        "weight_range": 1.7626293897628784
+      },
+      {
+        "name": "margin_bt_platform_m0.25",
+        "accuracy": 0.93014,
+        "stakeholder": "platform",
+        "positive_mean": 1.9695860147476196,
+        "negative_mean": -0.6096397638320923,
+        "weight_std": 0.9982393980026245,
+        "weight_range": 2.750995635986328
+      },
+      {
+        "name": "margin_bt_user_m2.0",
+        "accuracy": 0.93858,
+        "stakeholder": "user",
+        "positive_mean": 4.0783257484436035,
+        "negative_mean": -5.055675506591797,
+        "weight_std": 3.24442982673645,
+        "weight_range": 10.928972244262695
+      },
+      {
+        "name": "margin_bt_society_m0.75",
+        "accuracy": 0.96638,
+        "stakeholder": "society",
+        "positive_mean": 0.9552456140518188,
+        "negative_mean": -3.2008628845214844,
+        "weight_std": 1.563414454460144,
+        "weight_range": 5.3532233238220215
+      },
+      {
+        "name": "margin_bt_user_m1.5",
+        "accuracy": 0.94498,
+        "stakeholder": "user",
+        "positive_mean": 3.5258193016052246,
+        "negative_mean": -4.166292667388916,
+        "weight_std": 2.7262814044952393,
+        "weight_range": 8.977848052978516
+      },
+      {
+        "name": "margin_bt_user_m0.1",
+        "accuracy": 0.95948,
+        "stakeholder": "user",
+        "positive_mean": 0.9791792631149292,
+        "negative_mean": -1.0035628080368042,
+        "weight_std": 0.7005013823509216,
+        "weight_range": 2.1293787956237793
+      },
+      {
+        "name": "margin_bt_society_m0.35",
+        "accuracy": 0.97232,
+        "stakeholder": "society",
+        "positive_mean": 0.6166014671325684,
+        "negative_mean": -2.1106722354888916,
+        "weight_std": 1.0168176889419556,
+        "weight_range": 3.299769163131714
+      },
+      {
+        "name": "margin_bt_society_m0.15",
+        "accuracy": 0.97532,
+        "stakeholder": "society",
+        "positive_mean": 0.41645702719688416,
+        "negative_mean": -1.469219446182251,
+        "weight_std": 0.701616108417511,
+        "weight_range": 2.218782901763916
+      },
+      {
+        "name": "margin_bt_platform_m1.0",
+        "accuracy": 0.92722,
+        "stakeholder": "platform",
+        "positive_mean": 4.4177141189575195,
+        "negative_mean": -1.4682700634002686,
+        "weight_std": 2.264174461364746,
+        "weight_range": 6.254819869995117
+      }
+    ],
+    "constrained_bt": [
+      {
+        "name": "constrained_bt_platform_cw50.0",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_society_cw0.5",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_user_cw5.0",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_society_cw2.5",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_society_cw1.0",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_user_cw0.5",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_society_cw5.0",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_society_cw100.0",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_society_cw10.0",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_user_cw10.0",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_platform_cw25.0",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_user_cw2.5",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_user_cw1.0",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_platform_cw0.5",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_user_cw50.0",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_society_cw50.0",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_platform_cw100.0",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_platform_cw2.5",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_platform_cw1.0",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_platform_cw10.0",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_platform_cw5.0",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      },
+      {
+        "name": "constrained_bt_user_cw100.0",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "constrained_bt_society_cw25.0",
+        "accuracy": 0.0,
+        "stakeholder": "society",
+        "positive_mean": NaN,
+        "negative_mean": NaN,
+        "weight_std": NaN,
+        "weight_range": NaN
+      },
+      {
+        "name": "constrained_bt_user_cw25.0",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      }
+    ],
+    "bradley_terry": [
+      {
+        "name": "bradley_terry_user",
+        "accuracy": 0.92786,
+        "stakeholder": "user",
+        "positive_mean": 2.476231098175049,
+        "negative_mean": -3.426957130432129,
+        "weight_std": 2.105071783065796,
+        "weight_range": 7.308135032653809
+      },
+      {
+        "name": "bradley_terry_society",
+        "accuracy": 0.95384,
+        "stakeholder": "society",
+        "positive_mean": 0.7767680883407593,
+        "negative_mean": -4.04655122756958,
+        "weight_std": 1.9173226356506348,
+        "weight_range": 6.997016906738281
+      },
+      {
+        "name": "bradley_terry_platform",
+        "accuracy": 0.91936,
+        "stakeholder": "platform",
+        "positive_mean": 4.041459083557129,
+        "negative_mean": -1.4704794883728027,
+        "weight_std": 2.1143102645874023,
+        "weight_range": 6.12010383605957
+      }
+    ],
+    "calibrated_bt": [
+      {
+        "name": "calibrated_bt_society_cal0.75",
+        "accuracy": 0.95466,
+        "stakeholder": "society",
+        "positive_mean": 1.086449146270752,
+        "negative_mean": -2.464963674545288,
+        "weight_std": 1.3611159324645996,
+        "weight_range": 4.925699234008789
+      },
+      {
+        "name": "calibrated_bt_society_cal2.0",
+        "accuracy": 0.94694,
+        "stakeholder": "society",
+        "positive_mean": 0.8634560704231262,
+        "negative_mean": -1.4417842626571655,
+        "weight_std": 0.832195520401001,
+        "weight_range": 2.8025383949279785
+      },
+      {
+        "name": "calibrated_bt_user_cal0.1",
+        "accuracy": 0.93048,
+        "stakeholder": "user",
+        "positive_mean": 2.4133617877960205,
+        "negative_mean": -3.2696685791015625,
+        "weight_std": 2.0242350101470947,
+        "weight_range": 6.986575603485107
+      },
+      {
+        "name": "calibrated_bt_user_cal1.5",
+        "accuracy": 0.95016,
+        "stakeholder": "user",
+        "positive_mean": 1.5922216176986694,
+        "negative_mean": -1.7450482845306396,
+        "weight_std": 1.192497730255127,
+        "weight_range": 3.684096336364746
+      },
+      {
+        "name": "calibrated_bt_platform_cal0.75",
+        "accuracy": 0.85664,
+        "stakeholder": "platform",
+        "positive_mean": 2.4620261192321777,
+        "negative_mean": -1.2816791534423828,
+        "weight_std": 1.6222093105316162,
+        "weight_range": 4.540144920349121
+      },
+      {
+        "name": "calibrated_bt_society_cal0.1",
+        "accuracy": 0.9545,
+        "stakeholder": "society",
+        "positive_mean": 0.9426376223564148,
+        "negative_mean": -3.7989420890808105,
+        "weight_std": 1.8935092687606812,
+        "weight_range": 6.921178817749023
+      },
+      {
+        "name": "calibrated_bt_user_cal2.0",
+        "accuracy": 0.9509,
+        "stakeholder": "user",
+        "positive_mean": 1.431816577911377,
+        "negative_mean": -1.4861526489257812,
+        "weight_std": 1.0490586757659912,
+        "weight_range": 3.131324291229248
+      },
+      {
+        "name": "calibrated_bt_society_cal1.5",
+        "accuracy": 0.95162,
+        "stakeholder": "society",
+        "positive_mean": 0.9357622265815735,
+        "negative_mean": -1.714451551437378,
+        "weight_std": 0.9724871516227722,
+        "weight_range": 3.359213352203369
+      },
+      {
+        "name": "calibrated_bt_society_cal0.25",
+        "accuracy": 0.95434,
+        "stakeholder": "society",
+        "positive_mean": 1.077002763748169,
+        "negative_mean": -3.3930227756500244,
+        "weight_std": 1.7819472551345825,
+        "weight_range": 6.544407367706299
+      },
+      {
+        "name": "calibrated_bt_platform_cal0.05",
+        "accuracy": 0.91316,
+        "stakeholder": "platform",
+        "positive_mean": 3.8362669944763184,
+        "negative_mean": -1.5138344764709473,
+        "weight_std": 2.0824482440948486,
+        "weight_range": 5.95550537109375
+      },
+      {
+        "name": "calibrated_bt_platform_cal0.1",
+        "accuracy": 0.89422,
+        "stakeholder": "platform",
+        "positive_mean": 3.4513518810272217,
+        "negative_mean": -1.5678566694259644,
+        "weight_std": 2.014772891998291,
+        "weight_range": 5.733827590942383
+      },
+      {
+        "name": "calibrated_bt_platform_cal0.25",
+        "accuracy": 0.86848,
+        "stakeholder": "platform",
+        "positive_mean": 2.9578146934509277,
+        "negative_mean": -1.5184311866760254,
+        "weight_std": 1.873060703277588,
+        "weight_range": 5.315919876098633
+      },
+      {
+        "name": "calibrated_bt_platform_cal1.5",
+        "accuracy": 0.85246,
+        "stakeholder": "platform",
+        "positive_mean": 2.0599563121795654,
+        "negative_mean": -1.0301823616027832,
+        "weight_std": 1.375298261642456,
+        "weight_range": 3.7895212173461914
+      },
+      {
+        "name": "calibrated_bt_platform_cal2.0",
+        "accuracy": 0.85216,
+        "stakeholder": "platform",
+        "positive_mean": 1.8799670934677124,
+        "negative_mean": -0.9067432880401611,
+        "weight_std": 1.2567627429962158,
+        "weight_range": 3.4331674575805664
+      },
+      {
+        "name": "calibrated_bt_society_cal0.05",
+        "accuracy": 0.95444,
+        "stakeholder": "society",
+        "positive_mean": 0.8732267618179321,
+        "negative_mean": -3.931583881378174,
+        "weight_std": 1.9153671264648438,
+        "weight_range": 6.991475582122803
+      },
+      {
+        "name": "calibrated_bt_user_cal1.0",
+        "accuracy": 0.94666,
+        "stakeholder": "user",
+        "positive_mean": 1.8190819025039673,
+        "negative_mean": -2.1234495639801025,
+        "weight_std": 1.402617335319519,
+        "weight_range": 4.50846004486084
+      },
+      {
+        "name": "calibrated_bt_platform_cal5.0",
+        "accuracy": 0.84352,
+        "stakeholder": "platform",
+        "positive_mean": 1.3324962854385376,
+        "negative_mean": -0.5314816832542419,
+        "weight_std": 0.8884978890419006,
+        "weight_range": 2.3402020931243896
+      },
+      {
+        "name": "calibrated_bt_society_cal1.0",
+        "accuracy": 0.95474,
+        "stakeholder": "society",
+        "positive_mean": 1.0350161790847778,
+        "negative_mean": -2.14605975151062,
+        "weight_std": 1.1975406408309937,
+        "weight_range": 4.26556396484375
+      },
+      {
+        "name": "calibrated_bt_user_cal3.0",
+        "accuracy": 0.9411,
+        "stakeholder": "user",
+        "positive_mean": 1.2243473529815674,
+        "negative_mean": -1.1606367826461792,
+        "weight_std": 0.8703209757804871,
+        "weight_range": 2.5123703479766846
+      },
+      {
+        "name": "calibrated_bt_user_cal0.25",
+        "accuracy": 0.93392,
+        "stakeholder": "user",
+        "positive_mean": 2.308739185333252,
+        "negative_mean": -3.0427613258361816,
+        "weight_std": 1.9035502672195435,
+        "weight_range": 6.504938125610352
+      },
+      {
+        "name": "calibrated_bt_society_cal0.5",
+        "accuracy": 0.95474,
+        "stakeholder": "society",
+        "positive_mean": 1.1207969188690186,
+        "negative_mean": -2.872495651245117,
+        "weight_std": 1.5628670454025269,
+        "weight_range": 5.7250895500183105
+      },
+      {
+        "name": "calibrated_bt_society_cal3.0",
+        "accuracy": 0.93486,
+        "stakeholder": "society",
+        "positive_mean": 0.7720323801040649,
+        "negative_mean": -1.1160643100738525,
+        "weight_std": 0.6702266931533813,
+        "weight_range": 2.175309658050537
+      },
+      {
+        "name": "calibrated_bt_user_cal0.5",
+        "accuracy": 0.93926,
+        "stakeholder": "user",
+        "positive_mean": 2.1285953521728516,
+        "negative_mean": -2.689720869064331,
+        "weight_std": 1.7119252681732178,
+        "weight_range": 5.739069938659668
+      },
+      {
+        "name": "calibrated_bt_user_cal0.05",
+        "accuracy": 0.929,
+        "stakeholder": "user",
+        "positive_mean": 2.44561505317688,
+        "negative_mean": -3.347670793533325,
+        "weight_std": 2.0646467208862305,
+        "weight_range": 7.147429466247559
+      },
+      {
+        "name": "calibrated_bt_platform_cal3.0",
+        "accuracy": 0.85032,
+        "stakeholder": "platform",
+        "positive_mean": 1.625139594078064,
+        "negative_mean": -0.7323546409606934,
+        "weight_std": 1.086559772491455,
+        "weight_range": 2.923516273498535
+      },
+      {
+        "name": "calibrated_bt_user_cal0.75",
+        "accuracy": 0.94334,
+        "stakeholder": "user",
+        "positive_mean": 1.9631162881851196,
+        "negative_mean": -2.380321979522705,
+        "weight_std": 1.5434483289718628,
+        "weight_range": 5.067205429077148
+      },
+      {
+        "name": "calibrated_bt_platform_cal0.5",
+        "accuracy": 0.86002,
+        "stakeholder": "platform",
+        "positive_mean": 2.6598899364471436,
+        "negative_mean": -1.391238808631897,
+        "weight_std": 1.732688546180725,
+        "weight_range": 4.880457878112793
+      },
+      {
+        "name": "calibrated_bt_society_cal5.0",
+        "accuracy": 0.90264,
+        "stakeholder": "society",
+        "positive_mean": 0.6865782737731934,
+        "negative_mean": -0.7930926084518433,
+        "weight_std": 0.5256298184394836,
+        "weight_range": 1.6099731922149658
+      },
+      {
+        "name": "calibrated_bt_platform_cal1.0",
+        "accuracy": 0.85372,
+        "stakeholder": "platform",
+        "positive_mean": 2.303469181060791,
+        "negative_mean": -1.1871219873428345,
+        "weight_std": 1.5281786918640137,
+        "weight_range": 4.252725601196289
+      },
+      {
+        "name": "calibrated_bt_user_cal5.0",
+        "accuracy": 0.91356,
+        "stakeholder": "user",
+        "positive_mean": 1.013283371925354,
+        "negative_mean": -0.8271206021308899,
+        "weight_std": 0.694808304309845,
+        "weight_range": 2.008964776992798
+      }
+    ]
+  },
+  "timestamp": "2026-01-28T16:11:07.217454"
+}

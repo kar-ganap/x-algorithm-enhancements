@@ -8,7 +8,6 @@ Defines configuration options for different quantization approaches:
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class BitWidth(Enum):
@@ -51,8 +50,8 @@ class MixedPrecisionConfig:
     embedding_bit_width: BitWidth = BitWidth.INT8
 
     # Optional layer-specific granularity (allows per-group INT4 for FFN)
-    ffn_granularity: Optional[Granularity] = None
-    attention_granularity: Optional[Granularity] = None
+    ffn_granularity: Granularity | None = None
+    attention_granularity: Granularity | None = None
 
 
 @dataclass
@@ -91,10 +90,10 @@ class QuantizationConfig:
 
     # Mixed precision settings (layer-specific bit widths)
     use_mixed_precision: bool = False
-    mixed_precision: Optional[MixedPrecisionConfig] = None
+    mixed_precision: MixedPrecisionConfig | None = None
 
     # Identification
-    name: Optional[str] = None
+    name: str | None = None
 
     def __post_init__(self):
         """Auto-generate name if not provided."""

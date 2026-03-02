@@ -9,28 +9,26 @@ Usage:
     print(results.report())
 """
 
-from dataclasses import dataclass
-from typing import Dict, Optional
 import time
+from dataclasses import dataclass
 
-from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
-
-from enhancements.verification.embedding_probes import (
-    EmbeddingProbeResults,
-    run_embedding_probes,
+from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
+from enhancements.verification.action_tests import (
+    ActionTestResults,
+    run_action_tests,
 )
 from enhancements.verification.behavioral_tests import (
     BehavioralTestResults,
     run_behavioral_tests,
 )
-from enhancements.verification.action_tests import (
-    ActionTestResults,
-    run_action_tests,
-)
 from enhancements.verification.counterfactual_tests import (
     CounterfactualTestResults,
     run_counterfactual_tests,
+)
+from enhancements.verification.embedding_probes import (
+    EmbeddingProbeResults,
+    run_embedding_probes,
 )
 
 
@@ -53,10 +51,10 @@ class VerificationConfig:
 @dataclass
 class VerificationResults:
     """Results from the full verification suite."""
-    embedding_probes: Optional[EmbeddingProbeResults]
-    behavioral_tests: Optional[BehavioralTestResults]
-    action_tests: Optional[ActionTestResults]
-    counterfactual_tests: Optional[CounterfactualTestResults]
+    embedding_probes: EmbeddingProbeResults | None
+    behavioral_tests: BehavioralTestResults | None
+    action_tests: ActionTestResults | None
+    counterfactual_tests: CounterfactualTestResults | None
 
     # Timing
     total_time_s: float
@@ -139,7 +137,7 @@ class VerificationResults:
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         def to_float(v):
             """Convert numpy/jax values to Python float."""
@@ -184,8 +182,8 @@ def run_verification_suite(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
-    config: Optional[VerificationConfig] = None,
+    params: dict,
+    config: VerificationConfig | None = None,
     skip_embedding: bool = False,
     skip_behavioral: bool = False,
     skip_action: bool = False,

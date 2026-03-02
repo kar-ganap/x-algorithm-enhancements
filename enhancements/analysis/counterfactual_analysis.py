@@ -22,7 +22,6 @@ Usage:
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -30,40 +29,39 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from phoenix.grok import TransformerConfig
 from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
 from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 
 
 @dataclass
 class RankingSnapshot:
     """Snapshot of rankings for a specific context."""
     context_label: str
-    ranked_indices: List[int]  # Candidate indices in rank order
-    scores: Dict[int, float]  # candidate_idx -> score
+    ranked_indices: list[int]  # Candidate indices in rank order
+    scores: dict[int, float]  # candidate_idx -> score
 
 
 @dataclass
 class AblationResult:
     """Result of ablating (removing) a history item."""
     removed_position: int
-    original_ranking: List[int]
-    ablated_ranking: List[int]
-    rank_changes: Dict[int, int]  # candidate_idx -> rank change
+    original_ranking: list[int]
+    ablated_ranking: list[int]
+    rank_changes: dict[int, int]  # candidate_idx -> rank change
     kendall_tau: float  # Rank correlation
 
 
 @dataclass
 class CounterfactualResult:
     """Result of counterfactual analysis."""
-    baseline_ranking: List[int]
-    counterfactual_rankings: Dict[str, List[int]]  # label -> ranking
+    baseline_ranking: list[int]
+    counterfactual_rankings: dict[str, list[int]]  # label -> ranking
     ranking_stability: float  # How stable are rankings across contexts
 
 
-def compute_kendall_tau(ranking1: List[int], ranking2: List[int]) -> float:
+def compute_kendall_tau(ranking1: list[int], ranking2: list[int]) -> float:
     """Compute Kendall's tau rank correlation coefficient.
 
     Returns value in [-1, 1] where:
@@ -103,7 +101,7 @@ def compute_kendall_tau(ranking1: List[int], ranking2: List[int]) -> float:
     return (concordant - discordant) / total_pairs
 
 
-def compute_rank_changes(original: List[int], modified: List[int]) -> Dict[int, int]:
+def compute_rank_changes(original: list[int], modified: list[int]) -> dict[int, int]:
     """Compute how much each candidate's rank changed."""
     orig_ranks = {item: i for i, item in enumerate(original)}
     mod_ranks = {item: i for i, item in enumerate(modified)}
@@ -133,10 +131,10 @@ class CounterfactualAnalyzer:
         self.runner = runner
         self.base_batch = base_batch
         self.base_embeddings = base_embeddings
-        self._baseline_ranking: Optional[List[int]] = None
-        self._baseline_scores: Optional[Dict[int, float]] = None
+        self._baseline_ranking: list[int] | None = None
+        self._baseline_scores: dict[int, float] | None = None
 
-    def _run_ranking(self, batch: RecsysBatch, embeddings: RecsysEmbeddings) -> Tuple[List[int], Dict[int, float]]:
+    def _run_ranking(self, batch: RecsysBatch, embeddings: RecsysEmbeddings) -> tuple[list[int], dict[int, float]]:
         """Run ranking and return (ranked_indices, scores_dict)."""
         self.runner.clear_cache()
         output = self.runner.rank(batch, embeddings, use_cache=False)
@@ -217,7 +215,7 @@ class CounterfactualAnalyzer:
             kendall_tau=tau,
         )
 
-    def ablate_all_history(self) -> List[AblationResult]:
+    def ablate_all_history(self) -> list[AblationResult]:
         """Ablate each history item and measure impact."""
         history_len = self.base_batch.history_post_hashes.shape[1]
         results = []
@@ -271,7 +269,7 @@ class CounterfactualAnalyzer:
             scores=scores,
         )
 
-    def analyze_recency_sensitivity(self) -> Dict[int, float]:
+    def analyze_recency_sensitivity(self) -> dict[int, float]:
         """Analyze how rankings change as we truncate history.
 
         Returns:
@@ -326,7 +324,7 @@ class CounterfactualAnalyzer:
         )
 
 
-def visualize_ablation_results(results: List[AblationResult], history_len: int):
+def visualize_ablation_results(results: list[AblationResult], history_len: int):
     """Visualize which history items matter most."""
     print("\n" + "=" * 70)
     print("HISTORY ITEM IMPORTANCE (Ablation Analysis)")
@@ -367,7 +365,7 @@ def visualize_ablation_results(results: List[AblationResult], history_len: int):
         print("\n⚠️  Recent history items appear more important (recency bias)")
 
 
-def visualize_recency_sensitivity(sensitivity: Dict[int, float], full_history_len: int):
+def visualize_recency_sensitivity(sensitivity: dict[int, float], full_history_len: int):
     """Visualize how rankings change with history truncation."""
     print("\n" + "=" * 70)
     print("RECENCY SENSITIVITY ANALYSIS")
@@ -431,7 +429,7 @@ def run_analysis(history_len: int = 32, num_candidates: int = 8):
     print("\nThis analysis asks: 'What if the user had different history?'")
     print("We fix candidates and vary the user context.")
 
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  History length: {history_len}")
     print(f"  Candidates: {num_candidates}")
 

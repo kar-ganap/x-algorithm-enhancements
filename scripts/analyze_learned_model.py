@@ -15,33 +15,30 @@ import argparse
 import pickle
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "phoenix"))
 
-import jax
 import jax.numpy as jnp
 import numpy as np
-
-from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch
 
 from enhancements.data.movielens import MovieLensDataset
 from enhancements.data.movielens_adapter import MovieLensPhoenixAdapter
 from enhancements.optimization.quantization import (
     BitWidth,
     Granularity,
-    Symmetry,
     QuantizationConfig,
-    quantize_params,
+    Symmetry,
     dequantize_params,
+    quantize_params,
 )
+from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch
 from phoenix.runners import ModelRunner, RecsysInferenceRunner
 
 
-def load_checkpoint(checkpoint_path: str) -> Tuple[Dict, PhoenixModelConfig]:
+def load_checkpoint(checkpoint_path: str) -> tuple[dict, PhoenixModelConfig]:
     """Load trained model checkpoint.
 
     Returns:
@@ -112,7 +109,7 @@ def main():
     print(f"Loading checkpoint: {args.checkpoint}")
     params, model_config = load_checkpoint(args.checkpoint)
     print(f"  Model: {model_config.emb_size}d, {model_config.model.num_layers} layers")
-    print(f"  Params: model + embeddings")
+    print("  Params: model + embeddings")
     print()
 
     # Load dataset and adapter
@@ -151,7 +148,7 @@ def main():
     )
     quantized_params = quantize_params(model_params, quant_config)
     dequantized_params = dequantize_params(quantized_params)
-    print(f"  Config: INT8 per-channel symmetric")
+    print("  Config: INT8 per-channel symmetric")
     print()
 
     # Evaluate on test set
@@ -237,7 +234,7 @@ def main():
     passed = avg_agreement >= 0.95
     print("=" * 60)
     print(f"Go/No-Go Gate: {'PASSED' if passed else 'FAILED'}")
-    print(f"  Requirement: Top-3 agreement >= 95%")
+    print("  Requirement: Top-3 agreement >= 95%")
     print(f"  Result: {avg_agreement * 100:.1f}%")
     print("=" * 60)
 

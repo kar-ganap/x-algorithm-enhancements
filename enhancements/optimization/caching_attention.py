@@ -10,14 +10,13 @@ Key modifications from Phoenix's original attention:
 3. Handles RoPE position offsets for cached tokens
 """
 
-from dataclasses import dataclass
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import haiku as hk
 import jax
 import jax.numpy as jnp
 
-from phoenix.grok import Linear, MHAOutput, RotaryEmbedding
+from phoenix.grok import Linear, RotaryEmbedding
 
 
 class LayerKVCache(NamedTuple):
@@ -66,10 +65,10 @@ class CachingMultiHeadAttention(hk.Module):
         key_size: int,
         *,
         with_bias: bool = False,
-        value_size: Optional[int] = None,
-        model_size: Optional[int] = None,
+        value_size: int | None = None,
+        model_size: int | None = None,
         attn_output_multiplier: float = 1.0,
-        name: Optional[str] = None,
+        name: str | None = None,
     ):
         super().__init__(name=name)
         self.num_q_heads = num_q_heads
@@ -86,7 +85,7 @@ class CachingMultiHeadAttention(hk.Module):
         key: jax.Array,
         value: jax.Array,
         mask: jax.Array,
-        kv_cache: Optional[LayerKVCache] = None,
+        kv_cache: LayerKVCache | None = None,
         position_offset: int = 0,
     ) -> CachingMHAOutput:
         """Compute attention with optional K,V caching.
@@ -190,7 +189,7 @@ class CachingMultiHeadAttention(hk.Module):
         x: jax.Array,
         head_size: int,
         num_heads: int,
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> jax.Array:
         """Project input to multi-head format."""
         y = Linear(num_heads * head_size, with_bias=False, name=name)(x)

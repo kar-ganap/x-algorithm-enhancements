@@ -13,7 +13,6 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -49,7 +48,7 @@ def generate_training_data(
     label_flip_rate: float = 0.0,
     use_topic_features: bool = False,
     rng: np.random.Generator | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate training data with user histories.
 
     Args:
@@ -136,7 +135,7 @@ def measure_recovery(
     cluster_ids: np.ndarray,
     true_archetype_ids: np.ndarray,
     verbose: bool = True,
-) -> Dict:
+) -> dict:
     """Measure structural recovery for two-stage model."""
     gt_weights = get_all_ground_truth_weights()
 
@@ -188,22 +187,22 @@ def measure_recovery(
         for k, (arch, corr) in sorted(matches.items()):
             print(f"  Cluster {k} -> {arch:15s} (correlation: {corr:.3f})")
 
-        print(f"\n--- Weight Correlation ---")
+        print("\n--- Weight Correlation ---")
         print(f"  Mean correlation: {mean_corr:.3f}")
-        print(f"  Gate threshold:   0.80")
+        print("  Gate threshold:   0.80")
         print(f"  Status:           {'PASS' if mean_corr > 0.8 else 'FAIL'}")
 
-        print(f"\n--- Assignment Accuracy ---")
+        print("\n--- Assignment Accuracy ---")
         print(f"  Overall: {assignment_acc:.1%}")
         for arch, acc in per_arch_acc.items():
             print(f"    {arch:15s}: {acc:.1%}")
-        print(f"  Gate threshold: 70%")
+        print("  Gate threshold: 70%")
         print(f"  Status:         {'PASS' if assignment_acc > 0.7 else 'FAIL'}")
 
-        print(f"\n--- Interpretability ---")
+        print("\n--- Interpretability ---")
         print(f"  Overall: {interp_score:.1%}")
 
-        print(f"\n--- Weight Diversity ---")
+        print("\n--- Weight Diversity ---")
         print(f"  Mean pairwise distance: {diversity:.3f}")
 
         print("\n" + "=" * 60)
@@ -225,7 +224,7 @@ def run_two_stage_experiment(
     user_histories: np.ndarray,
     arch_ids: np.ndarray,
     config: TwoStageConfig,
-) -> Dict:
+) -> dict:
     """Run two-stage experiment and return results."""
     flush_print(f"\n{'='*70}")
     flush_print(f"EXPERIMENT: {name}")
@@ -287,7 +286,7 @@ def generate_stress_test_data(
     num_users_per_archetype: int = 100,
     num_pairs_per_user: int = 10,
     rng: np.random.Generator | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate stress test: archetypes with SAME topic preferences but DIFFERENT action patterns.
 
     Creates synthetic archetypes that all prefer the same topics (sports, tech)
@@ -389,7 +388,7 @@ def generate_noisy_preference_data(
     num_pairs_per_user: int = 10,
     label_flip_rate: float = 0.3,
     rng: np.random.Generator | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate stress test #2: Noisy preferences.
 
     Users sometimes click things they don't actually prefer.
@@ -461,7 +460,7 @@ def generate_cross_topic_data(
     num_cross_users: int = 300,
     num_pairs_per_user: int = 10,
     rng: np.random.Generator | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate stress test #4: Cross-topic users.
 
     Some users genuinely like multiple topics equally (e.g., sports AND politics).
@@ -732,7 +731,7 @@ def main():
     actual_topic = "PASS" if stress_results[0]['avg_purity'] > 0.8 else "FAIL"
     actual_action = "PASS" if stress_results[1]['avg_purity'] > 0.8 else "FAIL"
 
-    flush_print(f"\nVerification:")
+    flush_print("\nVerification:")
     flush_print(f"  Topic-only: Expected FAIL, Got {actual_topic} - {'✓' if actual_topic == 'FAIL' else '✗'}")
     flush_print(f"  Topic×Action: Expected PASS, Got {actual_action} - {'✓' if actual_action == 'PASS' else '✗'}")
 

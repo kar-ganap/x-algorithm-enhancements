@@ -11,7 +11,7 @@ Key difference from k-means version:
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, NamedTuple, Tuple, Union
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -20,7 +20,6 @@ import optax
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 
-from enhancements.reward_modeling.pluralistic import bradley_terry_loss
 from enhancements.reward_modeling.weights import NUM_ACTIONS, RewardWeights
 
 
@@ -63,19 +62,19 @@ class TwoStageGMMState(NamedTuple):
     """State for two-stage GMM model."""
     cluster_centers: np.ndarray  # [K, num_features] - cluster means
     cluster_weights: np.ndarray  # [K, num_actions] - per-cluster reward weights
-    clustering_model: Union[GaussianMixture, KMeans]  # Fitted model
+    clustering_model: GaussianMixture | KMeans  # Fitted model
     clustering_method: ClusteringMethod
 
 
 class TwoStageGMMMetrics(NamedTuple):
     """Metrics for two-stage GMM training."""
-    cluster_sizes: List[int]  # Hard assignment sizes
-    soft_cluster_sizes: List[float]  # Sum of membership probabilities
+    cluster_sizes: list[int]  # Hard assignment sizes
+    soft_cluster_sizes: list[float]  # Sum of membership probabilities
 
-    per_cluster_accuracy: Dict[int, float]
+    per_cluster_accuracy: dict[int, float]
     overall_accuracy: float
 
-    loss_histories: Dict[int, List[float]]
+    loss_histories: dict[int, list[float]]
 
     # GMM-specific
     bic: float  # Bayesian Information Criterion (lower is better)
@@ -86,7 +85,7 @@ def cluster_users_gmm(
     user_histories: np.ndarray,
     config: TwoStageGMMConfig,
     verbose: bool = True,
-) -> Tuple[GaussianMixture, np.ndarray, np.ndarray]:
+) -> tuple[GaussianMixture, np.ndarray, np.ndarray]:
     """Stage 1: Cluster users with GMM (soft membership).
 
     Args:
@@ -137,7 +136,7 @@ def train_per_cluster_weights_soft(
     probs_rejected: np.ndarray,
     config: TwoStageGMMConfig,
     verbose: bool = True,
-) -> Tuple[np.ndarray, Dict[int, List[float]], Dict[int, float]]:
+) -> tuple[np.ndarray, dict[int, list[float]], dict[int, float]]:
     """Stage 2: Train Bradley-Terry weights with soft membership weighting.
 
     Each sample contributes to cluster k proportionally to its membership π_k.
@@ -155,8 +154,8 @@ def train_per_cluster_weights_soft(
     K = config.num_clusters
     N = len(probs_preferred)
     weights = np.zeros((K, NUM_ACTIONS), dtype=np.float32)
-    loss_histories: Dict[int, List[float]] = {}
-    accuracies: Dict[int, float] = {}
+    loss_histories: dict[int, list[float]] = {}
+    accuracies: dict[int, float] = {}
 
     default = RewardWeights.default()
 
@@ -254,7 +253,7 @@ def train_two_stage_gmm(
     probs_rejected: np.ndarray,
     config: TwoStageGMMConfig,
     verbose: bool = True,
-) -> Tuple[TwoStageGMMState, TwoStageGMMMetrics]:
+) -> tuple[TwoStageGMMState, TwoStageGMMMetrics]:
     """Train two-stage pluralistic model with GMM.
 
     Args:
@@ -274,14 +273,13 @@ def train_two_stage_gmm(
 
     if config.clustering_method == ClusteringMethod.GMM:
         gmm, hard_ids, soft_memberships = cluster_users_gmm(user_histories, config, verbose)
-        model: Union[GaussianMixture, KMeans] = gmm
+        model: GaussianMixture | KMeans = gmm
         centers = np.array(gmm.means_)  # Ensure it's ndarray
         bic = gmm.bic(user_histories)
         aic = gmm.aic(user_histories)
     else:
         # Fallback to k-means
-        from enhancements.reward_modeling.two_stage import cluster_users
-        from enhancements.reward_modeling.two_stage import TwoStageConfig
+        from enhancements.reward_modeling.two_stage import TwoStageConfig, cluster_users
         kmeans_config = TwoStageConfig(
             num_clusters=config.num_clusters,
             kmeans_random_state=config.kmeans_random_state,
@@ -306,8 +304,7 @@ def train_two_stage_gmm(
         )
     else:
         # Hard training (original method)
-        from enhancements.reward_modeling.two_stage import train_per_cluster_weights
-        from enhancements.reward_modeling.two_stage import TwoStageConfig
+        from enhancements.reward_modeling.two_stage import TwoStageConfig, train_per_cluster_weights
         hard_config = TwoStageConfig(
             num_clusters=config.num_clusters,
             learning_rate=config.learning_rate,
@@ -403,7 +400,7 @@ def compute_reward_soft(
     user_history: np.ndarray,
     action_probs: np.ndarray,
     use_soft: bool = True,
-) -> Union[float, np.ndarray]:
+) -> float | np.ndarray:
     """Compute reward with optional soft membership blending.
 
     Args:

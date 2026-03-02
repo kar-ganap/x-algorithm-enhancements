@@ -15,7 +15,6 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import jax
 import jax.numpy as jnp
@@ -29,12 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "phoenix"))
 from enhancements.data import ContentTopic, UserArchetype, get_engagement_probs
 from enhancements.reward_modeling.pluralistic import (
     PluralConfig,
-    PluralMetrics,
-    PluralState,
     TrainingApproach,
-    compute_pluralistic_reward,
-    diversity_loss,
-    entropy_loss,
     init_plural_state,
     train_pluralistic,
 )
@@ -62,7 +56,7 @@ def generate_training_data(
     noise_std: float = 0.0,
     label_flip_rate: float = 0.0,
     rng: np.random.Generator = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate training data with user embeddings.
 
     Args:
@@ -155,7 +149,7 @@ def train_and_evaluate(
     config: PluralConfig,
     seed: int = 42,
     use_supervision: bool = False,
-) -> Dict:
+) -> dict:
     """Train model with given approach and evaluate.
 
     Args:
@@ -220,7 +214,7 @@ def train_and_evaluate(
 
 
 def compare_approaches(
-    results: Dict[str, Dict],
+    results: dict[str, dict],
     output_dir: Path,
 ):
     """Compare results across approaches and create visualizations."""

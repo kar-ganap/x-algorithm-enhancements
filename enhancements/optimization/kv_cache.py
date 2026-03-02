@@ -25,7 +25,7 @@ Architecture:
 import hashlib
 import time
 from dataclasses import dataclass, field
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -99,7 +99,7 @@ class CachedPhoenixRunner:
     """
 
     base_runner: RecsysInferenceRunner
-    cache: Optional[KVCache] = None
+    cache: KVCache | None = None
     _stats: CacheStats = field(default_factory=lambda: CacheStats(hits=0, misses=0, encode_time_ms=0.0, score_time_ms=0.0))
 
     @property
@@ -267,7 +267,7 @@ class CachedJITRunner:
         self._jit_runner = StaticJITRunner(base_runner, config)
 
         # Add caching layer
-        self._cache: Optional[KVCache] = None
+        self._cache: KVCache | None = None
         self._stats = CacheStats(hits=0, misses=0, encode_time_ms=0.0, score_time_ms=0.0)
 
     @property

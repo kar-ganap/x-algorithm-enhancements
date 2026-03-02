@@ -1,0 +1,74 @@
+{
+  "bradley": {
+    "cosine_similarities": {
+      "user_platform": 0.829596996307373,
+      "user_society": 0.8837010264396667,
+      "platform_society": 0.477666974067688
+    },
+    "ranking_correlations": {
+      "user_platform": 0.47234617308654325,
+      "user_society": 0.8211635817908954,
+      "platform_society": 0.295048524262131
+    },
+    "success": {
+      "cos_sim_below_095": true,
+      "tau_below_080": true,
+      "min_cos_sim": 0.477666974067688,
+      "min_tau": 0.295048524262131
+    }
+  },
+  "margin_bt": {
+    "cosine_similarities": {
+      "user_platform": 0.8566551208496094,
+      "user_society": 0.8901898264884949,
+      "platform_society": 0.5358264446258545
+    },
+    "ranking_correlations": {
+      "user_platform": 0.4912026013006503,
+      "user_society": 0.8146943471735867,
+      "platform_society": 0.30808204102051023
+    },
+    "success": {
+      "cos_sim_below_095": true,
+      "tau_below_080": true,
+      "min_cos_sim": 0.5358264446258545,
+      "min_tau": 0.30808204102051023
+    }
+  },
+  "calibrated_bt": {
+    "cosine_similarities": {
+      "user_platform": 0.9318205118179321,
+      "user_society": 0.9613606333732605,
+      "platform_society": 0.8023676872253418
+    },
+    "ranking_correlations": {
+      "user_platform": 0.5981750875437719,
+      "user_society": 0.8216478239119559,
+      "platform_society": 0.42249824912456224
+    },
+    "success": {
+      "cos_sim_below_095": true,
+      "tau_below_080": true,
+      "min_cos_sim": 0.8023676872253418,
+      "min_tau": 0.42249824912456224
+    }
+  },
+  "constrained_bt": {
+    "cosine_similarities": {
+      "user_platform": 0.829596996307373,
+      "user_society": NaN,
+      "platform_society": NaN
+    },
+    "ranking_correlations": {
+      "user_platform": 0.47234617308654325,
+      "user_society": NaN,
+      "platform_society": NaN
+    },
+    "success": {
+      "cos_sim_below_095": true,
+      "tau_below_080": true,
+      "min_cos_sim": 0.829596996307373,
+      "min_tau": 0.47234617308654325
+    }
+  }
+}

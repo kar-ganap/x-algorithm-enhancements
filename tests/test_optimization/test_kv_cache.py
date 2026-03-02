@@ -18,16 +18,15 @@ import pytest
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-from phoenix.runners import ACTIONS, ModelRunner, RecsysInferenceRunner, create_example_batch
-
 from enhancements.optimization.kv_cache import (
     CachedJITRunner,
     CachedPhoenixRunner,
     KVCache,
     compute_user_hash,
 )
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
+from phoenix.runners import ACTIONS, ModelRunner, RecsysInferenceRunner, create_example_batch
 
 
 @pytest.fixture(scope="module")
@@ -264,7 +263,7 @@ class TestCachePerformance:
         miss_p50 = np.percentile(miss_times, 50)
         hit_p50 = np.percentile(hit_times, 50)
 
-        print(f"\nCache Performance:")
+        print("\nCache Performance:")
         print(f"  Miss p50: {miss_p50:.2f} ms")
         print(f"  Hit p50: {hit_p50:.2f} ms")
         print(f"  Ratio: {hit_p50 / miss_p50:.2f}x")

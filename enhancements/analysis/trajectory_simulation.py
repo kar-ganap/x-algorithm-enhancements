@@ -32,7 +32,7 @@ Architecture:
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -56,21 +56,21 @@ class CandidateScore(NamedTuple):
 class TrajectoryStep(NamedTuple):
     """Record of a single step in the trajectory."""
     step_num: int
-    engaged_candidate_idx: Optional[int]  # None for initial state
-    engaged_candidate_score: Optional[float]
-    remaining_scores: List[CandidateScore]
+    engaged_candidate_idx: int | None  # None for initial state
+    engaged_candidate_score: float | None
+    remaining_scores: list[CandidateScore]
     context_length: int  # Current context length after engagement
 
 
 class TrajectoryPath(NamedTuple):
     """Complete trajectory from initial state to final state."""
-    steps: List[TrajectoryStep]
-    engagement_sequence: List[int]  # Indices of engaged candidates in order
+    steps: list[TrajectoryStep]
+    engagement_sequence: list[int]  # Indices of engaged candidates in order
 
 
 def extend_kv_cache(
     cache: FullKVCache,
-    candidate_layer_caches: Tuple[LayerKVCache, ...],
+    candidate_layer_caches: tuple[LayerKVCache, ...],
     new_user_hash: int,
 ) -> FullKVCache:
     """Extend the KV cache by appending a candidate's K/V tensors.
@@ -110,7 +110,7 @@ def extract_candidate_kv(
     candidate_start_idx: int,
     candidate_idx: int,
     num_tokens_per_candidate: int = 1,
-) -> Tuple[LayerKVCache, ...]:
+) -> tuple[LayerKVCache, ...]:
     """Extract K/V tensors for a specific candidate from full cache.
 
     After a forward pass with all candidates, we can extract the K/V
@@ -164,10 +164,10 @@ class TrajectorySimulator:
     initial_embeddings: any  # RecsysEmbeddings
 
     # State
-    _context_cache: Optional[FullKVCache] = field(default=None, init=False)
-    _remaining_candidate_indices: List[int] = field(default_factory=list, init=False)
-    _trajectory_steps: List[TrajectoryStep] = field(default_factory=list, init=False)
-    _engagement_sequence: List[int] = field(default_factory=list, init=False)
+    _context_cache: FullKVCache | None = field(default=None, init=False)
+    _remaining_candidate_indices: list[int] = field(default_factory=list, init=False)
+    _trajectory_steps: list[TrajectoryStep] = field(default_factory=list, init=False)
+    _engagement_sequence: list[int] = field(default_factory=list, init=False)
     _initialized: bool = field(default=False, init=False)
 
     def initialize(self):
@@ -218,7 +218,7 @@ class TrajectorySimulator:
 
         return agg_scores
 
-    def _make_candidate_scores(self, scores: np.ndarray) -> List[CandidateScore]:
+    def _make_candidate_scores(self, scores: np.ndarray) -> list[CandidateScore]:
         """Create CandidateScore list from raw scores."""
         # Filter to remaining candidates
         remaining_scores = [
@@ -234,7 +234,7 @@ class TrajectorySimulator:
             for rank, (idx, score) in enumerate(remaining_scores)
         ]
 
-    def current_scores(self) -> List[CandidateScore]:
+    def current_scores(self) -> list[CandidateScore]:
         """Get current ranking of remaining candidates."""
         if not self._initialized:
             self.initialize()
@@ -331,7 +331,7 @@ class TrajectorySimulator:
             context_length=self._context_cache.cached_len + len(self._engagement_sequence),
         )
 
-    def engage_top_n(self, n: int) -> List[TrajectoryStep]:
+    def engage_top_n(self, n: int) -> list[TrajectoryStep]:
         """Simulate engaging with top candidate n times."""
         steps = []
         for _ in range(n):
@@ -358,8 +358,8 @@ class TrajectorySimulator:
 
 
 def compare_trajectories(
-    trajectories: List[TrajectoryPath],
-    labels: Optional[List[str]] = None,
+    trajectories: list[TrajectoryPath],
+    labels: list[str] | None = None,
 ) -> dict:
     """Compare multiple trajectories to analyze divergence.
 

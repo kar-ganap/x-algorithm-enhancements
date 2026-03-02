@@ -16,20 +16,18 @@ Usage:
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
-import jax.numpy as jnp
 import numpy as np
 
 # Add paths
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from phoenix.grok import TransformerConfig
 from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
 from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 
 
 class CandidateScore(NamedTuple):
@@ -42,26 +40,26 @@ class CandidateScore(NamedTuple):
 class RealTrajectoryStep(NamedTuple):
     """Record of a single step with actual model scores."""
     step_num: int
-    engaged_candidate_idx: Optional[int]
-    engaged_candidate_score: Optional[float]
-    remaining_scores: List[CandidateScore]
+    engaged_candidate_idx: int | None
+    engaged_candidate_score: float | None
+    remaining_scores: list[CandidateScore]
     history_length: int  # Current history length after engagement
 
 
 class RealTrajectoryPath(NamedTuple):
     """Complete trajectory with actual model re-ranking."""
-    steps: List[RealTrajectoryStep]
-    engagement_sequence: List[int]
+    steps: list[RealTrajectoryStep]
+    engagement_sequence: list[int]
 
 
 def create_modified_batch(
     original_batch: RecsysBatch,
     original_embeddings: RecsysEmbeddings,
-    engaged_indices: List[int],
-    remaining_indices: List[int],
+    engaged_indices: list[int],
+    remaining_indices: list[int],
     num_item_hashes: int,
     num_author_hashes: int,
-) -> Tuple[RecsysBatch, RecsysEmbeddings]:
+) -> tuple[RecsysBatch, RecsysEmbeddings]:
     """Create a new batch with engaged candidates added to history.
 
     When a user engages with a candidate, that candidate becomes part of their
@@ -183,11 +181,11 @@ class RealTrajectorySimulator:
     num_author_hashes: int
 
     # State
-    _current_batch: Optional[RecsysBatch] = field(default=None, init=False)
-    _current_embeddings: Optional[RecsysEmbeddings] = field(default=None, init=False)
-    _engaged_indices: List[int] = field(default_factory=list, init=False)
-    _remaining_indices: List[int] = field(default_factory=list, init=False)
-    _trajectory_steps: List[RealTrajectoryStep] = field(default_factory=list, init=False)
+    _current_batch: RecsysBatch | None = field(default=None, init=False)
+    _current_embeddings: RecsysEmbeddings | None = field(default=None, init=False)
+    _engaged_indices: list[int] = field(default_factory=list, init=False)
+    _remaining_indices: list[int] = field(default_factory=list, init=False)
+    _trajectory_steps: list[RealTrajectoryStep] = field(default_factory=list, init=False)
     _initialized: bool = field(default=False, init=False)
     _index_mapping: dict = field(default_factory=dict, init=False)  # Maps current position to original index
 
@@ -224,7 +222,7 @@ class RealTrajectorySimulator:
         self._trajectory_steps.append(initial_step)
         self._initialized = True
 
-    def _extract_scores(self, output, original_indices: List[int]) -> List[CandidateScore]:
+    def _extract_scores(self, output, original_indices: list[int]) -> list[CandidateScore]:
         """Extract and rank scores from model output."""
         # output.scores: [batch, num_candidates, num_actions]
         # Aggregate to single score (mean across actions)
@@ -244,7 +242,7 @@ class RealTrajectorySimulator:
             for rank, (idx, score) in enumerate(scored)
         ]
 
-    def current_scores(self) -> List[CandidateScore]:
+    def current_scores(self) -> list[CandidateScore]:
         """Get current ranking of remaining candidates."""
         if not self._initialized:
             self.initialize()
@@ -320,7 +318,7 @@ class RealTrajectorySimulator:
 
         return new_step
 
-    def engage_top_n(self, n: int) -> List[RealTrajectoryStep]:
+    def engage_top_n(self, n: int) -> list[RealTrajectoryStep]:
         """Engage with top candidate n times."""
         steps = []
         for _ in range(n):
@@ -530,7 +528,7 @@ def run_analysis(num_candidates: int = 8, num_engagements: int = 5):
     print("\nThis analysis uses ACTUAL MODEL INFERENCE at each step,")
     print("not simulated perturbations. Rankings reflect true model dynamics.")
 
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  Candidates: {num_candidates}")
     print(f"  Engagements: {num_engagements}")
 

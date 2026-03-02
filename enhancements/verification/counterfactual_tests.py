@@ -7,18 +7,15 @@ Tests whether the model responds correctly to interventions:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 import jax.numpy as jnp
 import numpy as np
 
-from enhancements.data.ground_truth import UserArchetype, ContentTopic
+from enhancements.data.ground_truth import ContentTopic, UserArchetype
+from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
 from enhancements.data.synthetic_twitter import (
     SyntheticTwitterDataset,
-    SyntheticEngagement,
 )
-from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
-
 from phoenix.recsys_model import RecsysBatch
 
 
@@ -49,10 +46,10 @@ class ArchetypeFlipResult:
 @dataclass
 class CounterfactualTestResults:
     """Results from all counterfactual tests."""
-    block_effects: List[BlockEffectResult]
+    block_effects: list[BlockEffectResult]
     block_effect_rate: float  # % where block reduced ranking
 
-    archetype_flips: List[ArchetypeFlipResult]
+    archetype_flips: list[ArchetypeFlipResult]
     archetype_flip_rate: float  # % where predictions flipped
 
     def __repr__(self) -> str:
@@ -68,9 +65,9 @@ def test_block_effect(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     num_tests: int = 50,
-) -> Tuple[List[BlockEffectResult], float]:
+) -> tuple[list[BlockEffectResult], float]:
     """Test that blocking an author reduces their posts' rankings.
 
     For each test:
@@ -146,7 +143,7 @@ def _get_score_for_post(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     user_id: int,
     post_id: int,
 ) -> float:
@@ -177,7 +174,7 @@ def _get_score_with_block(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     user_id: int,
     post_id: int,
     blocked_author_id: int,
@@ -225,9 +222,9 @@ def test_archetype_flip(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     num_tests: int = 30,
-) -> Tuple[List[ArchetypeFlipResult], float]:
+) -> tuple[list[ArchetypeFlipResult], float]:
     """Test that giving a user a different archetype's history changes predictions.
 
     For example:
@@ -323,7 +320,7 @@ def _get_score_with_donor_history(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     user_id: int,
     post_id: int,
     donor_user_id: int,
@@ -361,7 +358,7 @@ def run_counterfactual_tests(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     num_block_tests: int = 50,
     num_flip_tests: int = 30,
 ) -> CounterfactualTestResults:

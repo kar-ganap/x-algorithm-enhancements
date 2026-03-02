@@ -17,7 +17,6 @@ Go/No-Go Gates:
 import sys
 import time
 from pathlib import Path
-from typing import Tuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -26,14 +25,9 @@ import pytest
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
-from phoenix.runners import ACTIONS, create_example_batch
-
 from enhancements.optimization.optimized_runner import OptimizationConfig, OptimizedPhoenixRunner
 from enhancements.reward_modeling import (
     ACTION_INDICES,
-    ACTION_NAMES,
     NUM_ACTIONS,
     PhoenixRewardModel,
     PreferenceBatch,
@@ -41,7 +35,9 @@ from enhancements.reward_modeling import (
     RewardWeights,
     create_preferences_from_rewards,
 )
-
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
+from phoenix.runners import ACTIONS, create_example_batch
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -92,7 +88,7 @@ def optimized_runner(model_config: PhoenixModelConfig) -> OptimizedPhoenixRunner
 
 
 @pytest.fixture
-def sample_batch(model_config: PhoenixModelConfig) -> Tuple[RecsysBatch, RecsysEmbeddings]:
+def sample_batch(model_config: PhoenixModelConfig) -> tuple[RecsysBatch, RecsysEmbeddings]:
     """Create a sample batch for testing."""
     batch, embeddings = create_example_batch(
         batch_size=2,
@@ -218,7 +214,7 @@ class TestPhoenixRewardModel:
     def test_get_action_probs_shape(
         self,
         reward_model: PhoenixRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Gate: Action probs have shape [B, C, 18]."""
         batch, embeddings = sample_batch
@@ -229,7 +225,7 @@ class TestPhoenixRewardModel:
     def test_get_action_probs_valid_range(
         self,
         reward_model: PhoenixRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Verify action probabilities are in valid range [0, 1]."""
         batch, embeddings = sample_batch
@@ -241,7 +237,7 @@ class TestPhoenixRewardModel:
     def test_compute_reward_shape(
         self,
         reward_model: PhoenixRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Gate: Rewards have shape [B, C]."""
         batch, embeddings = sample_batch
@@ -268,7 +264,7 @@ class TestPhoenixRewardModel:
     def test_reward_with_uniform_weights(
         self,
         optimized_runner: OptimizedPhoenixRunner,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Verify reward with uniform weights is just sum of probs."""
         batch, embeddings = sample_batch
@@ -286,7 +282,7 @@ class TestPhoenixRewardModel:
     def test_rank_by_reward(
         self,
         reward_model: PhoenixRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Verify rank_by_reward returns valid indices."""
         batch, embeddings = sample_batch
@@ -300,7 +296,7 @@ class TestPhoenixRewardModel:
     def test_get_best_candidate(
         self,
         reward_model: PhoenixRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Verify get_best_candidate returns valid indices."""
         batch, embeddings = sample_batch
@@ -339,7 +335,7 @@ class TestKVCacheIntegration:
     def test_kv_cache_speedup(
         self,
         model_config: PhoenixModelConfig,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Gate: KV-cache provides speedup on repeated calls."""
         # Create runner with KV-cache enabled
@@ -374,7 +370,7 @@ class TestKVCacheIntegration:
     def test_cache_stats_update(
         self,
         optimized_runner: OptimizedPhoenixRunner,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Verify cache stats are updated after calls."""
         reward_model = PhoenixRewardModel(optimized_runner)
@@ -462,7 +458,7 @@ class TestIntegration:
     def test_full_reward_pipeline(
         self,
         optimized_runner: OptimizedPhoenixRunner,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Test complete reward computation pipeline."""
         batch, embeddings = sample_batch
@@ -483,7 +479,7 @@ class TestIntegration:
     def test_reward_deterministic(
         self,
         reward_model: PhoenixRewardModel,
-        sample_batch: Tuple[RecsysBatch, RecsysEmbeddings],
+        sample_batch: tuple[RecsysBatch, RecsysEmbeddings],
     ):
         """Verify reward computation is deterministic."""
         batch, embeddings = sample_batch

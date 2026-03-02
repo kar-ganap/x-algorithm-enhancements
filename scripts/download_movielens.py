@@ -10,7 +10,6 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-
 MOVIELENS_100K_URL = "https://files.grouplens.org/datasets/movielens/ml-100k.zip"
 DATA_DIR = Path(__file__).parent.parent / "data"
 
@@ -65,7 +64,7 @@ def main():
     with open(data_file) as f:
         lines = f.readlines()
 
-    print(f"\nDataset stats:")
+    print("\nDataset stats:")
     print(f"  Total ratings: {len(lines):,}")
 
     users = set()
