@@ -18,7 +18,7 @@ Usage:
     kv_cache = dequantize_kv_cache(quant_cache)
 """
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -26,8 +26,8 @@ import jax.numpy as jnp
 from enhancements.optimization.quantization.config import BitWidth, Symmetry
 from enhancements.optimization.quantization.quantize import (
     QuantizedTensor,
-    compute_scale_zp_symmetric,
     compute_scale_zp_asymmetric,
+    compute_scale_zp_symmetric,
 )
 
 

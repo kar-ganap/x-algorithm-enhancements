@@ -67,5 +67,11 @@ results/*.png
 *.pkl
 checkpoints/
 
+# Datasets (large, downloaded separately)
+data/
+
+# Training logs
+training*.log
+
 # macOS
 .DS_Store

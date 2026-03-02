@@ -17,18 +17,17 @@ Architecture:
     └──────────────────────────────────────────┘
 """
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import haiku as hk
 import jax
 import jax.numpy as jnp
 
-from phoenix.grok import DenseBlock, Linear, RMSNorm, make_recsys_attn_mask
-
 from enhancements.optimization.caching_attention import (
     CachingMultiHeadAttention,
     LayerKVCache,
 )
+from phoenix.grok import DenseBlock, RMSNorm, make_recsys_attn_mask
 
 
 class FullKVCache(NamedTuple):
@@ -65,7 +64,7 @@ class CachingMHABlock(hk.Module):
         num_kv_heads: int,
         key_size: int,
         attn_output_multiplier: float = 1.0,
-        name: Optional[str] = None,
+        name: str | None = None,
     ):
         super().__init__(name=name)
         self.num_q_heads = num_q_heads
@@ -77,7 +76,7 @@ class CachingMHABlock(hk.Module):
         self,
         inputs: jax.Array,
         mask: jax.Array,
-        kv_cache: Optional[LayerKVCache] = None,
+        kv_cache: LayerKVCache | None = None,
         position_offset: int = 0,
     ) -> tuple[jax.Array, LayerKVCache]:
         """Forward pass with optional K,V cache.
@@ -121,7 +120,7 @@ class CachingDecoderLayer(hk.Module):
         key_size: int,
         widening_factor: float = 4.0,
         attn_output_multiplier: float = 1.0,
-        name: Optional[str] = None,
+        name: str | None = None,
     ):
         super().__init__(name=name)
         self.num_q_heads = num_q_heads
@@ -134,7 +133,7 @@ class CachingDecoderLayer(hk.Module):
         self,
         inputs: jax.Array,
         mask: jax.Array,
-        kv_cache: Optional[LayerKVCache] = None,
+        kv_cache: LayerKVCache | None = None,
         position_offset: int = 0,
     ) -> tuple[jax.Array, LayerKVCache]:
         """Forward pass with optional K,V cache.
@@ -205,7 +204,7 @@ class CachingTransformer(hk.Module):
         num_layers: int,
         widening_factor: float = 4.0,
         attn_output_multiplier: float = 1.0,
-        name: Optional[str] = None,
+        name: str | None = None,
     ):
         super().__init__(name=name)
         self.num_q_heads = num_q_heads
@@ -220,9 +219,9 @@ class CachingTransformer(hk.Module):
         embeddings: jax.Array,
         mask: jax.Array,
         user_hash: int,
-        kv_cache: Optional[FullKVCache] = None,
+        kv_cache: FullKVCache | None = None,
         position_offset: int = 0,
-        candidate_start_offset: Optional[int] = None,
+        candidate_start_offset: int | None = None,
     ) -> CachingTransformerOutput:
         """Forward pass with K,V caching.
 

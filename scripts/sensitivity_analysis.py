@@ -13,7 +13,6 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import jax
 import jax.numpy as jnp
@@ -49,12 +48,12 @@ def flush_print(*args, **kwargs):
 
 
 def generate_training_data(
-    archetypes: List[UserArchetype],
+    archetypes: list[UserArchetype],
     num_pairs_per_archetype: int = 200,
     noise_std: float = 0.0,
     label_flip_rate: float = 0.0,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate training data with optional noise."""
     if rng is None:
         rng = np.random.default_rng(42)
@@ -121,7 +120,7 @@ def train_model(
     num_epochs: int = 30,
     learning_rate: float = 0.05,
     batch_size: int = 64,
-    rng: Optional[np.random.Generator] = None,
+    rng: np.random.Generator | None = None,
 ) -> jnp.ndarray:
     """Train Bradley-Terry model."""
     if rng is None:
@@ -179,7 +178,7 @@ def evaluate_model(
 
 def study_noise_sensitivity(
     output_dir: Path,
-) -> Dict[str, Dict[str, float]]:
+) -> dict[str, dict[str, float]]:
     """Study effect of noise levels on model performance."""
     flush_print("\n" + "=" * 70)
     flush_print("STUDY 1: Noise Sensitivity")
@@ -250,7 +249,7 @@ def study_noise_sensitivity(
 
 def study_held_out_archetypes(
     output_dir: Path,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Study effect of number of held-out archetypes."""
     flush_print("\n" + "=" * 70)
     flush_print("STUDY 2: Held-Out Archetype Generalization")
@@ -324,7 +323,7 @@ def study_held_out_archetypes(
 
 def study_noisy_training(
     output_dir: Path,
-) -> Dict[str, Dict[str, float]]:
+) -> dict[str, dict[str, float]]:
     """Study effect of training with noisy data."""
     flush_print("\n" + "=" * 70)
     flush_print("STUDY 3: Noisy Training Data")
@@ -379,9 +378,9 @@ def study_noisy_training(
 
 
 def plot_sensitivity_results(
-    noise_results: Dict,
-    held_out_results: Dict,
-    noisy_train_results: Dict,
+    noise_results: dict,
+    held_out_results: dict,
+    noisy_train_results: dict,
     output_dir: Path,
 ):
     """Create visualization of sensitivity analysis."""

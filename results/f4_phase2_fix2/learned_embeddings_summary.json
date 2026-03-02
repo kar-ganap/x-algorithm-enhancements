@@ -1,0 +1,125 @@
+{
+  "unsupervised": {
+    "final_accuracy": 1.0,
+    "mean_correlation": 0.14122436940670013,
+    "assignment_accuracy": 0.17922457937088515,
+    "per_archetype_accuracy": {
+      "sports_fan": 0.0,
+      "political_L": 0.0,
+      "political_R": 1.0,
+      "tech_bro": 0.0,
+      "lurker": 0.0,
+      "power_user": 0.0
+    },
+    "interpretability": 0.5555555555555555,
+    "diversity": 0.9999971389770508,
+    "matches": {
+      "0": [
+        "political_L",
+        0.31105881929397583
+      ],
+      "1": [
+        "lurker",
+        0.004704548045992851
+      ],
+      "2": [
+        "power_user",
+        0.2159690111875534
+      ],
+      "3": [
+        "sports_fan",
+        -0.08418508619070053
+      ],
+      "4": [
+        "political_R",
+        0.5145384669303894
+      ],
+      "5": [
+        "tech_bro",
+        -0.1147395595908165
+      ]
+    }
+  },
+  "supervised": {
+    "final_accuracy": 0.9883720930232558,
+    "mean_correlation": 0.5535325407981873,
+    "assignment_accuracy": 0.17849305047549377,
+    "per_archetype_accuracy": {
+      "sports_fan": 1.0,
+      "political_L": 0.0,
+      "political_R": 0.0,
+      "tech_bro": 0.0,
+      "lurker": 0.0,
+      "power_user": 0.0
+    },
+    "interpretability": 0.7314814814814815,
+    "diversity": 0.7735094428062439,
+    "matches": {
+      "0": [
+        "sports_fan",
+        0.5483027696609497
+      ],
+      "1": [
+        "power_user",
+        0.5773454904556274
+      ],
+      "2": [
+        "tech_bro",
+        0.6576384902000427
+      ],
+      "3": [
+        "lurker",
+        0.5673710703849792
+      ],
+      "4": [
+        "political_R",
+        0.4928458631038666
+      ],
+      "5": [
+        "political_L",
+        0.47769156098365784
+      ]
+    }
+  },
+  "oracle": {
+    "final_accuracy": 0.995094476744186,
+    "mean_correlation": 0.2788383364677429,
+    "assignment_accuracy": 0.18269934162399415,
+    "per_archetype_accuracy": {
+      "sports_fan": 0.0,
+      "political_L": 1.0,
+      "political_R": 0.0,
+      "tech_bro": 0.0,
+      "lurker": 0.0,
+      "power_user": 0.0
+    },
+    "interpretability": 0.5740740740740741,
+    "diversity": 0.9427312612533569,
+    "matches": {
+      "0": [
+        "sports_fan",
+        0.1280708760023117
+      ],
+      "1": [
+        "lurker",
+        -0.15540534257888794
+      ],
+      "2": [
+        "power_user",
+        0.36051610112190247
+      ],
+      "3": [
+        "political_L",
+        0.6971732378005981
+      ],
+      "4": [
+        "political_R",
+        0.4983280897140503
+      ],
+      "5": [
+        "tech_bro",
+        0.14434704184532166
+      ]
+    }
+  }
+}

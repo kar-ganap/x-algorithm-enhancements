@@ -18,7 +18,6 @@ Outputs:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import jax
 import jax.numpy as jnp
@@ -30,24 +29,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent / "phoenix"))
 
 from enhancements.data import (
-    ENGAGEMENT_RULES,
     ContentTopic,
-    SyntheticTwitterDataset,
     UserArchetype,
     get_engagement_probs,
-    load_or_generate_dataset,
 )
 from enhancements.reward_modeling import (
-    ACTION_INDICES,
     ACTION_NAMES,
     NUM_ACTIONS,
-    ContextualRewardModel,
     RewardWeights,
-    TrainingConfig,
     compute_preference_accuracy,
     contextual_bradley_terry_loss,
 )
-
 
 # =============================================================================
 # Data Generation
@@ -56,8 +48,8 @@ from enhancements.reward_modeling import (
 
 def create_preference_pairs_from_ground_truth(
     num_pairs_per_archetype: int = 1000,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Create preference pairs directly from F2's ground truth engagement rules.
 
     For each archetype, generates pairs where the preferred item has higher
@@ -131,8 +123,8 @@ def create_preference_pairs_from_ground_truth(
 
 def create_within_topic_preference_pairs(
     num_pairs_per_archetype: int = 500,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Create preference pairs within the same topic (harder task).
 
     For each archetype, creates pairs from the same topic where
@@ -201,7 +193,7 @@ def train_contextual_reward_model(
     learning_rate: float = 0.05,
     batch_size: int = 64,
     verbose: bool = True,
-) -> Tuple[jnp.ndarray, Dict]:
+) -> tuple[jnp.ndarray, dict]:
     """Train contextual reward weights on ground truth preferences.
 
     Args:
@@ -353,8 +345,8 @@ def train_contextual_reward_model(
 
 def analyze_learned_weights(
     weights: jnp.ndarray,
-    archetypes: List[UserArchetype] = None,
-) -> Dict:
+    archetypes: list[UserArchetype] = None,
+) -> dict:
     """Analyze learned weights to verify they match expected patterns."""
     if archetypes is None:
         archetypes = list(UserArchetype)
@@ -401,7 +393,7 @@ def analyze_learned_weights(
     return analysis
 
 
-def plot_training_curves(metrics: Dict, output_path: Path):
+def plot_training_curves(metrics: dict, output_path: Path):
     """Plot training curves."""
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 

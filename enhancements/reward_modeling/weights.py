@@ -25,13 +25,11 @@ Action order (from Phoenix RankingOutput):
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 import jax.numpy as jnp
 
-
 # Action names in Phoenix order
-ACTION_NAMES: List[str] = [
+ACTION_NAMES: list[str] = [
     "favorite",
     "reply",
     "repost",
@@ -55,7 +53,7 @@ ACTION_NAMES: List[str] = [
 NUM_ACTIONS = len(ACTION_NAMES)  # 18
 
 # Indices for key actions (for interpretability checks)
-ACTION_INDICES: Dict[str, int] = {name: i for i, name in enumerate(ACTION_NAMES)}
+ACTION_INDICES: dict[str, int] = {name: i for i, name in enumerate(ACTION_NAMES)}
 
 
 @dataclass
@@ -120,7 +118,7 @@ class RewardWeights:
         """Create uniform weights (baseline: all actions equal)."""
         return cls(weights=jnp.ones(NUM_ACTIONS) * value)
 
-    def get_positive_actions(self) -> List[Tuple[str, float]]:
+    def get_positive_actions(self) -> list[tuple[str, float]]:
         """Get actions with positive weights, sorted by magnitude."""
         pairs = [
             (ACTION_NAMES[i], float(self.weights[i]))
@@ -129,7 +127,7 @@ class RewardWeights:
         ]
         return sorted(pairs, key=lambda x: -x[1])
 
-    def get_negative_actions(self) -> List[Tuple[str, float]]:
+    def get_negative_actions(self) -> list[tuple[str, float]]:
         """Get actions with negative weights, sorted by magnitude."""
         pairs = [
             (ACTION_NAMES[i], float(self.weights[i]))
@@ -138,7 +136,7 @@ class RewardWeights:
         ]
         return sorted(pairs, key=lambda x: x[1])
 
-    def to_dict(self) -> Dict[str, float]:
+    def to_dict(self) -> dict[str, float]:
         """Convert to dictionary mapping action names to weights."""
         return {
             ACTION_NAMES[i]: float(self.weights[i])

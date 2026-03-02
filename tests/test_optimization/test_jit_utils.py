@@ -18,10 +18,6 @@ import pytest
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-from phoenix.runners import ACTIONS, ModelRunner, RecsysInferenceRunner, create_example_batch
-
 from enhancements.optimization.jit_utils import (
     JITStats,
     StaticJITRunner,
@@ -30,6 +26,9 @@ from enhancements.optimization.jit_utils import (
     pad_batch_to_static,
     pad_embeddings_to_static,
 )
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
+from phoenix.runners import ACTIONS, ModelRunner, RecsysInferenceRunner, create_example_batch
 
 
 @pytest.fixture(scope="module")
@@ -248,7 +247,7 @@ class TestPerformance:
         jit_p50 = np.percentile(jit_times, 50)
         speedup = baseline_p50 / jit_p50
 
-        print(f"\nPerformance Results:")
+        print("\nPerformance Results:")
         print(f"  Baseline p50: {baseline_p50:.2f} ms")
         print(f"  JIT p50: {jit_p50:.2f} ms")
         print(f"  Speedup: {speedup:.2f}x")
@@ -278,7 +277,7 @@ class TestPerformance:
         mean_time = np.mean(times)
         max_deviation = max(abs(t - mean_time) for t in times)
 
-        print(f"\nRecompilation check:")
+        print("\nRecompilation check:")
         print(f"  Mean time: {mean_time:.2f} ms")
         print(f"  Max deviation: {max_deviation:.2f} ms")
         print(f"  Times: {[f'{t:.1f}' for t in times]}")
@@ -377,7 +376,7 @@ class TestIntegration:
 
         # 3. Verify stats are available
         assert jit_runner.stats is not None
-        print(f"\nFinal JIT Stats:")
+        print("\nFinal JIT Stats:")
         print(f"  Compilation: {jit_runner.stats.compilation_time_ms:.1f} ms")
         print(f"  First run: {jit_runner.stats.first_run_time_ms:.1f} ms")
         print(f"  Warmup avg: {jit_runner.stats.warmup_avg_time_ms:.1f} ms")

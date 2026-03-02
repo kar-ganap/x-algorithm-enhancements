@@ -5,7 +5,6 @@ and utilities for creating preference data from F2's synthetic data.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -56,7 +55,7 @@ class PreferenceBatch:
     confidences: jnp.ndarray
 
     @classmethod
-    def from_pairs(cls, pairs: List[PreferencePair]) -> "PreferenceBatch":
+    def from_pairs(cls, pairs: list[PreferencePair]) -> "PreferenceBatch":
         """Create batch from list of preference pairs."""
         return cls(
             user_indices=jnp.array([p.user_idx for p in pairs]),
@@ -73,8 +72,8 @@ def create_preferences_from_rewards(
     rewards: jnp.ndarray,
     num_pairs_per_user: int = 5,
     min_reward_diff: float = 0.1,
-    rng: Optional[np.random.Generator] = None,
-) -> List[PreferencePair]:
+    rng: np.random.Generator | None = None,
+) -> list[PreferencePair]:
     """Create preference pairs from known reward values.
 
     For each user, samples pairs of candidates where the higher-reward
@@ -127,12 +126,12 @@ def create_preferences_from_rewards(
 
 
 def create_preferences_from_ground_truth(
-    user_archetypes: List[str],
-    candidate_topics: List[str],
+    user_archetypes: list[str],
+    candidate_topics: list[str],
     engagement_rules: dict,
     num_pairs: int = 100,
-    rng: Optional[np.random.Generator] = None,
-) -> List[PreferencePair]:
+    rng: np.random.Generator | None = None,
+) -> list[PreferencePair]:
     """Create preference pairs from F2's ground truth engagement rules.
 
     Uses the ground truth probabilities to determine which posts

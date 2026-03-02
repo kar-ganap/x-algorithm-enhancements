@@ -8,13 +8,12 @@ Uses silhouette score to measure cluster quality.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-from enhancements.data.ground_truth import UserArchetype, ContentTopic
-from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
+from enhancements.data.ground_truth import ContentTopic, UserArchetype
 from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
+from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 
 
 @dataclass
@@ -25,14 +24,14 @@ class EmbeddingProbeResults:
     topic_silhouette: float  # Silhouette score for post topic clustering
 
     # Per-archetype metrics
-    archetype_cluster_sizes: Dict[str, int]
-    archetype_intra_distances: Dict[str, float]  # Avg distance within archetype
-    archetype_inter_distances: Dict[str, float]  # Avg distance to other archetypes
+    archetype_cluster_sizes: dict[str, int]
+    archetype_intra_distances: dict[str, float]  # Avg distance within archetype
+    archetype_inter_distances: dict[str, float]  # Avg distance to other archetypes
 
     # Per-topic metrics
-    topic_cluster_sizes: Dict[str, int]
-    topic_intra_distances: Dict[str, float]
-    topic_inter_distances: Dict[str, float]
+    topic_cluster_sizes: dict[str, int]
+    topic_intra_distances: dict[str, float]
+    topic_inter_distances: dict[str, float]
 
     # Pass/fail
     user_clustering_pass: bool  # silhouette > threshold
@@ -134,7 +133,7 @@ def compute_pairwise_distances(embeddings: np.ndarray) -> np.ndarray:
 def compute_cluster_distances(
     embeddings: np.ndarray,
     labels: np.ndarray,
-) -> Tuple[Dict[int, float], Dict[int, float]]:
+) -> tuple[dict[int, float], dict[int, float]]:
     """Compute intra-cluster and inter-cluster distances.
 
     Args:
@@ -183,7 +182,7 @@ def test_user_archetype_clustering(
     dataset: SyntheticTwitterDataset,
     sample_size: int = 500,
     threshold: float = 0.2,
-) -> Tuple[float, bool, Dict[str, int], Dict[str, float], Dict[str, float]]:
+) -> tuple[float, bool, dict[str, int], dict[str, float], dict[str, float]]:
     """Test if users of same archetype cluster together.
 
     Args:
@@ -240,7 +239,7 @@ def test_topic_clustering(
     dataset: SyntheticTwitterDataset,
     sample_size: int = 1000,
     threshold: float = 0.2,
-) -> Tuple[float, bool, Dict[str, int], Dict[str, float], Dict[str, float]]:
+) -> tuple[float, bool, dict[str, int], dict[str, float], dict[str, float]]:
     """Test if posts of same topic cluster together.
 
     Args:

@@ -10,22 +10,19 @@ Usage:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import jax.numpy as jnp
 import numpy as np
 
+from enhancements.data.movielens import MovieLensDataset, Rating
 from phoenix.recsys_model import (
     PhoenixModelConfig,
     RecsysBatch,
     RecsysEmbeddings,
 )
 
-from enhancements.data.movielens import MovieLensDataset, Rating
-
-
 # Type alias for embedding parameters
-EmbeddingParams = Dict[str, jnp.ndarray]
+EmbeddingParams = dict[str, jnp.ndarray]
 
 
 @dataclass
@@ -50,8 +47,8 @@ class MovieLensPhoenixAdapter:
     rng: np.random.Generator = None
 
     # Learned embedding projections (set during training)
-    genre_projection: Optional[np.ndarray] = None  # [19, emb_size]
-    user_embedding_table: Optional[np.ndarray] = None  # [num_users+1, emb_size]
+    genre_projection: np.ndarray | None = None  # [19, emb_size]
+    user_embedding_table: np.ndarray | None = None  # [num_users+1, emb_size]
 
     def __post_init__(self):
         if self.rng is None:
@@ -257,10 +254,10 @@ class MovieLensPhoenixAdapter:
     def create_batch_for_user(
         self,
         user_id: int,
-        candidate_movie_ids: List[int],
-        history_limit: Optional[int] = None,
-        num_candidates_override: Optional[int] = None,
-    ) -> Tuple[RecsysBatch, RecsysEmbeddings]:
+        candidate_movie_ids: list[int],
+        history_limit: int | None = None,
+        num_candidates_override: int | None = None,
+    ) -> tuple[RecsysBatch, RecsysEmbeddings]:
         """Create Phoenix batch for a single user.
 
         Args:
@@ -360,8 +357,8 @@ class MovieLensPhoenixAdapter:
     def _build_embeddings(
         self,
         user_id: int,
-        history: List[Rating],
-        candidates: List[int],
+        history: list[Rating],
+        candidates: list[int],
         batch_size: int,
     ) -> RecsysEmbeddings:
         """Build embedding arrays from user and movie data."""
@@ -419,7 +416,7 @@ class MovieLensPhoenixAdapter:
         self,
         rating: Rating,
         num_negatives: int = 4,
-    ) -> Tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
+    ) -> tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
         """Create training example from a rating.
 
         Creates a batch with:
@@ -474,7 +471,7 @@ class MovieLensPhoenixAdapter:
         batch_size: int = 32,
         num_negatives: int = 4,
         use_in_batch_negatives: bool = False,
-    ) -> Tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
+    ) -> tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
         """Get a batch of training examples.
 
         Args:
@@ -513,7 +510,7 @@ class MovieLensPhoenixAdapter:
     def _get_in_batch_negatives_batch(
         self,
         batch_size: int,
-    ) -> Tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
+    ) -> tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
         """Get training batch using in-batch negatives strategy.
 
         In-batch negatives: For each user's positive item, use all other users'
@@ -629,8 +626,8 @@ class MovieLensPhoenixAdapter:
 
     def _build_in_batch_embeddings(
         self,
-        ratings: List[Rating],
-        candidate_movie_ids: List[int],
+        ratings: list[Rating],
+        candidate_movie_ids: list[int],
         batch_size: int,
     ) -> RecsysEmbeddings:
         """Build embeddings for in-batch negatives setup."""
@@ -691,10 +688,10 @@ class MovieLensPhoenixAdapter:
 
     def _stack_batches(
         self,
-        batches: List[RecsysBatch],
-        embeddings_list: List[RecsysEmbeddings],
-        labels_list: List[np.ndarray],
-    ) -> Tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
+        batches: list[RecsysBatch],
+        embeddings_list: list[RecsysEmbeddings],
+        labels_list: list[np.ndarray],
+    ) -> tuple[RecsysBatch, RecsysEmbeddings, np.ndarray]:
         """Stack list of single-example batches into one batched batch."""
 
         stacked_batch = RecsysBatch(

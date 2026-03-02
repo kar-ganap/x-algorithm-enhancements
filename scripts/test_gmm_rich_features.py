@@ -15,7 +15,6 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -48,7 +47,7 @@ def generate_cross_topic_rich_features(
     num_cross_users: int = 300,
     num_pairs_per_user: int = 10,
     rng: np.random.Generator | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate cross-topic user data with both topic-only and rich features.
 
     Returns:
@@ -171,7 +170,7 @@ def generate_cross_topic_rich_features(
     )
 
 
-def measure_recovery(weights: np.ndarray, verbose: bool = True) -> Dict:
+def measure_recovery(weights: np.ndarray, verbose: bool = True) -> dict:
     """Measure structural recovery."""
     import jax.numpy as jnp
     gt_weights = get_all_ground_truth_weights()
@@ -199,7 +198,7 @@ def analyze_cross_user_handling(
     soft_memberships: np.ndarray | None,
     is_cross: np.ndarray,
     config_name: str,
-) -> Dict:
+) -> dict:
     """Analyze how cross-topic users are handled."""
     flush_print(f"\n--- Cross-Topic User Analysis ({config_name}) ---")
 
@@ -236,11 +235,11 @@ def analyze_cross_user_handling(
         pure_entropy = -np.sum(pure_memberships * np.log(pure_memberships + 1e-10), axis=1).mean()
         pure_significant = (pure_memberships > 0.1).sum(axis=1).mean()
 
-        flush_print(f"\nSoft membership analysis:")
-        flush_print(f"  Cross-topic users:")
+        flush_print("\nSoft membership analysis:")
+        flush_print("  Cross-topic users:")
         flush_print(f"    Avg entropy: {avg_entropy:.3f} (normalized: {normalized_entropy:.1%})")
         flush_print(f"    Avg significant clusters: {avg_significant:.1f}")
-        flush_print(f"  Pure users:")
+        flush_print("  Pure users:")
         flush_print(f"    Avg entropy: {pure_entropy:.3f}")
         flush_print(f"    Avg significant clusters: {pure_significant:.1f}")
 

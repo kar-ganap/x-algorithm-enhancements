@@ -19,16 +19,15 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from phoenix.grok import make_recsys_attn_mask
 from enhancements.optimization.attention import (
-    standard_attention,
-    efficient_phoenix_attention,
-    flash_attention_1d,
     compute_attention_memory_bytes,
     compute_efficient_attention_memory_bytes,
+    efficient_phoenix_attention,
+    flash_attention_1d,
     memory_reduction_factor,
+    standard_attention,
 )
-
+from phoenix.grok import make_recsys_attn_mask
 
 # =============================================================================
 # Fixtures

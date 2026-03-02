@@ -8,15 +8,13 @@ user archetypes. Key tests:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
 
 import jax.numpy as jnp
 import numpy as np
 
-from enhancements.data.ground_truth import UserArchetype, ContentTopic, get_engagement_probs
-from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
+from enhancements.data.ground_truth import ContentTopic, UserArchetype, get_engagement_probs
 from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
-
+from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 from phoenix.recsys_model import RecsysBatch
 
 
@@ -64,7 +62,7 @@ class ActionTestResults:
     political_l_on_politics_r: ActionDistribution  # Left user on right content
     political_r_on_politics_l: ActionDistribution  # Right user on left content
 
-    tests: List[ActionTestResult]
+    tests: list[ActionTestResult]
     tests_passed: int
     tests_total: int
 
@@ -82,7 +80,7 @@ def predict_action_distribution(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     archetype: UserArchetype,
     topic: ContentTopic = None,  # If None, use random posts
     num_samples: int = 100,
@@ -197,7 +195,7 @@ def run_action_tests(
     adapter: SyntheticTwitterPhoenixAdapter,
     dataset: SyntheticTwitterDataset,
     runner,
-    params: Dict,
+    params: dict,
     num_samples: int = 100,
 ) -> ActionTestResults:
     """Run all action differentiation tests.

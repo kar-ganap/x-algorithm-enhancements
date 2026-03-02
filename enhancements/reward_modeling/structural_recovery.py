@@ -11,7 +11,6 @@ Key metrics:
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -20,7 +19,6 @@ from scipy.optimize import linear_sum_assignment
 from enhancements.data import ContentTopic, UserArchetype, get_engagement_probs
 from enhancements.reward_modeling.pluralistic import (
     PluralState,
-    compute_mixture_weights,
     get_dominant_system,
 )
 from enhancements.reward_modeling.weights import NUM_ACTIONS
@@ -31,18 +29,18 @@ class RecoveryMetrics:
     """Metrics for structural recovery evaluation."""
 
     # Weight-based metrics
-    weight_correlations: Dict[int, Tuple[str, float]]  # system_k -> (best_archetype, correlation)
+    weight_correlations: dict[int, tuple[str, float]]  # system_k -> (best_archetype, correlation)
     mean_correlation: float
     correlation_matrix: np.ndarray  # [K, num_archetypes]
 
     # Assignment-based metrics
     assignment_accuracy: float
-    per_archetype_accuracy: Dict[str, float]
+    per_archetype_accuracy: dict[str, float]
     confusion_matrix: np.ndarray  # [num_archetypes, K]
 
     # Interpretability metrics
     interpretability_score: float
-    per_system_interpretability: List[float]
+    per_system_interpretability: list[float]
 
     # System diversity
     system_diversity: float  # Mean pairwise distance between systems
@@ -79,7 +77,7 @@ def compute_ground_truth_weights(archetype: UserArchetype) -> np.ndarray:
     return weights
 
 
-def get_all_ground_truth_weights() -> Dict[UserArchetype, np.ndarray]:
+def get_all_ground_truth_weights() -> dict[UserArchetype, np.ndarray]:
     """Get ground truth weights for all archetypes.
 
     Returns:
@@ -93,7 +91,7 @@ def get_all_ground_truth_weights() -> Dict[UserArchetype, np.ndarray]:
 
 def compute_correlation_matrix(
     learned_weights: jnp.ndarray,
-    gt_weights: Dict[UserArchetype, np.ndarray],
+    gt_weights: dict[UserArchetype, np.ndarray],
 ) -> np.ndarray:
     """Compute correlation between learned systems and ground truth archetypes.
 
@@ -123,7 +121,7 @@ def compute_correlation_matrix(
 
 def match_systems_to_archetypes(
     correlation_matrix: np.ndarray,
-) -> Dict[int, Tuple[str, float]]:
+) -> dict[int, tuple[str, float]]:
     """Match learned systems to ground truth archetypes using Hungarian algorithm.
 
     Args:
@@ -163,8 +161,8 @@ def compute_assignment_accuracy(
     state: PluralState,
     user_embeddings: jnp.ndarray,
     true_archetype_ids: jnp.ndarray,
-    system_to_archetype: Dict[int, Tuple[str, float]],
-) -> Tuple[float, Dict[str, float], np.ndarray]:
+    system_to_archetype: dict[int, tuple[str, float]],
+) -> tuple[float, dict[str, float], np.ndarray]:
     """Compute how accurately users are assigned to their true archetype's system.
 
     Args:
@@ -224,9 +222,9 @@ def compute_assignment_accuracy(
 
 def compute_interpretability_score(
     weights: jnp.ndarray,
-    positive_indices: List[int] = list(range(14)),
-    negative_indices: List[int] = list(range(14, 18)),
-) -> Tuple[float, List[float]]:
+    positive_indices: list[int] = list(range(14)),
+    negative_indices: list[int] = list(range(14, 18)),
+) -> tuple[float, list[float]]:
     """Compute how interpretable the learned value systems are.
 
     A system is interpretable if:
@@ -337,26 +335,26 @@ def measure_structural_recovery(
         for k, (arch, corr) in sorted(matches.items()):
             print(f"  System {k} -> {arch:15s} (correlation: {corr:.3f})")
 
-        print(f"\n--- Weight Correlation ---")
+        print("\n--- Weight Correlation ---")
         print(f"  Mean correlation: {mean_corr:.3f}")
-        print(f"  Gate threshold:   0.80")
+        print("  Gate threshold:   0.80")
         print(f"  Status:           {'PASS' if mean_corr > 0.8 else 'FAIL'}")
 
-        print(f"\n--- Assignment Accuracy ---")
+        print("\n--- Assignment Accuracy ---")
         print(f"  Overall: {overall_acc:.1%}")
         for arch, acc in per_arch_acc.items():
             print(f"    {arch:15s}: {acc:.1%}")
-        print(f"  Gate threshold: 70%")
+        print("  Gate threshold: 70%")
         print(f"  Status:         {'PASS' if overall_acc > 0.7 else 'FAIL'}")
 
-        print(f"\n--- Interpretability ---")
+        print("\n--- Interpretability ---")
         print(f"  Overall: {overall_interp:.1%}")
         for k, score in enumerate(per_system_interp):
             print(f"    System {k}: {score:.1%}")
 
-        print(f"\n--- System Diversity ---")
+        print("\n--- System Diversity ---")
         print(f"  Mean pairwise distance: {diversity:.3f}")
-        print(f"  (0 = identical, 1 = orthogonal)")
+        print("  (0 = identical, 1 = orthogonal)")
 
         print("\n" + "=" * 60)
 
@@ -373,7 +371,7 @@ def measure_structural_recovery(
     )
 
 
-def check_recovery_gates(metrics: RecoveryMetrics) -> Dict[str, bool]:
+def check_recovery_gates(metrics: RecoveryMetrics) -> dict[str, bool]:
     """Check if structural recovery passes all gates.
 
     Args:

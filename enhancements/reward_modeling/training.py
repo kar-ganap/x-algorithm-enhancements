@@ -6,8 +6,8 @@ Bradley-Terry model: P(A preferred to B) = σ(R(A) - R(B))
 Integrates with F2's synthetic data for ground-truth preferences.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Tuple, Union
 
 import jax
 import jax.numpy as jnp
@@ -40,7 +40,7 @@ def bradley_terry_loss(
     weights: jnp.ndarray,
     action_probs_preferred: jnp.ndarray,
     action_probs_rejected: jnp.ndarray,
-    confidence: Optional[jnp.ndarray] = None,
+    confidence: jnp.ndarray | None = None,
 ) -> jnp.ndarray:
     """Compute Bradley-Terry preference loss.
 
@@ -83,7 +83,7 @@ def bradley_terry_loss_with_margin(
     action_probs_preferred: jnp.ndarray,
     action_probs_rejected: jnp.ndarray,
     margin: float = 0.1,
-    confidence: Optional[jnp.ndarray] = None,
+    confidence: jnp.ndarray | None = None,
 ) -> jnp.ndarray:
     """Bradley-Terry loss with margin for stronger preference signal.
 
@@ -117,7 +117,7 @@ def contextual_bradley_terry_loss(
     action_probs_preferred: jnp.ndarray,
     action_probs_rejected: jnp.ndarray,
     archetype_ids: jnp.ndarray,
-    confidence: Optional[jnp.ndarray] = None,
+    confidence: jnp.ndarray | None = None,
 ) -> jnp.ndarray:
     """Bradley-Terry loss with archetype-specific weights.
 
@@ -163,8 +163,8 @@ class TrainingState:
 class TrainingMetrics:
     """Metrics from a training run."""
 
-    loss_history: List[float]
-    accuracy_history: List[float]
+    loss_history: list[float]
+    accuracy_history: list[float]
     final_weights: jnp.ndarray
     epochs_trained: int
 
@@ -173,7 +173,7 @@ def compute_preference_accuracy(
     weights: jnp.ndarray,
     action_probs_preferred: jnp.ndarray,
     action_probs_rejected: jnp.ndarray,
-    archetype_ids: Optional[jnp.ndarray] = None,
+    archetype_ids: jnp.ndarray | None = None,
 ) -> float:
     """Compute accuracy of preference predictions.
 
@@ -203,7 +203,7 @@ def compute_preference_accuracy(
 
 def train_single_weights(
     initial_weights: jnp.ndarray,
-    get_batch_fn: Callable[[], Tuple[jnp.ndarray, jnp.ndarray, Optional[jnp.ndarray]]],
+    get_batch_fn: Callable[[], tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray | None]],
     config: TrainingConfig,
     verbose: bool = True,
 ) -> TrainingMetrics:
@@ -277,7 +277,7 @@ def train_single_weights(
 
 def train_contextual_weights(
     initial_weights: jnp.ndarray,
-    get_batch_fn: Callable[[], Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, Optional[jnp.ndarray]]],
+    get_batch_fn: Callable[[], tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray | None]],
     config: TrainingConfig,
     verbose: bool = True,
 ) -> TrainingMetrics:
@@ -351,8 +351,8 @@ def train_contextual_weights(
 def create_synthetic_preference_batch(
     num_samples: int,
     num_actions: int = NUM_ACTIONS,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]:
     """Create synthetic preference batch for testing.
 
     Generates random action probabilities where preferred items have

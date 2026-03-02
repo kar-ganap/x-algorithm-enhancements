@@ -18,10 +18,10 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "phoenix"))
 
 from enhancements.data.ground_truth import (
-    UserArchetype,
-    ContentTopic,
     ARCHETYPE_DISTRIBUTION,
     TOPIC_DISTRIBUTION,
+    ContentTopic,
+    UserArchetype,
 )
 from enhancements.data.synthetic_twitter import (
     SyntheticTwitterGenerator,

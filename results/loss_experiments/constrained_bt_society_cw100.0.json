@@ -1,0 +1,52 @@
+{
+  "loss_type": "constrained_bt",
+  "stakeholder": "society",
+  "accuracy": 0.0,
+  "final_loss": NaN,
+  "weights": {
+    "positive_mean": NaN,
+    "negative_mean": NaN,
+    "weight_std": NaN,
+    "weight_range": NaN
+  },
+  "score_stats": {
+    "mean": NaN,
+    "std": NaN,
+    "min": NaN,
+    "max": NaN
+  },
+  "topic_scores": {
+    "sports": NaN,
+    "tech": NaN,
+    "politics_L": NaN,
+    "politics_R": NaN,
+    "entertainment": NaN,
+    "news": NaN
+  },
+  "config": {
+    "margin": 0.5,
+    "calibration_weight": 1.0,
+    "constraint_weight": 100.0
+  },
+  "training_time_seconds": 435.17436718940735,
+  "weights_vector": [
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN
+  ]
+}

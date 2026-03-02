@@ -9,7 +9,7 @@ meaningful clusters that correspond to actual value systems.
 """
 
 from dataclasses import dataclass
-from typing import Dict, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -24,7 +24,7 @@ from enhancements.reward_modeling.pluralistic import (
     diversity_loss,
     entropy_loss,
 )
-from enhancements.reward_modeling.weights import NUM_ACTIONS, RewardWeights
+from enhancements.reward_modeling.weights import RewardWeights
 
 
 @dataclass
@@ -91,7 +91,7 @@ def init_learned_embedding_state(
 
 
 def encode_user_history(
-    params: Dict,
+    params: dict,
     user_history: jnp.ndarray,
 ) -> jnp.ndarray:
     """Encode user interaction history into embedding.
@@ -112,7 +112,7 @@ def encode_user_history(
 
 
 def compute_mixture_from_history(
-    params: Dict,
+    params: dict,
     user_history: jnp.ndarray,
 ) -> jnp.ndarray:
     """Compute mixture weights from user history.
@@ -138,10 +138,10 @@ def train_with_learned_embeddings(
     user_histories: jnp.ndarray,
     probs_preferred: jnp.ndarray,
     probs_rejected: jnp.ndarray,
-    archetype_ids: Optional[jnp.ndarray] = None,
+    archetype_ids: jnp.ndarray | None = None,
     seed: int = 42,
     verbose: bool = True,
-) -> Tuple[LearnedEmbeddingState, PluralMetrics]:
+) -> tuple[LearnedEmbeddingState, PluralMetrics]:
     """Train pluralistic model with learned embeddings.
 
     The key difference from Fix 1: instead of pre-computed embeddings,

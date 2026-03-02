@@ -26,7 +26,6 @@ import argparse
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -34,20 +33,17 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from enhancements.analysis.real_trajectory_simulation import (
+    RealTrajectorySimulator,
+)
+from enhancements.analysis.trajectory_simulation import (
+    CandidateScore,
+    TrajectorySimulator,
+)
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from phoenix.grok import TransformerConfig
 from phoenix.recsys_model import HashConfig, PhoenixModelConfig
 from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
-from enhancements.analysis.trajectory_simulation import (
-    TrajectorySimulator,
-    TrajectoryPath,
-    CandidateScore,
-)
-from enhancements.analysis.real_trajectory_simulation import (
-    RealTrajectorySimulator,
-    RealTrajectoryPath,
-)
 
 
 @dataclass
@@ -72,14 +68,14 @@ class DiversitySnapshot:
 @dataclass
 class TrajectoryDiversity:
     """Diversity metrics tracked across a full trajectory."""
-    snapshots: List[DiversitySnapshot] = field(default_factory=list)
-    engaged_embeddings: List[np.ndarray] = field(default_factory=list)
+    snapshots: list[DiversitySnapshot] = field(default_factory=list)
+    engaged_embeddings: list[np.ndarray] = field(default_factory=list)
 
-    def diversity_trend(self) -> List[float]:
+    def diversity_trend(self) -> list[float]:
         """Return avg_pairwise_distance at each step."""
         return [s.avg_pairwise_distance for s in self.snapshots]
 
-    def concentration_trend(self) -> List[float]:
+    def concentration_trend(self) -> list[float]:
         """Return top_score_gap at each step (higher = more concentrated)."""
         return [s.top_score_gap for s in self.snapshots]
 
@@ -102,9 +98,9 @@ class DiversityAnalysisResult:
     num_engagements: int
 
     # Per-step aggregates
-    mean_diversity_by_step: List[float]
-    std_diversity_by_step: List[float]
-    mean_concentration_by_step: List[float]
+    mean_diversity_by_step: list[float]
+    std_diversity_by_step: list[float]
+    mean_concentration_by_step: list[float]
 
     # Summary statistics
     mean_diversity_change: float  # Average % change across trajectories
@@ -119,7 +115,7 @@ class DiversityAnalysisResult:
     diversity_ratio: float  # actual / baseline (< 1 means less diverse)
 
 
-def compute_pairwise_distances(embeddings: np.ndarray) -> Tuple[float, float, float]:
+def compute_pairwise_distances(embeddings: np.ndarray) -> tuple[float, float, float]:
     """Compute pairwise L2 distances between embeddings.
 
     Args:
@@ -162,7 +158,7 @@ def compute_gini_coefficient(counts: np.ndarray) -> float:
 
 
 def compute_snapshot(
-    remaining_scores: List[CandidateScore],
+    remaining_scores: list[CandidateScore],
     candidate_embeddings: np.ndarray,
     step: int,
 ) -> DiversitySnapshot:
@@ -220,7 +216,7 @@ def run_trajectory_with_diversity(
     candidate_embeddings: np.ndarray,
     num_engagements: int,
     strategy: str = "top",  # "top" or "random"
-    rng: Optional[np.random.Generator] = None,
+    rng: np.random.Generator | None = None,
     use_real_reranking: bool = False,
     num_item_hashes: int = 2,
     num_author_hashes: int = 2,
@@ -303,7 +299,7 @@ def _run_real_trajectory_with_diversity(
     candidate_embeddings: np.ndarray,
     num_engagements: int,
     strategy: str,
-    rng: Optional[np.random.Generator],
+    rng: np.random.Generator | None,
     num_item_hashes: int,
     num_author_hashes: int,
 ) -> TrajectoryDiversity:
@@ -472,7 +468,7 @@ def visualize_diversity_comparison(
     print("DIVERSITY ANALYSIS COMPARISON")
     print("=" * 70)
 
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  Candidates: {top_result.num_candidates}")
     print(f"  Trajectories: {top_result.num_trajectories}")
     print(f"  Engagements per trajectory: {top_result.num_engagements}")
@@ -564,7 +560,7 @@ def create_test_config(candidate_seq_len: int = 8):
 def run_analysis(
     num_candidates: int = 8,
     num_trajectories: int = 50,
-    num_engagements: Optional[int] = None,
+    num_engagements: int | None = None,
     use_real_reranking: bool = False,
 ):
     """Run the full diversity analysis.
@@ -586,7 +582,7 @@ def run_analysis(
     print("=" * 70)
     print(f"DIVERSITY METRICS ANALYSIS ({mode_str})")
     print("=" * 70)
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  Candidates: {num_candidates}")
     print(f"  Trajectories: {num_trajectories}")
     print(f"  Engagements per trajectory: {num_engagements}")
@@ -619,7 +615,7 @@ def run_analysis(
     raw_cand_emb = np.array(embeddings.candidate_post_embeddings[0])  # [C, num_hashes, D]
     candidate_embeddings = np.mean(raw_cand_emb, axis=1)  # [C, D]
 
-    print(f"Model initialized")
+    print("Model initialized")
     print(f"Candidate embedding shape: {candidate_embeddings.shape}")
 
     # Run top-following strategy

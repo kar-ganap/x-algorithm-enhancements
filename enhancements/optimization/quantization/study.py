@@ -6,27 +6,24 @@ and selecting the best one based on accuracy, memory, and latency criteria.
 
 import time
 from dataclasses import dataclass
-from typing import List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import jax
 import numpy as np
 
+from enhancements.optimization.quantization.config import (
+    STUDY_CONFIGS,
+    QuantizationConfig,
+)
+from enhancements.optimization.quantization.quantized_runner import (
+    QuantizedPhoenixRunner,
+)
 from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
 from phoenix.runners import (
     ModelRunner,
     RankingOutput,
     RecsysInferenceRunner,
     create_example_batch,
-)
-
-from enhancements.optimization.quantization.config import (
-    EXTENDED_STUDY_CONFIGS,
-    QuantizationConfig,
-    STUDY_CONFIGS,
-)
-from enhancements.optimization.quantization.quantized_runner import (
-    QuantizedPhoenixRunner,
-    create_quantized_runner,
 )
 
 
@@ -163,7 +160,7 @@ class QuantizationStudy:
     def __init__(
         self,
         model_config: PhoenixModelConfig,
-        study_config: Optional[StudyConfig] = None,
+        study_config: StudyConfig | None = None,
     ):
         """Initialize quantization study.
 
@@ -173,7 +170,7 @@ class QuantizationStudy:
         """
         self.model_config = model_config
         self.study_config = study_config or StudyConfig()
-        self._base_runner: Optional[RecsysInferenceRunner] = None
+        self._base_runner: RecsysInferenceRunner | None = None
 
     def _get_base_runner(self) -> RecsysInferenceRunner:
         """Get or create the base (unquantized) runner."""
@@ -185,7 +182,7 @@ class QuantizationStudy:
 
     def _create_eval_batches(
         self, num_batches: int
-    ) -> List[Tuple[RecsysBatch, RecsysEmbeddings]]:
+    ) -> list[tuple[RecsysBatch, RecsysEmbeddings]]:
         """Create evaluation batches."""
         batches = []
         for i in range(num_batches):
@@ -204,8 +201,8 @@ class QuantizationStudy:
         return batches
 
     def _collect_baseline_outputs(
-        self, batches: List[Tuple[RecsysBatch, RecsysEmbeddings]]
-    ) -> List[RankingOutput]:
+        self, batches: list[tuple[RecsysBatch, RecsysEmbeddings]]
+    ) -> list[RankingOutput]:
         """Collect baseline outputs for all batches."""
         runner = self._get_base_runner()
         outputs = []
@@ -245,8 +242,8 @@ class QuantizationStudy:
     def evaluate_config(
         self,
         quant_config: QuantizationConfig,
-        eval_batches: List[Tuple[RecsysBatch, RecsysEmbeddings]],
-        baseline_outputs: List[RankingOutput],
+        eval_batches: list[tuple[RecsysBatch, RecsysEmbeddings]],
+        baseline_outputs: list[RankingOutput],
         baseline_latency: dict,
     ) -> BenchmarkMetrics:
         """Evaluate a single quantization configuration.
@@ -334,8 +331,8 @@ class QuantizationStudy:
 
     def run(
         self,
-        configs: Optional[List[QuantizationConfig]] = None,
-    ) -> List[BenchmarkMetrics]:
+        configs: list[QuantizationConfig] | None = None,
+    ) -> list[BenchmarkMetrics]:
         """Run comparative quantization study.
 
         Args:
@@ -344,7 +341,7 @@ class QuantizationStudy:
         Returns:
             List of BenchmarkMetrics for each configuration
         """
-        configs_to_use: List[QuantizationConfig] = configs if configs is not None else list(STUDY_CONFIGS)
+        configs_to_use: list[QuantizationConfig] = configs if configs is not None else list(STUDY_CONFIGS)
         cfg = self.study_config
 
         print(f"Running quantization study with {len(configs_to_use)} configurations")
@@ -403,9 +400,9 @@ class WinnerSelectionCriteria:
 
 
 def select_winner(
-    results: List[BenchmarkMetrics],
-    criteria: Optional[WinnerSelectionCriteria] = None,
-) -> Tuple[Optional[BenchmarkMetrics], dict]:
+    results: list[BenchmarkMetrics],
+    criteria: WinnerSelectionCriteria | None = None,
+) -> tuple[BenchmarkMetrics | None, dict]:
     """Select the winning configuration from study results.
 
     Args:
@@ -463,7 +460,7 @@ def select_winner(
     }
 
 
-def format_results_table(results: List[BenchmarkMetrics]) -> str:
+def format_results_table(results: list[BenchmarkMetrics]) -> str:
     """Format results as a table string."""
     lines = []
     lines.append(

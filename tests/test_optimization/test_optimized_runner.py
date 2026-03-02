@@ -12,17 +12,11 @@ Go/No-Go Gate Criteria:
 import sys
 from pathlib import Path
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pytest
 
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
-
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-from phoenix.runners import ACTIONS, ModelRunner, RecsysInferenceRunner, create_example_batch
 
 from enhancements.optimization.optimized_runner import (
     OptimizationConfig,
@@ -31,7 +25,9 @@ from enhancements.optimization.optimized_runner import (
     create_optimized_runner,
 )
 from enhancements.optimization.quantization import BitWidth, Granularity, QuantizationConfig
-
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
+from phoenix.runners import ACTIONS, ModelRunner, RecsysInferenceRunner, create_example_batch
 
 # =============================================================================
 # Test Fixtures

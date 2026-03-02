@@ -12,7 +12,7 @@ Usage:
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 
 
@@ -34,7 +34,7 @@ class Movie:
     genres: np.ndarray  # Binary vector of 19 genres
 
     @property
-    def genre_indices(self) -> List[int]:
+    def genre_indices(self) -> list[int]:
         """Get list of genre indices for this movie."""
         return list(np.where(self.genres > 0)[0])
 
@@ -63,15 +63,15 @@ class MovieLensDataset:
         genres: List of genre names
     """
     data_dir: Path
-    movies: Dict[int, Movie] = field(default_factory=dict)
-    users: Dict[int, User] = field(default_factory=dict)
-    train_ratings: List[Rating] = field(default_factory=list)
-    val_ratings: List[Rating] = field(default_factory=list)
-    test_ratings: List[Rating] = field(default_factory=list)
-    genres: List[str] = field(default_factory=list)
+    movies: dict[int, Movie] = field(default_factory=dict)
+    users: dict[int, User] = field(default_factory=dict)
+    train_ratings: list[Rating] = field(default_factory=list)
+    val_ratings: list[Rating] = field(default_factory=list)
+    test_ratings: list[Rating] = field(default_factory=list)
+    genres: list[str] = field(default_factory=list)
 
     # User history cache
-    _user_history: Dict[int, List[Rating]] = field(default_factory=dict)
+    _user_history: dict[int, list[Rating]] = field(default_factory=dict)
 
     def __init__(self, data_dir: str | Path, val_ratio: float = 0.1):
         """Load MovieLens 100K dataset.
@@ -200,15 +200,15 @@ class MovieLensDataset:
         for user_id in self._user_history:
             self._user_history[user_id].sort(key=lambda r: r.timestamp)
 
-    def get_movie(self, movie_id: int) -> Optional[Movie]:
+    def get_movie(self, movie_id: int) -> Movie | None:
         """Get movie by ID."""
         return self.movies.get(movie_id)
 
-    def get_user(self, user_id: int) -> Optional[User]:
+    def get_user(self, user_id: int) -> User | None:
         """Get user by ID."""
         return self.users.get(user_id)
 
-    def get_user_history(self, user_id: int) -> List[Rating]:
+    def get_user_history(self, user_id: int) -> list[Rating]:
         """Get user's rating history sorted by timestamp."""
         return self._user_history.get(user_id, [])
 
@@ -235,16 +235,16 @@ class MovieLensDataset:
         return len(self.genres)
 
     @property
-    def all_movie_ids(self) -> List[int]:
+    def all_movie_ids(self) -> list[int]:
         """List of all movie IDs."""
         return list(self.movies.keys())
 
     @property
-    def all_user_ids(self) -> List[int]:
+    def all_user_ids(self) -> list[int]:
         """List of all user IDs."""
         return list(self.users.keys())
 
-    def get_unrated_movies(self, user_id: int) -> List[int]:
+    def get_unrated_movies(self, user_id: int) -> list[int]:
         """Get movies not rated by user (for negative sampling)."""
         rated = {r.movie_id for r in self.get_user_history(user_id)}
         return [m for m in self.all_movie_ids if m not in rated]
@@ -253,8 +253,8 @@ class MovieLensDataset:
         self,
         user_id: int,
         n: int,
-        rng: Optional[np.random.Generator] = None,
-    ) -> List[int]:
+        rng: np.random.Generator | None = None,
+    ) -> list[int]:
         """Sample n movies not rated by user."""
         if rng is None:
             rng = np.random.default_rng()

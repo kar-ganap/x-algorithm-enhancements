@@ -18,7 +18,6 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -40,7 +39,6 @@ from enhancements.reward_modeling import (
     contextual_bradley_terry_loss,
 )
 
-
 # =============================================================================
 # Evaluation Data Generators
 # =============================================================================
@@ -48,8 +46,8 @@ from enhancements.reward_modeling import (
 
 def create_standard_test_set(
     num_pairs_per_archetype: int = 50,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Standard test set - same as training distribution.
 
     Note: Some archetypes (lurker, power_user) have topic-independent behavior,
@@ -109,10 +107,10 @@ def create_standard_test_set(
 
 
 def create_held_out_archetype_test(
-    held_out_archetypes: List[UserArchetype],
+    held_out_archetypes: list[UserArchetype],
     num_pairs_per_archetype: int = 50,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[str]]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str]]:
     """Test set with only held-out archetypes (never seen during training)."""
     if rng is None:
         rng = np.random.default_rng(888)
@@ -173,8 +171,8 @@ def create_noisy_test_set(
     noise_std: float = 0.15,
     label_flip_rate: float = 0.1,
     num_pairs_per_archetype: int = 50,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Test set with noisy action probabilities and flipped labels."""
     if rng is None:
         rng = np.random.default_rng(777)
@@ -229,8 +227,8 @@ def create_noisy_test_set(
 
 def create_hard_negatives_test(
     num_pairs_per_archetype: int = 50,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Test set with hard negatives - same topic, subtle differences."""
     if rng is None:
         rng = np.random.default_rng(666)
@@ -289,8 +287,8 @@ def create_hard_negatives_test(
 
 def create_adversarial_test(
     num_pairs: int = 100,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Adversarial pairs where naive scoring fails.
 
     Creates pairs where rejected has higher positive actions BUT also has
@@ -346,8 +344,8 @@ def create_adversarial_test(
 
 def create_conflicting_signals_test(
     num_pairs: int = 100,
-    rng: Optional[np.random.Generator] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    rng: np.random.Generator | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Pairs with mixed signals - some positive AND some negative.
 
     Tests: Can model handle nuanced cases where content is polarizing?
@@ -399,10 +397,10 @@ def create_conflicting_signals_test(
 
 
 def train_with_held_out_archetypes(
-    train_archetypes: List[UserArchetype],
+    train_archetypes: list[UserArchetype],
     num_epochs: int = 100,
     learning_rate: float = 0.05,
-    rng: Optional[np.random.Generator] = None,
+    rng: np.random.Generator | None = None,
 ) -> jnp.ndarray:
     """Train only on specified archetypes."""
     import optax
@@ -485,7 +483,7 @@ class EvalResult:
 
 def evaluate_on_test_set(
     weights: jnp.ndarray,
-    test_data: Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    test_data: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
     name: str,
     description: str,
 ) -> EvalResult:
@@ -516,7 +514,7 @@ def evaluate_on_test_set(
 def run_comprehensive_evaluation(
     weights: jnp.ndarray,
     verbose: bool = True,
-) -> Dict[str, EvalResult]:
+) -> dict[str, EvalResult]:
     """Run all evaluation tests."""
     results = {}
 
@@ -583,9 +581,8 @@ def run_comprehensive_evaluation(
     return results
 
 
-def run_held_out_evaluation(verbose: bool = True) -> Dict[str, float]:
+def run_held_out_evaluation(verbose: bool = True) -> dict[str, float]:
     """Train with held-out archetypes and evaluate generalization."""
-    import jax
 
     results = {}
 
@@ -657,7 +654,7 @@ def flush_print(*args, **kwargs):
     print(*args, **kwargs, flush=True)
 
 
-def save_checkpoint(path: Path, results: Dict[str, "EvalResult"], held_out: Dict[str, float]):
+def save_checkpoint(path: Path, results: dict[str, "EvalResult"], held_out: dict[str, float]):
     """Save evaluation checkpoint."""
     checkpoint = {
         "results": {k: {"name": v.name, "accuracy": v.accuracy, "loss": v.loss,
@@ -672,7 +669,6 @@ def save_checkpoint(path: Path, results: Dict[str, "EvalResult"], held_out: Dict
 
 def main():
     """Run comprehensive evaluation."""
-    import jax
 
     output_dir = Path("results/f4_phase1")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -811,8 +807,8 @@ def main():
 
 
 def plot_evaluation_comparison(
-    results: Dict[str, EvalResult],
-    held_out_results: Dict[str, float],
+    results: dict[str, EvalResult],
+    held_out_results: dict[str, float],
     output_path: Path,
 ):
     """Plot comparison of evaluation results."""

@@ -20,18 +20,15 @@ import pytest
 # Add phoenix to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
-from phoenix.runners import ACTIONS, create_example_batch
-
 from enhancements.optimization.caching_attention import LayerKVCache
 from enhancements.optimization.caching_transformer import FullKVCache
 from enhancements.optimization.full_kv_cache import (
-    CacheStats,
     FullKVCachedRunner,
     compute_user_hash,
 )
-
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
+from phoenix.runners import ACTIONS, create_example_batch
 
 # =============================================================================
 # Test Fixtures
@@ -409,7 +406,7 @@ class TestCachePerformance:
         hit_p50 = np.percentile(hit_times, 50)
         speedup = miss_p50 / hit_p50
 
-        print(f"\nFull KV-Cache Performance:")
+        print("\nFull KV-Cache Performance:")
         print(f"  Cache miss p50: {miss_p50:.2f} ms")
         print(f"  Cache hit p50: {hit_p50:.2f} ms")
         print(f"  Speedup: {speedup:.2f}x")

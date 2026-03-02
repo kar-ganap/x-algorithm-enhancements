@@ -12,7 +12,6 @@ Usage:
 
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 import numpy as np
 
@@ -20,16 +19,14 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from enhancements.analysis.trajectory_simulation import (
+    TrajectoryPath,
+    TrajectorySimulator,
+)
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from phoenix.grok import TransformerConfig
 from phoenix.recsys_model import HashConfig, PhoenixModelConfig
 from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
-from enhancements.analysis.trajectory_simulation import (
-    TrajectorySimulator,
-    TrajectoryPath,
-    compare_trajectories,
-)
 
 
 def create_test_config():
@@ -96,7 +93,7 @@ def compute_ranking_overlap(path1: TrajectoryPath, path2: TrajectoryPath, step: 
     return similar_ranks / len(common)
 
 
-def visualize_path_tree(paths: List[TrajectoryPath], labels: List[str]):
+def visualize_path_tree(paths: list[TrajectoryPath], labels: list[str]):
     """Create ASCII tree visualization of diverging paths."""
     print("\n" + "=" * 70)
     print("PATH DIVERGENCE TREE")
@@ -124,7 +121,7 @@ def visualize_path_tree(paths: List[TrajectoryPath], labels: List[str]):
 
         # Show final state
         final_step = path.steps[-1]
-        print(f"\n           Final: ", end="")
+        print("\n           Final: ", end="")
         for cs in final_step.remaining_scores[:3]:
             print(f"C{cs.index}({cs.score:.2f})", end=" ")
         if len(final_step.remaining_scores) > 3:
@@ -132,7 +129,7 @@ def visualize_path_tree(paths: List[TrajectoryPath], labels: List[str]):
         print()
 
 
-def analyze_divergence(paths: List[TrajectoryPath], labels: List[str]):
+def analyze_divergence(paths: list[TrajectoryPath], labels: list[str]):
     """Analyze divergence between paths over time."""
     print("\n" + "=" * 70)
     print("DIVERGENCE ANALYSIS")
@@ -194,7 +191,7 @@ def analyze_divergence(paths: List[TrajectoryPath], labels: List[str]):
                   f"(score: {final.remaining_scores[0].score:.4f})")
 
 
-def compute_path_similarity_matrix(paths: List[TrajectoryPath], labels: List[str]):
+def compute_path_similarity_matrix(paths: list[TrajectoryPath], labels: list[str]):
     """Compute and display similarity matrix between final path states."""
     print("\n" + "=" * 70)
     print("PATH SIMILARITY MATRIX (Final State)")

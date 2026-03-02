@@ -34,6 +34,7 @@ def load_module_direct(module_name: str, file_path: str):
 
 # Create package structure without triggering __init__.py
 import types
+
 enhancements_pkg = types.ModuleType("enhancements")
 enhancements_pkg.__path__ = [os.path.join(project_root, "enhancements")]
 sys.modules["enhancements"] = enhancements_pkg

@@ -1,0 +1,342 @@
+{
+  "test_1_weights": {
+    "weights": {
+      "favorite": {
+        "user": 1.4279260635375977,
+        "platform": 1.4016987085342407,
+        "society": 1.3776053190231323
+      },
+      "repost": {
+        "user": 1.0576989650726318,
+        "platform": 1.0691584348678589,
+        "society": 1.0503181219100952
+      },
+      "block_author": {
+        "user": 0.9068402647972107,
+        "platform": 0.9517731070518494,
+        "society": 0.907616138458252
+      },
+      "report": {
+        "user": 1.982698917388916,
+        "platform": 2.0429651737213135,
+        "society": 1.9910913705825806
+      },
+      "follow_author": {
+        "user": 1.0687235593795776,
+        "platform": 1.0240380764007568,
+        "society": 1.0159403085708618
+      }
+    },
+    "cosine_similarities": {
+      "user_platform": 0.9995302557945251,
+      "user_society": 0.9996036887168884,
+      "platform_society": 0.999616265296936
+    },
+    "success": false
+  },
+  "test_2_correlation": {
+    "correlations": {
+      "('user', 'platform')": 0.984749437881408,
+      "('user', 'society')": 0.9885851703406812,
+      "('platform', 'society')": 0.9870901286256782
+    },
+    "matrix": {
+      "user": {
+        "user": 1.0,
+        "platform": 0.984749437881408,
+        "society": 0.9885851703406812
+      },
+      "platform": {
+        "user": 0.984749437881408,
+        "platform": 1.0,
+        "society": 0.9870901286256782
+      },
+      "society": {
+        "user": 0.9885851703406812,
+        "platform": 0.9870901286256782,
+        "society": 1.0
+      }
+    },
+    "success": false
+  },
+  "test_3_contested": {
+    "contested_items": [
+      {
+        "content_idx": 142,
+        "topic": "tech",
+        "rank_variance": 57.55555555555555,
+        "ranks": {
+          "user": 389,
+          "platform": 371,
+          "society": 384
+        }
+      },
+      {
+        "content_idx": 327,
+        "topic": "sports",
+        "rank_variance": 54.888888888888886,
+        "ranks": {
+          "user": 367,
+          "platform": 385,
+          "society": 378
+        }
+      },
+      {
+        "content_idx": 30,
+        "topic": "politics_L",
+        "rank_variance": 48.22222222222222,
+        "ranks": {
+          "user": 383,
+          "platform": 366,
+          "society": 375
+        }
+      },
+      {
+        "content_idx": 334,
+        "topic": "politics_L",
+        "rank_variance": 46.88888888888889,
+        "ranks": {
+          "user": 316,
+          "platform": 301,
+          "society": 315
+        }
+      },
+      {
+        "content_idx": 28,
+        "topic": "politics_R",
+        "rank_variance": 44.666666666666664,
+        "ranks": {
+          "user": 234,
+          "platform": 223,
+          "society": 239
+        }
+      },
+      {
+        "content_idx": 140,
+        "topic": "news",
+        "rank_variance": 43.55555555555555,
+        "ranks": {
+          "user": 386,
+          "platform": 370,
+          "society": 376
+        }
+      },
+      {
+        "content_idx": 26,
+        "topic": "politics_L",
+        "rank_variance": 36.22222222222222,
+        "ranks": {
+          "user": 166,
+          "platform": 152,
+          "society": 163
+        }
+      },
+      {
+        "content_idx": 243,
+        "topic": "politics_R",
+        "rank_variance": 34.88888888888889,
+        "ranks": {
+          "user": 381,
+          "platform": 369,
+          "society": 382
+        }
+      },
+      {
+        "content_idx": 460,
+        "topic": "entertainment",
+        "rank_variance": 33.55555555555555,
+        "ranks": {
+          "user": 227,
+          "platform": 241,
+          "society": 236
+        }
+      },
+      {
+        "content_idx": 280,
+        "topic": "tech",
+        "rank_variance": 30.88888888888889,
+        "ranks": {
+          "user": 291,
+          "platform": 278,
+          "society": 288
+        }
+      }
+    ],
+    "topic_distribution": {
+      "tech": 2,
+      "sports": 1,
+      "politics_L": 3,
+      "politics_R": 2,
+      "news": 1,
+      "entertainment": 1
+    },
+    "success": true
+  },
+  "test_4_content_type": {
+    "rank_by_topic": {
+      "sports": {
+        "user": 19.202247191011235,
+        "platform": 18.777528089887642,
+        "society": 19.013483146067415
+      },
+      "tech": {
+        "user": 38.8325,
+        "platform": 39.1825,
+        "society": 39.08
+      },
+      "politics_L": {
+        "user": 77.73563218390805,
+        "platform": 78.0390804597701,
+        "society": 77.76551724137931
+      },
+      "politics_R": {
+        "user": 79.63376623376622,
+        "platform": 79.85194805194807,
+        "society": 79.58181818181818
+      },
+      "entertainment": {
+        "user": 45.351063829787236,
+        "platform": 44.88085106382979,
+        "society": 45.208510638297874
+      },
+      "news": {
+        "user": 40.775342465753425,
+        "platform": 40.92328767123288,
+        "society": 40.93698630136986
+      }
+    },
+    "success": true
+  },
+  "test_5_cross_exposure": {
+    "cross_exposure": {
+      "user": 0.499,
+      "platform": 0.513,
+      "society": 0.501
+    },
+    "success": false
+  },
+  "test_6_win_win": {
+    "win_win_count": 18,
+    "win_win_indices": [
+      64,
+      193,
+      192,
+      131,
+      452,
+      69,
+      487,
+      457,
+      489,
+      139,
+      434,
+      179,
+      52,
+      370,
+      406,
+      185,
+      284,
+      157
+    ],
+    "topic_distribution": {
+      "politics_L": 11,
+      "politics_R": 7
+    },
+    "success": true
+  },
+  "test_7_policy": {
+    "recommendations_changed_pct": 11.4,
+    "platform_utility_change_pct": -0.035813067108392715,
+    "society_utility_change_pct": 0.0,
+    "success": true
+  },
+  "test_8_causal": {
+    "model_results": {
+      "user": {
+        "block_passed": true,
+        "block_effect": -0.8651176929473877,
+        "follow_passed": true,
+        "follow_effect": 1.0759236669540406
+      },
+      "platform": {
+        "block_passed": true,
+        "block_effect": -0.8204486894607544,
+        "follow_passed": true,
+        "follow_effect": 1.0499454069137573
+      },
+      "society": {
+        "block_passed": true,
+        "block_effect": -0.8417595005035401,
+        "follow_passed": true,
+        "follow_effect": 1.049363603591919
+      }
+    },
+    "success": true
+  },
+  "model_weights": {
+    "user": [
+      1.4279260635375977,
+      1.0277453660964966,
+      1.0576989650726318,
+      1.1037026643753052,
+      1.216346025466919,
+      1.1218146085739136,
+      0.9622785449028015,
+      2.0833938121795654,
+      0.8844070434570312,
+      0.9632735848426819,
+      0.9308260679244995,
+      1.0019121170043945,
+      0.7889887094497681,
+      1.0687235593795776,
+      0.7758379578590393,
+      0.9068402647972107,
+      1.1296645402908325,
+      1.982698917388916
+    ],
+    "platform": [
+      1.4016987085342407,
+      1.0933051109313965,
+      1.0691584348678589,
+      1.0663127899169922,
+      1.216893196105957,
+      1.1542820930480957,
+      0.9874460101127625,
+      2.049553155899048,
+      0.8680662512779236,
+      0.9750041961669922,
+      0.9455716013908386,
+      1.0509600639343262,
+      0.7920160889625549,
+      1.0240380764007568,
+      0.7088596224784851,
+      0.9517731070518494,
+      1.148231029510498,
+      2.0429651737213135
+    ],
+    "society": [
+      1.3776053190231323,
+      1.056551456451416,
+      1.0503181219100952,
+      1.076332688331604,
+      1.2423938512802124,
+      1.1781178712844849,
+      0.968413233757019,
+      2.094674587249756,
+      0.8677675127983093,
+      1.0309154987335205,
+      0.9047624468803406,
+      1.0544509887695312,
+      0.8237097263336182,
+      1.0159403085708618,
+      0.7654362320899963,
+      0.907616138458252,
+      1.1467688083648682,
+      1.9910913705825806
+    ]
+  },
+  "model_accuracy": {
+    "user": 0.782,
+    "platform": 0.7828,
+    "society": 0.7824
+  }
+}

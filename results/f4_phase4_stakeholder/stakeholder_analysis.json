@@ -1,0 +1,136 @@
+{
+  "current_model": {
+    "user": {
+      "total_utility": 0.5733528027000526,
+      "positive_component": 0.9182092850096524,
+      "negative_component": 0.3448564823095997
+    },
+    "platform": {
+      "total_utility": 2.2618932723999023,
+      "engagement_score": 1.5191583139821887,
+      "retention_proxy": 0.7427348494529724
+    },
+    "society": {
+      "total_utility": -0.16666666666666663,
+      "diversity_score": 0.3333333333333333,
+      "polarization_score": 0.49999999999999994,
+      "cross_exposure_rate": 0.5
+    }
+  },
+  "pareto_frontier": {
+    "points": [
+      {
+        "diversity_weight": 0.0,
+        "user_utility": 1.0376626714132726,
+        "platform_utility": 3.3173670768737793,
+        "society_utility": -0.75,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.1,
+        "user_utility": 1.0657589679273467,
+        "platform_utility": 3.246293306350708,
+        "society_utility": -0.6388888888888888,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.2,
+        "user_utility": 1.0767572855887313,
+        "platform_utility": 3.234271764755249,
+        "society_utility": -0.5555555555555556,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.3,
+        "user_utility": 1.086551020698001,
+        "platform_utility": 3.186798572540283,
+        "society_utility": -0.5,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.4,
+        "user_utility": 1.0762613404852648,
+        "platform_utility": 3.154271364212036,
+        "society_utility": -0.41666666666666663,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.5,
+        "user_utility": 1.010845355534305,
+        "platform_utility": 3.0206494331359863,
+        "society_utility": -0.060515873015873134,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.6,
+        "user_utility": 1.0042533399537206,
+        "platform_utility": 2.924091100692749,
+        "society_utility": -2.220446049250313e-16,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.7,
+        "user_utility": 0.8939154762774706,
+        "platform_utility": 2.7355945110321045,
+        "society_utility": 0.19999999999999996,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.8,
+        "user_utility": 0.8559935726225376,
+        "platform_utility": 2.682055711746216,
+        "society_utility": 0.40000000000000013,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 0.9,
+        "user_utility": 0.8386432702342669,
+        "platform_utility": 2.618795871734619,
+        "society_utility": 0.5,
+        "is_pareto_optimal": true
+      },
+      {
+        "diversity_weight": 1.0,
+        "user_utility": 0.6853667522470156,
+        "platform_utility": 2.4887855052948,
+        "society_utility": 0.5,
+        "is_pareto_optimal": false
+      }
+    ],
+    "analysis": {
+      "max_user_utility": {
+        "diversity_weight": 0.3,
+        "utilities": {
+          "user": 1.086551020698001,
+          "platform": 3.186798572540283,
+          "society": -0.5
+        }
+      },
+      "max_platform_utility": {
+        "diversity_weight": 0.0,
+        "utilities": {
+          "user": 1.0376626714132726,
+          "platform": 3.3173670768737793,
+          "society": -0.75
+        }
+      },
+      "max_society_utility": {
+        "diversity_weight": 0.9,
+        "utilities": {
+          "user": 0.8386432702342669,
+          "platform": 2.618795871734619,
+          "society": 0.5
+        }
+      },
+      "balanced": {
+        "diversity_weight": 0.4,
+        "utilities": {
+          "user": 1.0762613404852648,
+          "platform": 3.154271364212036,
+          "society": -0.41666666666666663
+        }
+      },
+      "num_pareto_optimal": 10
+    }
+  }
+}

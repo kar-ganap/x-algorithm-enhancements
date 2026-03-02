@@ -13,7 +13,7 @@ Three training approaches are provided:
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -63,11 +63,11 @@ class PluralState(NamedTuple):
 
 class PluralMetrics(NamedTuple):
     """Training metrics for pluralistic model."""
-    loss_history: List[float]
-    diversity_history: List[float]
-    entropy_history: List[float]
-    accuracy_history: List[float]
-    system_correlations: Optional[jnp.ndarray] = None  # [K, K] pairwise
+    loss_history: list[float]
+    diversity_history: list[float]
+    entropy_history: list[float]
+    accuracy_history: list[float]
+    system_correlations: jnp.ndarray | None = None  # [K, K] pairwise
 
 
 def init_plural_state(
@@ -383,7 +383,7 @@ def train_mlp_supervised(
     target_responsibilities: jnp.ndarray,
     learning_rate: float = 0.01,
     num_iterations: int = 50,
-    archetype_ids: Optional[jnp.ndarray] = None,
+    archetype_ids: jnp.ndarray | None = None,
     lambda_classification: float = 0.0,
 ) -> PluralState:
     """Train MLP to predict E-step responsibilities (distillation).
@@ -456,7 +456,7 @@ def train_em(
     user_embeddings: jnp.ndarray,
     config: PluralConfig,
     verbose: bool = True,
-) -> Tuple[PluralState, PluralMetrics]:
+) -> tuple[PluralState, PluralMetrics]:
     """Train pluralistic model using EM-style alternating optimization.
 
     Args:
@@ -556,9 +556,9 @@ def train_auxiliary(
     probs_rejected: jnp.ndarray,
     user_embeddings: jnp.ndarray,
     config: PluralConfig,
-    archetype_ids: Optional[jnp.ndarray] = None,
+    archetype_ids: jnp.ndarray | None = None,
     verbose: bool = True,
-) -> Tuple[PluralState, PluralMetrics]:
+) -> tuple[PluralState, PluralMetrics]:
     """Train pluralistic model end-to-end with auxiliary losses.
 
     L_total = L_bradley_terry + λ_div · L_diversity + λ_ent · L_entropy + λ_cls · L_classification
@@ -708,9 +708,9 @@ def train_hybrid(
     probs_rejected: jnp.ndarray,
     user_embeddings: jnp.ndarray,
     config: PluralConfig,
-    archetype_ids: Optional[jnp.ndarray] = None,
+    archetype_ids: jnp.ndarray | None = None,
     verbose: bool = True,
-) -> Tuple[PluralState, PluralMetrics]:
+) -> tuple[PluralState, PluralMetrics]:
     """Train pluralistic model using hybrid approach.
 
     EM structure with auxiliary regularization in M-step:
@@ -815,9 +815,9 @@ def train_pluralistic(
     user_embeddings: jnp.ndarray,
     config: PluralConfig,
     approach: TrainingApproach = TrainingApproach.HYBRID,
-    archetype_ids: Optional[jnp.ndarray] = None,
+    archetype_ids: jnp.ndarray | None = None,
     verbose: bool = True,
-) -> Tuple[PluralState, PluralMetrics]:
+) -> tuple[PluralState, PluralMetrics]:
     """Train pluralistic model using specified approach.
 
     Args:

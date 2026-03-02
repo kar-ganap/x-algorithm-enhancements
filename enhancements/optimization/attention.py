@@ -13,7 +13,7 @@ For very long context sequences, we also provide an optional flash-attention
 style implementation using online softmax.
 """
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -23,15 +23,15 @@ class EfficientAttentionOutput(NamedTuple):
     """Output of efficient attention."""
     output: jax.Array  # [batch, seq_len, num_heads, head_dim]
     # Optional debug info
-    context_attn_weights: Optional[jax.Array] = None
-    candidate_attn_weights: Optional[jax.Array] = None
+    context_attn_weights: jax.Array | None = None
+    candidate_attn_weights: jax.Array | None = None
 
 
 def standard_attention(
     query: jax.Array,
     key: jax.Array,
     value: jax.Array,
-    mask: Optional[jax.Array] = None,
+    mask: jax.Array | None = None,
     scale: float = 1.0,
     attn_logit_cap: float = 30.0,
 ) -> jax.Array:
@@ -199,7 +199,7 @@ def flash_attention_1d(
     query: jax.Array,
     key: jax.Array,
     value: jax.Array,
-    mask: Optional[jax.Array] = None,
+    mask: jax.Array | None = None,
     scale: float = 1.0,
     block_size: int = 64,
 ) -> jax.Array:

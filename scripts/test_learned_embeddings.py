@@ -17,9 +17,7 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Tuple
 
-import jax
 import jax.numpy as jnp
 import numpy as np
 
@@ -31,12 +29,10 @@ from enhancements.data import ContentTopic, UserArchetype, get_engagement_probs
 from enhancements.reward_modeling.learned_embeddings import (
     LearnedEmbeddingConfig,
     LearnedEmbeddingState,
-    compute_embeddings_from_state,
     get_dominant_system_from_history,
     train_with_learned_embeddings,
 )
 from enhancements.reward_modeling.structural_recovery import (
-    check_recovery_gates,
     compute_correlation_matrix,
     compute_interpretability_score,
     compute_system_diversity,
@@ -58,7 +54,7 @@ def generate_training_data_with_history(
     noise_std: float = 0.0,
     label_flip_rate: float = 0.0,
     rng: np.random.Generator = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate training data with user interaction histories.
 
     Key difference: Instead of random embeddings, we compute user "history"
@@ -149,7 +145,7 @@ def measure_recovery_learned(
     user_histories: jnp.ndarray,
     true_archetype_ids: jnp.ndarray,
     verbose: bool = True,
-) -> Dict:
+) -> dict:
     """Measure structural recovery for learned embedding model.
 
     Args:
@@ -217,22 +213,22 @@ def measure_recovery_learned(
         for k, (arch, corr) in sorted(matches.items()):
             print(f"  System {k} -> {arch:15s} (correlation: {corr:.3f})")
 
-        print(f"\n--- Weight Correlation ---")
+        print("\n--- Weight Correlation ---")
         print(f"  Mean correlation: {mean_corr:.3f}")
-        print(f"  Gate threshold:   0.80")
+        print("  Gate threshold:   0.80")
         print(f"  Status:           {'PASS' if mean_corr > 0.8 else 'FAIL'}")
 
-        print(f"\n--- Assignment Accuracy ---")
+        print("\n--- Assignment Accuracy ---")
         print(f"  Overall: {assignment_acc:.1%}")
         for arch, acc in per_arch_acc.items():
             print(f"    {arch:15s}: {acc:.1%}")
-        print(f"  Gate threshold: 70%")
+        print("  Gate threshold: 70%")
         print(f"  Status:         {'PASS' if assignment_acc > 0.7 else 'FAIL'}")
 
-        print(f"\n--- Interpretability ---")
+        print("\n--- Interpretability ---")
         print(f"  Overall: {interp_score:.1%}")
 
-        print(f"\n--- System Diversity ---")
+        print("\n--- System Diversity ---")
         print(f"  Mean pairwise distance: {diversity:.3f}")
 
         print("\n" + "=" * 60)

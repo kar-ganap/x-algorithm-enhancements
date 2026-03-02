@@ -8,7 +8,7 @@ well-understood techniques with no complex end-to-end training dynamics.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import jax.numpy as jnp
 import numpy as np
@@ -43,22 +43,22 @@ class TwoStageState(NamedTuple):
 class TwoStageMetrics(NamedTuple):
     """Metrics for two-stage training."""
     # Clustering metrics
-    cluster_sizes: List[int]
+    cluster_sizes: list[int]
     cluster_inertia: float
 
     # Per-cluster training metrics
-    per_cluster_accuracy: Dict[int, float]
+    per_cluster_accuracy: dict[int, float]
     overall_accuracy: float
 
     # Loss history per cluster
-    loss_histories: Dict[int, List[float]]
+    loss_histories: dict[int, list[float]]
 
 
 def cluster_users(
     user_histories: np.ndarray,
     config: TwoStageConfig,
     verbose: bool = True,
-) -> Tuple[KMeans, np.ndarray]:
+) -> tuple[KMeans, np.ndarray]:
     """Stage 1: Cluster users by interaction history.
 
     Args:
@@ -94,7 +94,7 @@ def train_per_cluster_weights(
     probs_rejected: np.ndarray,
     config: TwoStageConfig,
     verbose: bool = True,
-) -> Tuple[np.ndarray, Dict[int, List[float]], Dict[int, float]]:
+) -> tuple[np.ndarray, dict[int, list[float]], dict[int, float]]:
     """Stage 2: Train Bradley-Terry weights per cluster.
 
     Args:
@@ -196,7 +196,7 @@ def train_two_stage(
     probs_rejected: np.ndarray,
     config: TwoStageConfig,
     verbose: bool = True,
-) -> Tuple[TwoStageState, TwoStageMetrics]:
+) -> tuple[TwoStageState, TwoStageMetrics]:
     """Train two-stage pluralistic model.
 
     Args:

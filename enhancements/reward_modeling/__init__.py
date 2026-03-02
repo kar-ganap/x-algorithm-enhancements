@@ -27,6 +27,30 @@ Example:
     >>> rewards = ctx_model.compute_reward(batch, embeddings, archetype_ids)
 """
 
+from enhancements.reward_modeling.causal_verification import (
+    CausalTestConfig,
+    CausalTestResults,
+    CausalVerificationSuite,
+    InterventionResult,
+    InterventionType,
+    create_reward_fn_from_two_stage,
+    create_reward_fn_from_weights,
+)
+from enhancements.reward_modeling.pluralistic import (
+    PluralConfig,
+    PluralMetrics,
+    PluralState,
+    TrainingApproach,
+    compute_mixture_weights,
+    compute_pluralistic_reward,
+    diversity_loss,
+    entropy_loss,
+    init_plural_state,
+    train_auxiliary,
+    train_em,
+    train_hybrid,
+    train_pluralistic,
+)
 from enhancements.reward_modeling.preference_data import (
     PreferenceBatch,
     PreferencePair,
@@ -36,6 +60,12 @@ from enhancements.reward_modeling.preference_data import (
 from enhancements.reward_modeling.reward_model import (
     ContextualRewardModel,
     PhoenixRewardModel,
+)
+from enhancements.reward_modeling.structural_recovery import (
+    RecoveryMetrics,
+    check_recovery_gates,
+    compute_ground_truth_weights,
+    measure_structural_recovery,
 )
 from enhancements.reward_modeling.training import (
     TrainingConfig,
@@ -53,36 +83,6 @@ from enhancements.reward_modeling.weights import (
     ACTION_NAMES,
     NUM_ACTIONS,
     RewardWeights,
-)
-from enhancements.reward_modeling.pluralistic import (
-    PluralConfig,
-    PluralMetrics,
-    PluralState,
-    TrainingApproach,
-    compute_mixture_weights,
-    compute_pluralistic_reward,
-    diversity_loss,
-    entropy_loss,
-    init_plural_state,
-    train_auxiliary,
-    train_em,
-    train_hybrid,
-    train_pluralistic,
-)
-from enhancements.reward_modeling.structural_recovery import (
-    RecoveryMetrics,
-    check_recovery_gates,
-    compute_ground_truth_weights,
-    measure_structural_recovery,
-)
-from enhancements.reward_modeling.causal_verification import (
-    CausalTestConfig,
-    CausalTestResults,
-    CausalVerificationSuite,
-    InterventionResult,
-    InterventionType,
-    create_reward_fn_from_two_stage,
-    create_reward_fn_from_weights,
 )
 
 __all__ = [

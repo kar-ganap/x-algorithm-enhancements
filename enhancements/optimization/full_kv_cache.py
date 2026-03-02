@@ -22,16 +22,20 @@ Architecture:
 
 import hashlib
 import time
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import haiku as hk
 import jax
 import jax.numpy as jnp
 import numpy as np
 
-from phoenix.grok import TransformerConfig, layer_norm
+from enhancements.optimization.caching_transformer import (
+    CachingTransformer,
+    FullKVCache,
+    extract_user_context_from_cache,
+)
+from phoenix.grok import layer_norm
 from phoenix.recsys_model import (
-    HashConfig,
     PhoenixModelConfig,
     RecsysBatch,
     RecsysEmbeddings,
@@ -40,14 +44,7 @@ from phoenix.recsys_model import (
     block_history_reduce,
     block_user_reduce,
 )
-from phoenix.runners import ACTIONS, RankingOutput, RecsysInferenceRunner
-
-from enhancements.optimization.caching_attention import LayerKVCache
-from enhancements.optimization.caching_transformer import (
-    CachingTransformer,
-    FullKVCache,
-    extract_user_context_from_cache,
-)
+from phoenix.runners import RankingOutput
 
 
 class CacheStats(NamedTuple):
@@ -77,7 +74,7 @@ class CachingPhoenixModel(hk.Module):
         self,
         config: PhoenixModelConfig,
         fprop_dtype=jnp.bfloat16,
-        name: Optional[str] = None,
+        name: str | None = None,
     ):
         super().__init__(name=name)
         self.config = config
@@ -154,7 +151,7 @@ class CachingPhoenixModel(hk.Module):
         self,
         batch: RecsysBatch,
         recsys_embeddings: RecsysEmbeddings,
-    ) -> Tuple[jax.Array, jax.Array]:
+    ) -> tuple[jax.Array, jax.Array]:
         """Build embeddings for user + history only.
 
         Returns:
@@ -203,7 +200,7 @@ class CachingPhoenixModel(hk.Module):
         self,
         batch: RecsysBatch,
         recsys_embeddings: RecsysEmbeddings,
-    ) -> Tuple[jax.Array, jax.Array]:
+    ) -> tuple[jax.Array, jax.Array]:
         """Build embeddings for candidates only.
 
         Returns:
@@ -306,7 +303,7 @@ class CachingPhoenixModel(hk.Module):
         batch: RecsysBatch,
         recsys_embeddings: RecsysEmbeddings,
         user_hash: int,
-    ) -> Tuple[RecsysModelOutput, FullKVCache]:
+    ) -> tuple[RecsysModelOutput, FullKVCache]:
         """Full forward pass, returning both output and cache.
 
         This runs the complete sequence (user + history + candidates) and
@@ -378,7 +375,7 @@ class FullKVCachedRunner:
         """
         self.model_config = model_config
         self.params = None
-        self._cache: Optional[FullKVCache] = None
+        self._cache: FullKVCache | None = None
         self._stats = CacheStats(hits=0, misses=0, encode_time_ms=0.0, score_time_ms=0.0)
 
         # Haiku functions will be set during initialize()
@@ -392,7 +389,7 @@ class FullKVCachedRunner:
         return self._stats
 
     @property
-    def cache(self) -> Optional[FullKVCache]:
+    def cache(self) -> FullKVCache | None:
         """Get current cache."""
         return self._cache
 

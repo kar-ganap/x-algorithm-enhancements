@@ -17,8 +17,8 @@ import importlib.util
 import json
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 
@@ -41,6 +41,7 @@ def load_module_direct(module_name: str, file_path: str):
 
 # Create package structure without triggering __init__.py
 import types
+
 enhancements_pkg = types.ModuleType("enhancements")
 enhancements_pkg.__path__ = [os.path.join(project_root, "enhancements")]
 sys.modules["enhancements"] = enhancements_pkg
@@ -78,7 +79,7 @@ class StressTestResult:
     """Result of a single stress test."""
     name: str
     passed: bool
-    details: Dict
+    details: dict
     message: str
 
 
@@ -408,7 +409,7 @@ def test_reversibility(
 
 def test_noise_robustness(
     reward_fn: RewardFunction,
-    noise_levels: List[float] = [0.05, 0.1, 0.15, 0.2],
+    noise_levels: list[float] = [0.05, 0.1, 0.15, 0.2],
     num_samples: int = 50,
     seed: int = 47,
 ) -> StressTestResult:
@@ -468,7 +469,7 @@ def test_noise_robustness(
 
 def test_threshold_sensitivity(
     reward_fn: RewardFunction,
-    thresholds: List[float] = [0.01, 0.05, 0.1, 0.2, 0.5],
+    thresholds: list[float] = [0.01, 0.05, 0.1, 0.2, 0.5],
     num_samples: int = 100,
     seed: int = 48,
 ) -> StressTestResult:
@@ -531,7 +532,7 @@ def run_all_stress_tests(
     reward_fn: RewardFunction,
     model_name: str = "Unknown",
     verbose: bool = True,
-) -> Dict[str, StressTestResult]:
+) -> dict[str, StressTestResult]:
     """Run all stress tests on a reward function."""
 
     if verbose:

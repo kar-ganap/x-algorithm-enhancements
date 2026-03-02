@@ -14,20 +14,20 @@ Usage:
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 
 from enhancements.data.ground_truth import (
-    UserArchetype,
-    ContentTopic,
     ARCHETYPE_DISTRIBUTION,
-    TOPIC_DISTRIBUTION,
     AUTHORS_PER_TOPIC,
+    TOPIC_DISTRIBUTION,
     ActionProbabilities,
-    SyntheticUser,
-    SyntheticPost,
-    SyntheticEngagement,
+    ContentTopic,
     SyntheticAuthor,
+    SyntheticEngagement,
+    SyntheticPost,
+    SyntheticUser,
+    UserArchetype,
     get_engagement_probs,
 )
 
@@ -38,20 +38,20 @@ class SyntheticTwitterDataset:
 
     All data is structured (not text) with known ground truth patterns.
     """
-    users: List[SyntheticUser]
-    authors: List[SyntheticAuthor]
-    posts: List[SyntheticPost]
-    engagements: List[SyntheticEngagement]
+    users: list[SyntheticUser]
+    authors: list[SyntheticAuthor]
+    posts: list[SyntheticPost]
+    engagements: list[SyntheticEngagement]
 
     # Index lookups for efficient access
-    _users_by_id: Dict[int, SyntheticUser] = field(default_factory=dict)
-    _users_by_archetype: Dict[UserArchetype, List[SyntheticUser]] = field(default_factory=dict)
-    _posts_by_id: Dict[int, SyntheticPost] = field(default_factory=dict)
-    _posts_by_topic: Dict[ContentTopic, List[SyntheticPost]] = field(default_factory=dict)
-    _posts_by_author: Dict[int, List[SyntheticPost]] = field(default_factory=dict)
-    _authors_by_id: Dict[int, SyntheticAuthor] = field(default_factory=dict)
-    _authors_by_topic: Dict[ContentTopic, List[SyntheticAuthor]] = field(default_factory=dict)
-    _engagements_by_user: Dict[int, List[SyntheticEngagement]] = field(default_factory=dict)
+    _users_by_id: dict[int, SyntheticUser] = field(default_factory=dict)
+    _users_by_archetype: dict[UserArchetype, list[SyntheticUser]] = field(default_factory=dict)
+    _posts_by_id: dict[int, SyntheticPost] = field(default_factory=dict)
+    _posts_by_topic: dict[ContentTopic, list[SyntheticPost]] = field(default_factory=dict)
+    _posts_by_author: dict[int, list[SyntheticPost]] = field(default_factory=dict)
+    _authors_by_id: dict[int, SyntheticAuthor] = field(default_factory=dict)
+    _authors_by_topic: dict[ContentTopic, list[SyntheticAuthor]] = field(default_factory=dict)
+    _engagements_by_user: dict[int, list[SyntheticEngagement]] = field(default_factory=dict)
 
     def __post_init__(self):
         """Build index lookups."""
@@ -88,39 +88,39 @@ class SyntheticTwitterDataset:
                 self._engagements_by_user[e.user_id] = []
             self._engagements_by_user[e.user_id].append(e)
 
-    def get_user(self, user_id: int) -> Optional[SyntheticUser]:
+    def get_user(self, user_id: int) -> SyntheticUser | None:
         """Get user by ID."""
         return self._users_by_id.get(user_id)
 
-    def get_users_by_archetype(self, archetype: UserArchetype) -> List[SyntheticUser]:
+    def get_users_by_archetype(self, archetype: UserArchetype) -> list[SyntheticUser]:
         """Get all users of a given archetype."""
         return self._users_by_archetype.get(archetype, [])
 
-    def get_post(self, post_id: int) -> Optional[SyntheticPost]:
+    def get_post(self, post_id: int) -> SyntheticPost | None:
         """Get post by ID."""
         return self._posts_by_id.get(post_id)
 
-    def get_posts_by_topic(self, topic: ContentTopic) -> List[SyntheticPost]:
+    def get_posts_by_topic(self, topic: ContentTopic) -> list[SyntheticPost]:
         """Get all posts of a given topic."""
         return self._posts_by_topic.get(topic, [])
 
-    def get_posts_by_author(self, author_id: int) -> List[SyntheticPost]:
+    def get_posts_by_author(self, author_id: int) -> list[SyntheticPost]:
         """Get all posts by a given author."""
         return self._posts_by_author.get(author_id, [])
 
-    def get_author(self, author_id: int) -> Optional[SyntheticAuthor]:
+    def get_author(self, author_id: int) -> SyntheticAuthor | None:
         """Get author by ID."""
         return self._authors_by_id.get(author_id)
 
-    def get_authors_by_topic(self, topic: ContentTopic) -> List[SyntheticAuthor]:
+    def get_authors_by_topic(self, topic: ContentTopic) -> list[SyntheticAuthor]:
         """Get all authors for a given topic."""
         return self._authors_by_topic.get(topic, [])
 
-    def get_user_engagements(self, user_id: int) -> List[SyntheticEngagement]:
+    def get_user_engagements(self, user_id: int) -> list[SyntheticEngagement]:
         """Get all engagements for a user."""
         return self._engagements_by_user.get(user_id, [])
 
-    def get_user_history(self, user_id: int) -> List[SyntheticEngagement]:
+    def get_user_history(self, user_id: int) -> list[SyntheticEngagement]:
         """Get user's engagement history sorted by timestamp."""
         engagements = self.get_user_engagements(user_id)
         return sorted(engagements, key=lambda e: e.timestamp)
@@ -142,15 +142,15 @@ class SyntheticTwitterDataset:
         return len(self.engagements)
 
     @property
-    def all_user_ids(self) -> List[int]:
+    def all_user_ids(self) -> list[int]:
         return list(self._users_by_id.keys())
 
     @property
-    def all_post_ids(self) -> List[int]:
+    def all_post_ids(self) -> list[int]:
         return list(self._posts_by_id.keys())
 
     @property
-    def all_author_ids(self) -> List[int]:
+    def all_author_ids(self) -> list[int]:
         return list(self._authors_by_id.keys())
 
     def __repr__(self) -> str:
@@ -216,7 +216,7 @@ class SyntheticTwitterGenerator:
             engagements=engagements,
         )
 
-    def _generate_users(self, num_users: int) -> List[SyntheticUser]:
+    def _generate_users(self, num_users: int) -> list[SyntheticUser]:
         """Generate users with archetype distribution."""
         users = []
         archetypes = list(ARCHETYPE_DISTRIBUTION.keys())
@@ -230,7 +230,7 @@ class SyntheticTwitterGenerator:
 
         return users
 
-    def _generate_authors(self) -> List[SyntheticAuthor]:
+    def _generate_authors(self) -> list[SyntheticAuthor]:
         """Generate authors for each topic."""
         authors = []
         author_id = 1
@@ -249,8 +249,8 @@ class SyntheticTwitterGenerator:
     def _generate_posts(
         self,
         num_posts: int,
-        authors: List[SyntheticAuthor],
-    ) -> List[SyntheticPost]:
+        authors: list[SyntheticAuthor],
+    ) -> list[SyntheticPost]:
         """Generate posts with topic distribution."""
         posts = []
 
@@ -283,9 +283,9 @@ class SyntheticTwitterGenerator:
     def _generate_engagements(
         self,
         num_engagements: int,
-        users: List[SyntheticUser],
-        posts: List[SyntheticPost],
-    ) -> List[SyntheticEngagement]:
+        users: list[SyntheticUser],
+        posts: list[SyntheticPost],
+    ) -> list[SyntheticEngagement]:
         """Generate engagement events based on ground truth rules.
 
         Uses the engagement probability rules to determine which actions
@@ -339,7 +339,7 @@ class SyntheticTwitterGenerator:
 
         return engagements
 
-    def _sample_actions(self, probs: ActionProbabilities) -> Dict[str, float]:
+    def _sample_actions(self, probs: ActionProbabilities) -> dict[str, float]:
         """Sample actions based on probabilities.
 
         Each action is independently sampled according to its probability.
@@ -367,7 +367,7 @@ def create_train_val_test_split(
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
     seed: int = 42,
-) -> Tuple[List[SyntheticEngagement], List[SyntheticEngagement], List[SyntheticEngagement]]:
+) -> tuple[list[SyntheticEngagement], list[SyntheticEngagement], list[SyntheticEngagement]]:
     """Split engagements into train/val/test sets.
 
     Uses chronological split: earliest engagements for train,

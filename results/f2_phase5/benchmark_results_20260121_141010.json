@@ -1,0 +1,127 @@
+{
+  "timestamp": "2026-01-21T14:10:10.287464",
+  "model_config": {
+    "emb_size": 128,
+    "num_layers": 4,
+    "history_len": 32,
+    "candidate_len": 8
+  },
+  "benchmark_config": {
+    "num_eval_batches": 30,
+    "num_timing_runs": 15,
+    "min_top3_accuracy": 0.95,
+    "min_latency_speedup": 2.0,
+    "min_memory_reduction": 0.3
+  },
+  "results": [
+    {
+      "config_name": "baseline",
+      "use_jit": false,
+      "use_kv_cache": false,
+      "use_quantization": false,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 51.485117059201,
+      "latency_speedup": 1.0,
+      "memory_reduction_ratio": 0.0,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "jit_only",
+      "use_jit": true,
+      "use_kv_cache": false,
+      "use_quantization": false,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 3.496477147564292,
+      "latency_speedup": 14.724854442439714,
+      "memory_reduction_ratio": 0.0,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "kv_cache_only",
+      "use_jit": false,
+      "use_kv_cache": true,
+      "use_quantization": false,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 53.09884296730161,
+      "latency_speedup": 0.9696090193698883,
+      "memory_reduction_ratio": 0.0,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "quantization_only",
+      "use_jit": false,
+      "use_kv_cache": false,
+      "use_quantization": true,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 59.622472850605845,
+      "latency_speedup": 0.8635186465379528,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "jit_kv_cache",
+      "use_jit": true,
+      "use_kv_cache": true,
+      "use_quantization": false,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 51.7063660081476,
+      "latency_speedup": 0.9957210501137959,
+      "memory_reduction_ratio": 0.0,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "kv_cache_quantization",
+      "use_jit": false,
+      "use_kv_cache": true,
+      "use_quantization": true,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 57.80766112729907,
+      "latency_speedup": 0.8906279211993181,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "full_optimized",
+      "use_jit": true,
+      "use_kv_cache": true,
+      "use_quantization": true,
+      "top3_accuracy": 1.0,
+      "ranking_correlation": 1.0,
+      "baseline_latency_ms": 51.485117059201,
+      "optimized_latency_ms": 58.169611962512136,
+      "latency_speedup": 0.8850861355647515,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "passes_all_gates": false
+    }
+  ],
+  "gates": {
+    "accuracy": {
+      "metric": "100.0%",
+      "threshold": ">= 95%",
+      "passed": true
+    },
+    "latency": {
+      "metric": "0.97x",
+      "threshold": ">= 2.0x",
+      "passed": false
+    },
+    "memory": {
+      "metric": "58.3%",
+      "threshold": ">= 30%",
+      "passed": true
+    }
+  },
+  "gates_passed": false
+}

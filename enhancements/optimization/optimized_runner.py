@@ -21,35 +21,25 @@ Architecture:
     └─────────────────────────────────────────────────────────────────────┘
 """
 
-import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, NamedTuple, Optional
-
-import jax
-import jax.numpy as jnp
-import numpy as np
-
-from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
-from phoenix.runners import (
-    ModelRunner,
-    RankingOutput,
-    RecsysInferenceRunner,
-    create_example_batch,
-)
+from dataclasses import dataclass
+from typing import Any, NamedTuple
 
 from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from enhancements.optimization.jit_utils import (
     StaticJITRunner,
     StaticShapeConfig,
-    pad_batch_to_static,
-    pad_embeddings_to_static,
 )
 from enhancements.optimization.quantization import (
     QuantizationConfig,
-    QuantizedPhoenixRunner,
     compute_memory_bytes,
     dequantize_params,
     quantize_params,
+)
+from phoenix.recsys_model import PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
+from phoenix.runners import (
+    ModelRunner,
+    RankingOutput,
+    RecsysInferenceRunner,
 )
 
 
@@ -85,7 +75,7 @@ class OptimizationConfig:
     jit_num_candidates: int = 8
 
     # Quantization configuration (default: INT8 per-channel with KV-cache)
-    quant_config: Optional[QuantizationConfig] = None
+    quant_config: QuantizationConfig | None = None
 
     def __post_init__(self):
         if self.quant_config is None and self.use_quantization:
@@ -118,7 +108,7 @@ class OptimizedPhoenixRunner:
     def __init__(
         self,
         model_config: PhoenixModelConfig,
-        optimization_config: Optional[OptimizationConfig] = None,
+        optimization_config: OptimizationConfig | None = None,
     ):
         """Initialize the optimized runner.
 
@@ -130,13 +120,13 @@ class OptimizedPhoenixRunner:
         self.opt_config = optimization_config or OptimizationConfig()
 
         # Runners (set during initialize)
-        self._base_runner: Optional[RecsysInferenceRunner] = None
-        self._jit_runner: Optional[StaticJITRunner] = None
-        self._kv_cache_runner: Optional[FullKVCachedRunner] = None
+        self._base_runner: RecsysInferenceRunner | None = None
+        self._jit_runner: StaticJITRunner | None = None
+        self._kv_cache_runner: FullKVCachedRunner | None = None
 
         # Quantized params (if using quantization without KV-cache)
-        self._quantized_params: Optional[Dict[str, Any]] = None
-        self._original_params: Optional[Dict[str, Any]] = None
+        self._quantized_params: dict[str, Any] | None = None
+        self._original_params: dict[str, Any] | None = None
 
         # Stats
         self._stats = OptimizationStats()
@@ -323,7 +313,7 @@ class OptimizedPhoenixRunner:
         if self._kv_cache_runner is not None:
             self._kv_cache_runner.clear_cache()
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Get summary of optimization configuration."""
         opt = self.opt_config
         return {
@@ -336,7 +326,7 @@ class OptimizedPhoenixRunner:
             "quant_config": opt.quant_config.name if opt.quant_config else None,
         }
 
-    def benchmark_report(self) -> Dict[str, Any]:
+    def benchmark_report(self) -> dict[str, Any]:
         """Generate benchmark report comparing to baseline.
 
         Returns:
@@ -366,7 +356,7 @@ def create_optimized_runner(
     use_jit: bool = True,
     use_kv_cache: bool = True,
     use_quantization: bool = True,
-    quant_config: Optional[QuantizationConfig] = None,
+    quant_config: QuantizationConfig | None = None,
 ) -> OptimizedPhoenixRunner:
     """Create and initialize an optimized runner.
 

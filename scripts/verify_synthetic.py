@@ -16,14 +16,12 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "phoenix"))
 
-from phoenix.runners import ModelRunner, RecsysInferenceRunner
-
-from enhancements.data.synthetic_twitter import SyntheticTwitterDataset
 from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
 from enhancements.verification.suite import (
     VerificationConfig,
     run_verification_suite,
 )
+from phoenix.runners import ModelRunner, RecsysInferenceRunner
 
 
 def main():

@@ -9,7 +9,6 @@ archetype will take a specific action on content of a given topic.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Tuple
 
 
 class UserArchetype(str, Enum):
@@ -33,7 +32,7 @@ class ContentTopic(str, Enum):
 
 
 # User archetype distribution (sum = 100%)
-ARCHETYPE_DISTRIBUTION: Dict[UserArchetype, float] = {
+ARCHETYPE_DISTRIBUTION: dict[UserArchetype, float] = {
     UserArchetype.SPORTS_FAN: 0.15,
     UserArchetype.POLITICAL_L: 0.15,
     UserArchetype.POLITICAL_R: 0.15,
@@ -43,7 +42,7 @@ ARCHETYPE_DISTRIBUTION: Dict[UserArchetype, float] = {
 }
 
 # Content topic distribution (sum = 100%)
-TOPIC_DISTRIBUTION: Dict[ContentTopic, float] = {
+TOPIC_DISTRIBUTION: dict[ContentTopic, float] = {
     ContentTopic.SPORTS: 0.25,
     ContentTopic.POLITICS_L: 0.125,
     ContentTopic.POLITICS_R: 0.125,
@@ -53,7 +52,7 @@ TOPIC_DISTRIBUTION: Dict[ContentTopic, float] = {
 }
 
 # Number of authors per topic
-AUTHORS_PER_TOPIC: Dict[ContentTopic, int] = {
+AUTHORS_PER_TOPIC: dict[ContentTopic, int] = {
     ContentTopic.SPORTS: 20,
     ContentTopic.POLITICS_L: 15,
     ContentTopic.POLITICS_R: 15,
@@ -89,7 +88,7 @@ class ActionProbabilities:
     mute_author: float = 0.0
     report: float = 0.0
 
-    def to_dict(self) -> Dict[str, float]:
+    def to_dict(self) -> dict[str, float]:
         """Convert to dictionary."""
         return {
             "favorite_score": self.favorite,
@@ -112,7 +111,7 @@ class ActionProbabilities:
             "report_score": self.report,
         }
 
-    def to_array(self) -> List[float]:
+    def to_array(self) -> list[float]:
         """Convert to array in Phoenix action order."""
         return [
             self.favorite,
@@ -140,7 +139,7 @@ class ActionProbabilities:
 # Key: (UserArchetype, ContentTopic or "*" for wildcard)
 # Value: ActionProbabilities
 
-ENGAGEMENT_RULES: Dict[Tuple[UserArchetype, str], ActionProbabilities] = {
+ENGAGEMENT_RULES: dict[tuple[UserArchetype, str], ActionProbabilities] = {
     # =========================================================================
     # SPORTS FAN - High engagement with sports, ignores politics
     # =========================================================================
@@ -396,7 +395,7 @@ class SyntheticEngagement:
     """A synthetic engagement event."""
     user_id: int
     post_id: int
-    actions: Dict[str, float]  # Action name -> 1.0 if taken, 0.0 if not
+    actions: dict[str, float]  # Action name -> 1.0 if taken, 0.0 if not
     timestamp: int
 
 
@@ -406,7 +405,7 @@ class SyntheticAuthor:
     author_id: int
     primary_topic: ContentTopic
     # Secondary topics with lower probability
-    secondary_topics: List[ContentTopic] = field(default_factory=list)
+    secondary_topics: list[ContentTopic] = field(default_factory=list)
 
 
 # Expected test outcomes for verification

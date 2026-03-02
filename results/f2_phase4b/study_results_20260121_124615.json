@@ -1,0 +1,236 @@
+{
+  "timestamp": "2026-01-21T12:46:15.065086",
+  "model_config": {
+    "emb_size": 128,
+    "num_layers": 4,
+    "history_len": 16,
+    "candidate_len": 8
+  },
+  "study_config": {
+    "num_eval_batches": 50,
+    "num_timing_runs": 20,
+    "min_top3_preserved": 0.9,
+    "min_memory_reduction": 0.4,
+    "max_latency_ratio": 1.2
+  },
+  "results": [
+    {
+      "config_name": "fp16_baseline",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.3958099978320566,
+      "latency_p50_ms": 50.59592903126031,
+      "latency_ratio": 1.046748107419147,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "int8_tensor_sym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5937432251770487,
+      "latency_p50_ms": 55.9915624326095,
+      "latency_ratio": 1.1583750536839403,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int8_channel_sym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 57.66505945939571,
+      "latency_ratio": 1.1929970060642938,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int8_channel_asym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 55.50983746070415,
+      "latency_ratio": 1.1484089415422516,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int4_tensor_sym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5937432251770487,
+      "latency_p50_ms": 57.509699021466076,
+      "latency_ratio": 1.1897828493626712,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int4_channel_asym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 54.87631156574935,
+      "latency_ratio": 1.1353023133165847,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int8_channel_kv8",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 54.52040850650519,
+      "latency_ratio": 1.1279392534653003,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "mixed_int4_ffn_int8_attn",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 55.08683749940246,
+      "latency_ratio": 1.1396577550849905,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int4_pergroup128_sym",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5814288553259142,
+      "latency_p50_ms": 57.86110705230385,
+      "latency_ratio": 1.1970529143314173,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int8_channel_sym_kv8",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 55.0494184717536,
+      "latency_ratio": 1.1388836157990272,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "mixed_int4_int8_kv8",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5827725285445874,
+      "latency_p50_ms": 55.91912101954222,
+      "latency_ratio": 1.156876357771467,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "int4_pergroup_kv8",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5814288553259142,
+      "latency_p50_ms": 59.921267442405224,
+      "latency_ratio": 1.2396743076056893,
+      "passes_all_gates": false
+    },
+    {
+      "config_name": "mixed_int4_pergroup_int8_attn",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5823389398757046,
+      "latency_p50_ms": 56.629979982972145,
+      "latency_ratio": 1.171582882364631,
+      "passes_all_gates": true
+    },
+    {
+      "config_name": "mixed_int4_pergroup_int8_kv8",
+      "kendall_tau": 1.0,
+      "top3_preserved_rate": 1.0,
+      "max_score_diff": 0.0,
+      "mean_score_diff": 0.0,
+      "memory_reduction_ratio": 0.5823389398757046,
+      "latency_p50_ms": 56.614553555846214,
+      "latency_ratio": 1.1712637344863832,
+      "passes_all_gates": true
+    }
+  ],
+  "winner": {
+    "config_name": "int8_channel_kv8",
+    "score": 0.8256135268813944
+  },
+  "selection_details": {
+    "winner_score": 0.8256135268813944,
+    "num_total": 14,
+    "num_passing": 12,
+    "all_scores": [
+      [
+        "int8_channel_kv8",
+        0.8256135268813944
+      ],
+      [
+        "int4_channel_asym",
+        0.8241760492155549
+      ],
+      [
+        "int8_tensor_sym",
+        0.8236296936454237
+      ],
+      [
+        "int8_channel_sym_kv8",
+        0.8234835964653382
+      ],
+      [
+        "mixed_int4_ffn_int8_attn",
+        0.8233344869629176
+      ],
+      [
+        "int8_channel_asym",
+        0.8216628732293888
+      ],
+      [
+        "mixed_int4_int8_kv8",
+        0.820069537091513
+      ],
+      [
+        "int4_tensor_sym",
+        0.8179325054573499
+      ],
+      [
+        "mixed_int4_pergroup_int8_kv8",
+        0.8172632978547689
+      ],
+      [
+        "mixed_int4_pergroup_int8_attn",
+        0.8172051539417539
+      ],
+      [
+        "int8_channel_sym",
+        0.8135266527173386
+      ],
+      [
+        "int4_pergroup128_sym",
+        0.8123463391642805
+      ]
+    ],
+    "criteria": {
+      "weight_accuracy": 0.4,
+      "weight_memory": 0.35,
+      "weight_latency": 0.25
+    }
+  }
+}

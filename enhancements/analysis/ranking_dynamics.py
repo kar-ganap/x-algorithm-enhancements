@@ -19,15 +19,14 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "phoenix"))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig
-from phoenix.runners import ACTIONS, create_example_batch
-
-from enhancements.optimization.full_kv_cache import FullKVCachedRunner
 from enhancements.analysis.trajectory_simulation import (
     TrajectorySimulator,
     format_trajectory_table,
 )
+from enhancements.optimization.full_kv_cache import FullKVCachedRunner
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig
+from phoenix.runners import ACTIONS, create_example_batch
 
 
 def create_test_config():

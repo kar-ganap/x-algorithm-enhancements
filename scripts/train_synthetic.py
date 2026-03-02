@@ -9,8 +9,9 @@ import argparse
 import pickle
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -22,16 +23,15 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 
-from phoenix.grok import TransformerConfig
-from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
-from phoenix.runners import ModelRunner, RecsysInferenceRunner
-
+from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
 from enhancements.data.synthetic_twitter import (
     SyntheticTwitterDataset,
     SyntheticTwitterGenerator,
     create_train_val_test_split,
 )
-from enhancements.data.synthetic_adapter import SyntheticTwitterPhoenixAdapter
+from phoenix.grok import TransformerConfig
+from phoenix.recsys_model import HashConfig, PhoenixModelConfig, RecsysBatch, RecsysEmbeddings
+from phoenix.runners import ModelRunner, RecsysInferenceRunner
 
 
 # Register RecsysEmbeddings as a JAX pytree
@@ -127,10 +127,10 @@ def make_block_aware_loss_fn(
     """
 
     def loss_fn(
-        params: Dict[str, Any],
+        params: dict[str, Any],
         batch: RecsysBatch,
         block_labels: jnp.ndarray,
-    ) -> Tuple[jnp.ndarray, Dict[str, jnp.ndarray]]:
+    ) -> tuple[jnp.ndarray, dict[str, jnp.ndarray]]:
         """Compute block-aware contrastive loss.
 
         Args:
@@ -195,10 +195,10 @@ def make_history_contrastive_loss_fn(
     """
 
     def loss_fn(
-        params: Dict[str, Any],
+        params: dict[str, Any],
         matching_batch: RecsysBatch,
         mismatched_batch: RecsysBatch,
-    ) -> Tuple[jnp.ndarray, Dict[str, jnp.ndarray]]:
+    ) -> tuple[jnp.ndarray, dict[str, jnp.ndarray]]:
         """Compute history contrastive loss."""
         model_params = params["model"]
         emb_params = params["embeddings"]
@@ -254,12 +254,12 @@ def make_multitask_loss_fn(
     """
 
     def loss_fn(
-        params: Dict[str, Any],
+        params: dict[str, Any],
         batch: RecsysBatch,
         labels: jnp.ndarray,
         action_labels: jnp.ndarray,
         archetype_labels: jnp.ndarray,
-    ) -> Tuple[jnp.ndarray, Dict[str, jnp.ndarray]]:
+    ) -> tuple[jnp.ndarray, dict[str, jnp.ndarray]]:
         """Compute multi-task loss.
 
         Args:
@@ -554,13 +554,13 @@ class SyntheticTrainer:
 
     def train_epoch(
         self,
-        max_batches: Optional[int] = None,
+        max_batches: int | None = None,
         use_hard_mining: bool = True,
         use_block_training: bool = True,
         use_history_training: bool = True,
         block_steps_per_batch: int = 1,
         history_steps_per_batch: int = 1,
-    ) -> Tuple[float, float, float, float, float]:
+    ) -> tuple[float, float, float, float, float]:
         """Train for one epoch.
 
         Returns:
@@ -706,7 +706,7 @@ class SyntheticTrainer:
         avg_history_acc = total_history_acc / max(1, history_steps)
         return total_loss / num_batches, total_acc / num_batches, total_cls_acc / num_batches, avg_block_acc, avg_history_acc
 
-    def evaluate(self, num_samples: int = 200) -> Tuple[float, float]:
+    def evaluate(self, num_samples: int = 200) -> tuple[float, float]:
         """Evaluate on validation set. Returns (ndcg@3, hit_rate@3)."""
         samples = self.adapter.get_validation_samples(num_samples)
 
