@@ -207,11 +207,13 @@ Implementation: `compute_user_utility()` in `stakeholder_utilities.py:136-182`.
 
 The platform wants maximum engagement of any kind. Even negative actions are signals — a block tells the platform to stop showing that author's content, and a report provides content moderation data.
 
-$$U_\text{platform}(\mathbf{P}) = \sum_{a=1}^{18} w_a^\text{plat} \cdot P_a + \text{retention\_proxy}$$
+$$U_\text{platform}(\mathbf{P}) = \sum_{a=1}^{18} w_a^\text{plat} \cdot P_a + R_\text{ret}$$
 
-where the retention proxy models user return rate:
+where $R_\text{ret}$ is a retention proxy (`retention_proxy` in the code) modeling user return rate:
 
-$$\text{retention\_proxy} = r \cdot \left(1 - 0.5 \cdot \frac{\text{negative\_signals}}{\text{positive\_signals} + 0.1}\right)$$
+$$R_\text{ret} = r \cdot \left(1 - 0.5 \cdot \frac{S^{-}}{S^{+} + 0.1}\right)$$
+
+Here $S^{-}$ and $S^{+}$ are the sums of negative and positive engagement signals, respectively.
 
 with $r = 0.8$ (base return rate), clamped to $[0, 1]$.
 
@@ -252,7 +254,9 @@ $$U_\text{society} = \text{diversity} - \text{polarization}$$
 
 **Polarization**: computed only for political users (archetypes `POLITICAL_L` and `POLITICAL_R`). For a left-leaning user, polarization measures the fraction of political content from their own side:
 
-$$\text{polarization} = \frac{\text{same\_side\_political}}{\text{same\_side\_political} + \text{other\_side\_political}}$$
+$$\text{polarization} = \frac{n_\text{same}}{n_\text{same} + n_\text{other}}$$
+
+where $n_\text{same}$ is the count of same-side political content and $n_\text{other}$ is the count of other-side political content in the user's feed.
 
 A polarization of 1.0 means the user only sees political content they already agree with (pure echo chamber). 0.5 means balanced exposure. The society utility function penalizes polarization because echo chambers are considered harmful regardless of political direction.
 
@@ -414,7 +418,7 @@ where $C_k$ depends on the stakeholder:
 
 $$C_\text{user}(\mathbf{w}) = \frac{1}{|\mathcal{N}|}\sum_{a \in \mathcal{N}} \max\!\big(0,\; w_a + \epsilon\big)$$
 
-where $\mathcal{N} = \{\text{block, mute, report, not\_interested}\}$ and $\epsilon = 0.1$ is the maximum allowed weight on negative actions. If $w_\text{block} > -0.1$, the penalty activates.
+where $\mathcal{N}$ is the set of negative actions (block, mute, report, `not_interested`) and $\epsilon = 0.1$ is the maximum allowed weight on negative actions. If $w_\text{block} > -0.1$, the penalty activates.
 
 **Society constraint** — encourage diverse weight distribution:
 
@@ -612,11 +616,11 @@ No single recommendation policy simultaneously maximizes user utility, platform 
 
 The serving-time mechanism for navigating the tradeoff is a greedy diversity-aware selection algorithm. Given a set of candidate content items, the algorithm selects items one at a time:
 
-$$\text{score}(c) = (1 - \alpha) \cdot \text{engagement}(c) + \alpha \cdot \text{diversity\_bonus}(c)$$
+$$\text{score}(c) = (1 - \alpha) \cdot E(c) + \alpha \cdot D(c)$$
 
 where:
-- $\text{engagement}(c)$ is the reward score from either the hardcoded or learned scorer
-- $\text{diversity\_bonus}(c) = 1 / (\text{topic\_count}[\text{topic}(c)] + 1)$ — topics already well-represented in the selected set get penalized
+- $E(c)$ is the engagement score from either the hardcoded or learned scorer
+- $D(c) = 1 / (n_t(c) + 1)$ is the diversity bonus — topics already well-represented in the selected set get penalized ($n_t(c)$ is the count of already-selected items with the same topic as $c$)
 - $\alpha \in [0, 1]$ is the diversity weight
 
 At $\alpha = 0$: pure engagement optimization (show whatever scores highest).
