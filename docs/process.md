@@ -13,7 +13,7 @@ Write a plan document before writing any code. The plan should cover:
 - **Files:** Which files will be created or modified
 - **Verification:** How to confirm the change works
 
-Plans are written in Claude Code's plan mode or as docs in `docs/phases/`.
+Plans are written in Claude Code's plan mode or as docs in `docs/fN/` (grouped by feature).
 
 ### 2. TEST
 
@@ -39,7 +39,7 @@ Do not merge code that fails any gate.
 
 ### 4. RETRO
 
-Write `docs/phases/phase-N-retro.md` using this 6-section format:
+Write `docs/fN/retro.md` using this 6-section format:
 
 1. **What Worked** — techniques, tools, approaches that paid off
 2. **Surprises** — unexpected findings or behaviors

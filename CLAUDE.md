@@ -52,8 +52,8 @@ make all        # all three in sequence
 - No force pushes to main. No Co-Authored-By lines.
 
 ### Phase Docs
-- **Plan**: `docs/phases/phase-N-plan.md` — before code
-- **Retro**: `docs/phases/phase-N-retro.md` — after code (6-section format, see `docs/process.md`)
+- **Plan**: `docs/fN/plan.md` or `docs/fN/phaseM_plan.md` — before code
+- **Retro**: `docs/fN/retro.md` — after code (6-section format, see `docs/process.md`)
 
 ## Key Paths
 
@@ -75,6 +75,7 @@ docs/results.md                 # Full results narrative (all phases)
 docs/process.md                 # PLAN→TEST→IMPLEMENT→RETRO lifecycle
 docs/design_doc.md              # Architecture and vision
 docs/implementation_plan.md     # Risk-tiered implementation strategy
+docs/f4/                        # F4-specific: retro, plans, reports
 results/loss_experiments/       # 87+ Phase 4 experiment JSONs
 results/pareto_comparison.*     # Pareto frontier analysis
 ```
