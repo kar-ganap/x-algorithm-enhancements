@@ -21,20 +21,20 @@ Phoenix, xAI's recommendation ranker, processes each (user, content) pair and ou
 | 0 | favorite | Positive |
 | 1 | reply | Positive (ambiguous) |
 | 2 | repost | Positive |
-| 3 | photo_expand | Neutral |
+| 3 | `photo_expand` | Neutral |
 | 4 | click | Neutral |
-| 5 | profile_click | Neutral |
+| 5 | `profile_click` | Neutral |
 | 6 | vqv (video quality view) | Neutral |
 | 7 | share | Positive |
-| 8 | share_via_dm | Positive |
-| 9 | share_via_copy_link | Neutral |
+| 8 | `share_via_dm` | Positive |
+| 9 | `share_via_copy_link` | Neutral |
 | 10 | dwell | Neutral |
 | 11 | quote | Positive |
-| 12 | quoted_click | Neutral |
-| 13 | follow_author | Positive |
-| 14 | not_interested | Negative |
-| 15 | block_author | Negative |
-| 16 | mute_author | Negative |
+| 12 | `quoted_click` | Neutral |
+| 13 | `follow_author` | Positive |
+| 14 | `not_interested` | Negative |
+| 15 | `block_author` | Negative |
+| 16 | `mute_author` | Negative |
 | 17 | report | Negative |
 
 A reward model converts this 18-dimensional probability vector into a single scalar score that determines ranking. The simplest form is a linear reward:
@@ -96,16 +96,16 @@ Six user archetypes capture distinct behavioral patterns. Each archetype represe
 
 | Archetype | Share | Behavioral signature |
 |-----------|-------|---------------------|
-| SPORTS_FAN | 15% | High engagement with sports; ignores politics |
-| POLITICAL_L | 15% | Engages with left-leaning content; hostile to right-leaning content |
-| POLITICAL_R | 15% | Engages with right-leaning content; hostile to left-leaning content |
-| TECH_BRO | 15% | Tech/startup content enthusiast |
-| LURKER | 20% | Passive consumer — likes occasionally, rarely shares or replies |
-| POWER_USER | 20% | High engagement across all action types and topics |
+| `SPORTS_FAN` | 15% | High engagement with sports; ignores politics |
+| `POLITICAL_L` | 15% | Engages with left-leaning content; hostile to right-leaning content |
+| `POLITICAL_R` | 15% | Engages with right-leaning content; hostile to left-leaning content |
+| `TECH_BRO` | 15% | Tech/startup content enthusiast |
+| `LURKER` | 20% | Passive consumer — likes occasionally, rarely shares or replies |
+| `POWER_USER` | 20% | High engagement across all action types and topics |
 
 Source: `UserArchetype` enum and `ARCHETYPE_DISTRIBUTION` in `enhancements/data/ground_truth.py:14-42`.
 
-The distribution is intentional: LURKER and POWER_USER are the two most common archetypes (20% each), reflecting that most platforms have more passive consumers and power users than niche-topic enthusiasts.
+The distribution is intentional: `LURKER` and `POWER_USER` are the two most common archetypes (20% each), reflecting that most platforms have more passive consumers and power users than niche-topic enthusiasts.
 
 ### 2.3 Content topics
 
@@ -114,8 +114,8 @@ Six content topics cover the major content categories on a social media platform
 | Topic | Share | Notes |
 |-------|-------|-------|
 | SPORTS | 25% | Largest category |
-| POLITICS_L | 12.5% | Left-leaning political content |
-| POLITICS_R | 12.5% | Right-leaning political content |
+| `POLITICS_L` | 12.5% | Left-leaning political content |
+| `POLITICS_R` | 12.5% | Right-leaning political content |
 | TECH | 20% | Technology and startups |
 | ENTERTAINMENT | 20% | General entertainment |
 | NEWS | 10% | Mixed/neutral news |
@@ -126,7 +126,7 @@ Political content is split into left and right to enable modeling of cross-parti
 
 ### 2.4 The 648 parameters
 
-The ground truth specifies `P(action | archetype, topic)` for every combination: 6 archetypes × 6 topics × 18 actions = 648 parameters. In practice, LURKER and POWER_USER use wildcard rules (same probabilities regardless of topic), so the specification has 26 rule entries in the `ENGAGEMENT_RULES` dictionary, each defining up to 18 action probabilities.
+The ground truth specifies `P(action | archetype, topic)` for every combination: 6 archetypes × 6 topics × 18 actions = 648 parameters. In practice, `LURKER` and `POWER_USER` use wildcard rules (same probabilities regardless of topic), so the specification has 26 rule entries in the `ENGAGEMENT_RULES` dictionary, each defining up to 18 action probabilities.
 
 Here are the key engagement patterns that drive the experimental results:
 
@@ -157,13 +157,13 @@ share: 0.12       profile_click: 0.20
 
 Source: `ENGAGEMENT_RULES` in `enhancements/data/ground_truth.py:142-338`.
 
-The cross-partisan hostility pattern is especially important: when a left-leaning user encounters right-leaning content, the dominant actions are block (0.25), not_interested (0.30), and mute (0.15). This creates the divergence between stakeholder utilities — the platform sees engagement (even negative engagement counts), while society sees polarization.
+The cross-partisan hostility pattern is especially important: when a left-leaning user encounters right-leaning content, the dominant actions are block (0.25), `not_interested` (0.30), and mute (0.15). This creates the divergence between stakeholder utilities — the platform sees engagement (even negative engagement counts), while society sees polarization.
 
 ### 2.5 Generating preference data
 
-The engagement rules produce a 3D tensor of action probabilities: users × content × 18 actions. From this, preference pairs are generated for Bradley-Terry training. A typical dataset has 600 users × 100 content items = 60,000 (user, content) pairs, from which 2,000-5,000 preference triples (user, preferred_content, rejected_content) are sampled.
+The engagement rules produce a 3D tensor of action probabilities: users × content × 18 actions. From this, preference pairs are generated for Bradley-Terry training. A typical dataset has 600 users × 100 content items = 60,000 (user, content) pairs, from which 2,000-5,000 preference triples (user, `preferred_content`, `rejected_content`) are sampled.
 
-The wildcard mechanism works as follows: `get_engagement_probs(archetype, topic)` first checks for a specific `(archetype, topic)` rule. If none exists, it falls back to `(archetype, "*")` — the wildcard rule. This means LURKER and POWER_USER have the same behavior regardless of topic, while the other four archetypes have topic-specific engagement patterns.
+The wildcard mechanism works as follows: `get_engagement_probs(archetype, topic)` first checks for a specific `(archetype, topic)` rule. If none exists, it falls back to `(archetype, "*")` — the wildcard rule. This means `LURKER` and `POWER_USER` have the same behavior regardless of topic, while the other four archetypes have topic-specific engagement patterns.
 
 ---
 
@@ -183,7 +183,7 @@ $$U_\text{user}(\mathbf{P}) = \sum_{a \in \text{positive}} w_a^+ \cdot P_a - \su
 
 | Action | Weight | Rationale |
 |--------|--------|-----------|
-| follow_author | 1.2 | Strongest positive — user wants more from this author |
+| `follow_author` | 1.2 | Strongest positive — user wants more from this author |
 | favorite | 1.0 | User liked the content |
 | share | 0.9 | User recommended it to others |
 | repost | 0.8 | User endorsed it publicly |
@@ -195,9 +195,9 @@ $$U_\text{user}(\mathbf{P}) = \sum_{a \in \text{positive}} w_a^+ \cdot P_a - \su
 | Action | Weight | Rationale |
 |--------|--------|-----------|
 | report | -2.5 | Strongest negative — content was harmful |
-| block_author | -2.0 | User never wants to see this author again |
-| mute_author | -1.5 | User wants less of this |
-| not_interested | -1.0 | Mild negative signal |
+| `block_author` | -2.0 | User never wants to see this author again |
+| `mute_author` | -1.5 | User wants less of this |
+| `not_interested` | -1.0 | Mild negative signal |
 
 The asymmetry is deliberate: one report (weight -2.5) cancels more than two favorites (weight +1.0). Showing a user content bad enough to trigger a report is a much bigger failure than showing them content good enough to favorite.
 
@@ -220,23 +220,23 @@ with $r = 0.8$ (base return rate), clamped to $[0, 1]$.
 | Action | Weight | Notes |
 |--------|--------|-------|
 | repost | 1.5 | Highest — viral spread |
-| share_via_dm | 1.4 | Personal recommendation |
+| `share_via_dm` | 1.4 | Personal recommendation |
 | share | 1.3 | Content distribution |
 | quote | 1.3 | Creates derivative content |
 | reply | 1.2 | Creates content threads |
-| share_via_copy_link | 1.2 | External sharing |
+| `share_via_copy_link` | 1.2 | External sharing |
 | favorite | 1.0 | Standard engagement |
-| follow_author | 1.0 | Builds creator relationships |
-| profile_click | 0.6 | User exploration |
+| `follow_author` | 1.0 | Builds creator relationships |
+| `profile_click` | 0.6 | User exploration |
 | click | 0.5 | Content consumption |
 | vqv | 0.4 | Video engagement |
-| quoted_click | 0.4 | Derivative content |
-| photo_expand | 0.3 | Mild interest |
+| `quoted_click` | 0.4 | Derivative content |
+| `photo_expand` | 0.3 | Mild interest |
 | dwell | 0.2 | Time on platform |
 | report | 0.2 | Moderation signal |
-| not_interested | 0.1 | Preference signal |
-| block_author | 0.1 | Preference signal |
-| mute_author | 0.1 | Preference signal |
+| `not_interested` | 0.1 | Preference signal |
+| `block_author` | 0.1 | Preference signal |
+| `mute_author` | 0.1 | Preference signal |
 
 The critical difference from user utility: negative actions still have positive (small) platform weights. A block is worth 0.1 to the platform but -2.0 to the user. This structural difference in how the same actions are valued is what makes different preference labels possible.
 
@@ -250,7 +250,7 @@ $$U_\text{society} = \text{diversity} - \text{polarization}$$
 
 **Diversity**: the average fraction of unique topics each user sees in their top-K recommendations. If a user's feed contains 4 out of 6 possible topics, diversity = 4/6 = 0.67. Perfect diversity (all 6 topics) = 1.0; complete homogeneity (one topic) = 1/6 = 0.17.
 
-**Polarization**: computed only for political users (archetypes POLITICAL_L and POLITICAL_R). For a left-leaning user, polarization measures the fraction of political content from their own side:
+**Polarization**: computed only for political users (archetypes `POLITICAL_L` and `POLITICAL_R`). For a left-leaning user, polarization measures the fraction of political content from their own side:
 
 $$\text{polarization} = \frac{\text{same\_side\_political}}{\text{same\_side\_political} + \text{other\_side\_political}}$$
 
@@ -420,7 +420,7 @@ where $\mathcal{N} = \{\text{block, mute, report, not\_interested}\}$ and $\epsi
 
 $$C_\text{society}(\mathbf{w}) = \max\!\big(0,\; \sigma_\text{target} - \text{std}(\mathbf{w}_\text{positive})\big)$$
 
-where $\mathbf{w}_\text{positive}$ are the weights on positive actions (favorite, repost, follow_author, share, reply) and $\sigma_\text{target} = 0.3$. This penalizes uniform positive weights, encouraging the model to value some positive actions more than others (which could produce more diverse recommendations).
+where $\mathbf{w}_\text{positive}$ are the weights on positive actions (favorite, repost, `follow_author`, share, reply) and $\sigma_\text{target} = 0.3$. This penalizes uniform positive weights, encouraging the model to value some positive actions more than others (which could produce more diverse recommendations).
 
 **Platform constraint**: none ($C_\text{platform} = 0$). The platform has no structural constraints beyond maximizing engagement.
 
@@ -474,7 +474,7 @@ The simplest architecture: a single weight vector $\mathbf{w} \in \mathbb{R}^{18
 
 $$R(u, c) = \mathbf{w}^\top \mathbf{P}(u, c)$$
 
-Implementation: `PhoenixRewardModel` in `enhancements/reward_modeling/reward_model.py:35-184`. The default weights are hand-tuned: favorite=+1.0, follow_author=+1.2, block_author=-1.5, report=-2.0, etc.
+Implementation: `PhoenixRewardModel` in `enhancements/reward_modeling/reward_model.py:35-184`. The default weights are hand-tuned: `favorite=+1.0, follow_author=+1.2, block_author=-1.5, report=-2.0`, etc.
 
 **Limitation**: One-size-fits-all. Cannot capture that sports fans and political users value different actions differently.
 
@@ -492,7 +492,7 @@ This enables different reward functions per user group — sports fans can have 
 
 The two-stage approach won the Phase 2 comparison across 8 approaches. It separates clustering from reward learning:
 
-**Stage 1: Cluster users**. Run K-means ($K = 6$) on user interaction features (per-topic engagement vectors). Users are grouped by behavioral similarity, not demographics. Configuration: `n_init=10` (10 random seeds, pick best clustering).
+**Stage 1: Cluster users**. Run K-means ($K = 6$) on user interaction features (per-topic engagement vectors). Users are grouped by behavioral similarity, not demographics. Configuration: `n_init=10` (10 random seeds, pick best).
 
 **Stage 2: Train per-cluster BT models**. For each cluster $k$, collect the preference pairs belonging to users in that cluster. Train an independent BT model on each cluster's data, producing cluster-specific weights $\mathbf{w}_k$.
 
@@ -555,7 +555,7 @@ Overall silhouette = mean of $s(i)$ across all points. Threshold: $\geq 0.2$.
 
 Implementation: `enhancements/verification/embedding_probes.py`.
 
-**Result**: user_silhouette = 0.369, topic_silhouette = 1.000. Users cluster reasonably well; topic embeddings cluster perfectly.
+**Result**: `user_silhouette` = 0.369, `topic_silhouette` = 1.000. Users cluster reasonably well; topic embeddings cluster perfectly.
 
 ### 7.2 Level 2: Behavioral tests
 
@@ -573,12 +573,12 @@ Implementation: `enhancements/verification/behavioral_tests.py`.
 
 **Method**: Six specific behavioral checks:
 
-1. LURKER repost ratio < 5% (ground truth: 1%)
-2. POWER_USER repost ratio > 30% (ground truth: 35%)
-3. POWER_USER repost > 2× LURKER repost
-4. LURKER reply < 5% (ground truth: 0%)
-5. POLITICAL_L blocks POLITICS_R content at > 20% (ground truth: 25%)
-6. POLITICAL_R blocks POLITICS_L content at > 20%
+1. `LURKER` repost ratio < 5% (ground truth: 1%)
+2. `POWER_USER` repost ratio > 30% (ground truth: 35%)
+3. `POWER_USER` repost > 2× `LURKER` repost
+4. `LURKER` reply < 5% (ground truth: 0%)
+5. `POLITICAL_L` blocks `POLITICS_R` content at > 20% (ground truth: 25%)
+6. `POLITICAL_R` blocks `POLITICS_L` content at > 20%
 
 Implementation: `enhancements/verification/action_tests.py`.
 
@@ -598,7 +598,7 @@ Implementation: `enhancements/verification/counterfactual_tests.py`.
 
 **Why this matters**: A model can achieve 99% ranking accuracy by memorizing user embeddings (which encode archetype identity) without ever reading the content or history. Such a model would pass Levels 1-3 perfectly but fail Level 4 — swapping a user's history wouldn't change predictions because the model ignores history entirely. This is exactly what happened in Phase 7's initial training, where the model achieved high accuracy but only 4% archetype flip rate.
 
-**Result**: block_effect = 78%, archetype_flip = 86% (after three successive fixes: soft labels, block contrastive training, and history-topic contrastive loss).
+**Result**: `block_effect` = 78%, `archetype_flip` = 86% (after three successive fixes: soft labels, block contrastive training, and history-topic contrastive loss).
 
 ---
 
@@ -646,7 +646,7 @@ For each value of $\alpha \in \{0.0, 0.1, 0.2, \ldots, 1.0\}$, we run the greedy
 
 ### 8.5 Key results
 
-| Scorer | Max user_utility | At $\alpha$ | Max society_utility | At $\alpha$ |
+| Scorer | Max `user_utility` | At $\alpha$ | Max `society_utility` | At $\alpha$ |
 |--------|-----------------|-------------|--------------------|----|
 | Hardcoded | 1.087 | 0.3 | 0.500 | 0.9 |
 | Learned (user) | **1.149** | **0.1** | 0.500 | 1.0 |
@@ -696,7 +696,7 @@ Higher label disagreement maps directly to lower cosine similarity (more differe
 
 **MovieLens (Phase 6)**: Real movie rating data. The reward model architecture (learned embeddings + transformer) achieves NDCG@3 of 0.4112, a 59% improvement over an untrained baseline. Key discovery: the transformer and embeddings exhibit a 107.5% synergy effect — neither component works alone; all improvement comes from their interaction.
 
-**Synthetic Twitter (Phase 7)**: Full pipeline test with 648-parameter ground truth. All 5 test suites pass after three successive fixes (soft labels, block contrastive training, history-topic contrastive loss). Final metrics: behavioral_accuracy 100%, action_tests 6/6, block_effect 78%, archetype_flip 86%.
+**Synthetic Twitter (Phase 7)**: Full pipeline test with 648-parameter ground truth. All 5 test suites pass after three successive fixes (soft labels, block contrastive training, history-topic contrastive loss). Final metrics: `behavioral_accuracy` 100%, `action_tests` 6/6, `block_effect` 78%, `archetype_flip` 86%.
 
 ---
 
