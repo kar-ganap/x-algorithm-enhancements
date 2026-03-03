@@ -33,9 +33,9 @@ Simple k-means clustering on user features + per-cluster BT training beat every 
 | EM | 99.3% | 0.387 | collapsed |
 | Hybrid | 97.3% | 0.510 | — |
 | Supervised classification | ~98% | 0.559 | — |
-| **Two-stage (topic×action)** | **99.5%** | **0.554** | **100%** |
+| **Two-stage (topic-aware)** | **99.3%** | **0.604** | **100%** |
 
-Source: `results/f4_phase2_two_stage/two_stage_comparison.json` — Topic-aware avg_purity: 1.0, Topic×Action avg_purity: 1.0. The lesson: feature engineering > model complexity. Choosing the right 108D feature set (topic × action cross-features) solved clustering perfectly, making complex end-to-end models unnecessary.
+Source: `results/f4_phase2_two_stage/two_stage_comparison.json` — Topic-aware avg_purity: 1.0, Topic×Action avg_purity: 1.0. The lesson: feature engineering > model complexity. Using per-topic engagement features solved clustering perfectly, making complex end-to-end models unnecessary.
 
 ### Systematic experimentation made the core insight discoverable (Phase 4)
 
@@ -77,11 +77,11 @@ After implementing Margin-BT, Calibrated-BT, Constrained-BT, and Post-Hoc rerank
 | Loss | Min Cosine Sim (P-S) |
 |------|---------------------|
 | **Standard BT** | **0.478** |
-| Margin-BT (m=0.05) | 0.613 |
-| Margin-BT (m=0.5) | 0.534 |
+| Margin-BT (m=0.05) | 0.541 |
+| Margin-BT (m=0.5) | 0.551 |
 | Calibrated-BT (λ=0.05) | 0.512 |
 
-Source: `docs/results.md:2109-2117`. Margin-BT actually made differentiation *worse* by regularizing weight directions — the margin constraint forces larger magnitudes but more similar orientations.
+Source: Cosine similarities computed from weight vectors in `results/loss_experiments/`. Margin-BT makes differentiation *worse* — every alternative produces higher cosine similarity than standard BT. (Note: `docs/results.md:2109-2117` records slightly different values from the original experiment run; the Margin-BT JSONs were regenerated in a later training run. The directional conclusion is unchanged.)
 
 ### Transformer-embedding synergy was 107.5% (Phase 6)
 
@@ -93,7 +93,7 @@ This means the model's architecture is fundamentally a joint system — you can'
 
 The platform-trained BT weight vector produces such concentrated scores (all topics score 2.9-4.3, narrow range) that the serving-time diversity knob can't overcome them until diversity_weight reaches ~0.7. The platform frontier in `results/pareto_comparison.json` (lines 140-205) is essentially flat for diversity_weight 0.0 through 0.6 — user_utility and society_utility barely change.
 
-Contrast with the user-trained scorer, where the frontier moves smoothly from diversity_weight 0.0 (user_utility 1.145) to 1.0 (user_utility 0.685).
+Contrast with the user-trained scorer, where the frontier peaks at diversity_weight 0.1 (user_utility 1.149) and declines to 1.0 (user_utility 0.685). The slight increase from 0.0 (1.145) to 0.1 suggests a small amount of diversity marginally benefits even user-centric utility.
 
 ### Society scorer gets dominated in combination
 
@@ -122,7 +122,7 @@ Then GMM soft clustering (equivalent to k-means with good features), plus 4 stre
 
 1. **Penalty-based differentiation** (failed): Added stakeholder-specific loss terms. All three models converged to identical weights (cosine sim ~1.0). Incorrectly diagnosed as "BT loss dominates penalties."
 
-2. **Alternative loss functions** (failed): 87 experiments across Margin-BT, Calibrated-BT, Constrained-BT. All produced identical weights when trained on the same preference pairs. This proved the issue wasn't the loss.
+2. **Alternative loss functions** (failed): 87 experiments across 4 loss functions (standard BT baseline, Margin-BT, Calibrated-BT, Constrained-BT). All produced identical weights when trained on the same preference pairs. This proved the issue wasn't the loss.
 
 3. **Stakeholder-specific preference labels** (succeeded): Different utility functions per stakeholder → different (preferred, rejected) pairs → different learned weights. Cosine sim dropped from 1.0 to 0.478. The winning approach was conceptually the simplest.
 
@@ -156,7 +156,7 @@ This is arguably F4's most important lesson and corrects the Phase 2 narrative t
 
 Phase 2 invested heavily in recovering ground truth weights (target: 0.8 correlation). Best result: 0.554 (`results/f4_phase2_two_stage/two_stage_summary.json`, mean_correlation). This was declared a fundamental limitation and accepted.
 
-In retrospect, weight recovery was the wrong metric. What matters for production is: (a) ranking accuracy (99.5% — excellent), (b) cluster purity (100% — excellent), and (c) weight *differentiation* between stakeholders (cosine sim 0.478 — excellent). The fact that learned weights don't match ground truth numerically is a property of BT's scale invariance, not a deficiency.
+In retrospect, weight recovery was the wrong metric. What matters for production is: (a) ranking accuracy (99.3% — excellent), (b) cluster purity (100% — excellent), and (c) weight *differentiation* between stakeholders (cosine sim 0.478 — excellent). The fact that learned weights don't match ground truth numerically is a property of BT's scale invariance, not a deficiency.
 
 ### "High accuracy = good model"
 
@@ -181,37 +181,64 @@ Source: `results/pareto_comparison.json` — hardcoded max user_utility 1.087 vs
 
 ---
 
-## 5. Scope Changes for Next Phase
+## 5. Research Directions
 
-### Priority 1: Real preference data pipeline
+F4's original question — "given stakeholder utility definitions, can we train differentiated models?" — is answered. The natural next questions are about identifiability and robustness: what can and can't be recovered from preference data, and how sensitive are the results to the choices we made?
 
-**Why**: Everything so far uses synthetic data with known ground truth (Phases 1-4, 7) or movie ratings (Phase 6). Zero evidence this works on real Twitter/X engagement data.
+### Central research question
 
-**The hard part**: On synthetic data, stakeholder utility functions are given. On real data, they must be *designed*. How do you define "user utility" vs "society utility" from engagement logs? What signals indicate societal harm vs legitimate controversy? The core insight says "it's the labels" — but designing the right labels for real data is the open research question.
+*What are the identifiability limits of multistakeholder reward functions learned from pairwise preferences — and how sensitive are Pareto-optimal policies to utility misspecification and unobserved stakeholders?*
 
-### Priority 2: End-to-end integration
+### Direction 1: Identifiability limits of Bradley-Terry (core contribution)
 
-**Why**: F4 produces 18-dimensional weight vectors per stakeholder. F2 produces an optimized inference pipeline (JIT, KV-cache, quantization). Nothing connects them. The Pareto analysis script (`scripts/compare_pareto_frontiers.py`) is an ad-hoc prototype, not a production scoring pipeline.
+**Question**: Given pairwise preference labels from K stakeholders, what can we recover about their individual reward functions?
 
-**What's needed**: A serving-time pipeline that takes (user, candidate_set) → scores → diversity-aware ranking → final feed, using the learned weight vectors as the scorer.
+BT's scale invariance means absolute weight values are unrecoverable. But Phase 4 showed weight *differentiation* IS recoverable (cosine sim 0.478). The open question: what's the full identifiability frontier? Specifically:
 
-### Priority 3: Replace hardcoded scorer with learned weights
+- **Rank-order recovery**: We measured Pearson correlation (0.554). We never measured Kendall's τ or Spearman ρ on weight ranks. If rank correlation is high, the low Pearson is purely a scale artifact and the model is learning correct structure.
+- **Disagreement → differentiation bound**: P-S disagreement 35% → cosine sim 0.478. U-S disagreement 12% → cosine sim 0.884. Is there a formal relationship? Can we prove: "given X% label disagreement, the minimum achievable cosine similarity is Y"?
+- **What's recoverable vs not**: Weight magnitudes (no), weight ordering (likely yes), relative stakeholder importance (unknown). Characterize each.
 
-**Why**: The Pareto frontier analysis proved the learned scorer outperforms the hardcoded `favorite + 0.8*repost + 0.5*follow` formula. This is the most concrete, immediately actionable improvement from F4.
+Connects to: Skalse et al. (2025) on partial identifiability in reward learning; rethinking BT in preference-based reward modeling (ICLR 2025).
 
-**What it looks like**: Load the BT weight vectors from `results/loss_experiments/bradley_terry_{user,platform,society}.json`, use them as the scoring function in the diversity-aware selection mechanism.
+**Infrastructure**: Existing 87 experiments + synthetic ground truth directly support empirical measurement. Need to add rank-correlation metrics and theoretical analysis.
 
-### Priority 4: History-level causality
+### Direction 2: Utility function sensitivity
 
-**Why**: Phase 3 causal verification: block/follow pass 100%, but history intervention only 50%. Phase 7 improved to 86% with contrastive learning. Still not fully solved. Content-level personalization ("user likes sports → show more sports") only partially works.
+**Question**: How sensitive is the Pareto frontier to utility function parameterization?
 
-**Possible approaches**: Topic-aware reward weights, content-user interaction features, attention mechanisms that explicitly condition on history topics.
+The `UtilityWeights` dataclass in `stakeholder_utilities.py` defines utility functions with ~14 free parameters (action weights for user positive/negative, platform weights). We used one set of values. What happens if you perturb them?
 
-### Priority 5: Weight interpretability
+- If you change society's negativity penalty from 4.0 to 2.0, how much does the frontier shift?
+- Is there a "utility function tolerance" — a perturbation radius within which the Pareto-optimal policy doesn't change?
+- Which parameters matter most? (Sensitivity analysis: partial derivatives of frontier position with respect to each utility parameter.)
 
-**Why**: Weight correlation is 0.554 — meaning learned weights don't match ground truth numerically (BT scale invariance). Rankings are correct, but you can't point to a weight and say "the model learned that blocking is negative because w_block = -2.9." The weight magnitudes are arbitrary, only relative order matters.
+This answers a practitioner question: *"how precisely must I specify my utility function before deploying a multistakeholder system?"* If the answer is "very precisely," that's a serious limitation. If it's "the frontier is robust to ±30% perturbations," that's reassuring.
 
-**Mitigation**: Use the weight vectors for what they're good at (scoring, differentiation) and don't try to interpret individual values. Alternatively, explore calibrated loss functions that anchor scores to observable engagement rates, accepting the accuracy hit (Platform drops to 86% at λ=0.5).
+**Infrastructure**: `compute_pareto_frontier()` exists. Need to add utility parameter sweep (grid over `UtilityWeights` dimensions) and frontier distance metrics.
+
+### Direction 3: Partial observation (missing stakeholders)
+
+**Question**: If you can observe user and platform preferences but society objectives are hidden, how wrong is your Pareto frontier?
+
+In practice, societal impact is the hardest stakeholder to observe — there's no direct engagement signal for "this content increased polarization." Platforms optimize what they can measure (user engagement, platform retention) and hope societal outcomes follow.
+
+- Train on K-1 of K stakeholders. Compute the Pareto frontier. Then reveal the Kth stakeholder and measure frontier degradation.
+- Does the frontier shift predictably? Is the shift bounded by the correlation structure between observed and unobserved stakeholders?
+- Which stakeholder is most dangerous to miss? (Hypothesis: society, because it's most anti-correlated with platform.)
+
+Connects to: robustness under partial identifiability (Skalse et al., 2025); multistakeholder evaluation of recommender systems (de Vrieze et al., 2025).
+
+**Infrastructure**: Train on subsets of `{user, platform, society}`, compare frontiers via existing Pareto machinery.
+
+### How these connect
+
+All three directions share F4's infrastructure and build on each other:
+1. **Identifiability** tells you what's theoretically recoverable
+2. **Sensitivity** tells you how much specification error matters in practice
+3. **Partial observation** tells you what happens when you can't specify at all
+
+Together they answer: *"If I'm a practitioner building a multistakeholder recommender, what do I need to get right, what can I get approximately right, and what am I safe to ignore?"*
 
 ---
 
@@ -226,7 +253,7 @@ Source: `results/pareto_comparison.json` — hardcoded max user_utility 1.087 vs
 | MovieLens training configs (Phase 6) | 3 |
 | Synthetic verification fix iterations (Phase 7) | 3 |
 | Causal stress tests (Phase 3) | 7 |
-| Total result JSON files in `results/` | 119 (in `loss_experiments/` alone) |
+| Result JSON files in `loss_experiments/` | 119 |
 
 ### Test coverage
 
@@ -253,7 +280,7 @@ Source: `results/pareto_comparison.json` — hardcoded max user_utility 1.087 vs
 | Phase 1 val accuracy | `results/f4_phase1/training_metrics.json` | 99.3% |
 | Phase 1 standard accuracy | `results/f4_phase1/comprehensive_evaluation.json` | 100% |
 | Phase 1 label flip impact (30%) | `docs/results.md:1383` | 68.7% accuracy |
-| Phase 2 overall accuracy (topic×action) | `results/f4_phase2_two_stage/two_stage_comparison.json` | 99.5% (stress variant) |
+| Phase 2 accuracy (topic-aware) | `results/f4_phase2_two_stage/two_stage_comparison.json` | 99.3% |
 | Phase 2 cluster purity (topic-aware) | same | 100% (avg_purity: 1.0) |
 | Phase 2 weight correlation | `results/f4_phase2_two_stage/two_stage_summary.json` | 0.554 |
 | Phase 3 block/follow pass rate | `results/f4_phase3_causal/causal_verification_results.json` | 100% |
@@ -270,7 +297,7 @@ Source: `results/pareto_comparison.json` — hardcoded max user_utility 1.087 vs
 | Phase 7 behavioral accuracy | `results/synthetic_verification.json` | 100% |
 | Phase 7 action tests | same | 6/6 |
 | Phase 7 block effect rate | same | 78% |
-| Phase 7 archetype flip rate | same | 85.7% |
+| Phase 7 archetype flip rate | same | 86% |
 | Phase 7 user embedding silhouette | same | 0.369 |
 | Phase 7 topic embedding silhouette | same | 1.000 |
 | Pareto: hardcoded max user_utility | `results/pareto_comparison.json` | 1.087 (at div_weight=0.3) |
@@ -284,7 +311,7 @@ Source: `results/pareto_comparison.json` — hardcoded max user_utility 1.087 vs
 
 Phase 1 data: synthetic. Phase 2: synthetic. Phase 3: synthetic. Phase 4: synthetic. Phase 7: synthetic with 648 known parameters. MovieLens (Phase 6) is real, but it's a movie rating dataset — not social media engagement. We have produced zero evidence that any of this works on real Twitter/X data.
 
-The synthetic data is *designed* to be learnable. Ground truth archetypes have clean separation. Engagement patterns are noise-free (before we add noise ourselves). Real engagement data has overlapping user behaviors, noisy signals, temporal drift, and ambiguous preferences. The impressive numbers (99.5% accuracy, 100% purity, 0.478 cosine sim) are achieved under ideal conditions.
+The synthetic data is *designed* to be learnable. Ground truth archetypes have clean separation. Engagement patterns are noise-free (before we add noise ourselves). Real engagement data has overlapping user behaviors, noisy signals, temporal drift, and ambiguous preferences. The impressive numbers (99.3% accuracy, 100% purity, 0.478 cosine sim) are achieved under ideal conditions.
 
 ### 2. The "core insight" is obvious in hindsight
 
@@ -314,10 +341,112 @@ F4 produces 18-dimensional weight vectors stored in JSON files. F2 produces an o
 
 The entire F4 body of work is a research prototype with rigorous internal validation but zero production readiness.
 
+### 8. We searched under the lamppost
+
+The 87 experiments exploring loss function variants were a productive detour that yielded a useful negative result: no loss function can overcome identical training signals. But the reason we went down that path was a framing error. We assumed the loss function was the lever because that's what we knew how to modify. The actual lever — training labels — was in the data pipeline, which we weren't examining. Phase 1's 0.997 cross-archetype cosine similarity was the clue, but we read it as "good generalization" rather than "identical signal." In any eventual report, this journey should be acknowledged honestly. The negative result has independent value (it's a rigorous proof of a general principle), but the path was a course correction, not a deliberate strategy.
+
+---
+
+## 7. Discussion
+
+Deeper analysis of the F4 journey, organized thematically.
+
+### Weight recovery: fundamental or worth revisiting?
+
+The 0.554 Pearson correlation was declared a fundamental BT limitation and accepted. But there's a nuance we didn't explore: we only measured *Pearson correlation* (sensitive to scale). We never measured *rank-order correlation* — Kendall's τ or Spearman ρ on the weight vector.
+
+BT's scale invariance means `[1.0, 0.5, 0.3]` and `[2.0, 1.0, 0.6]` are equivalent for ranking. Pearson correlation between these is 1.0 (perfect), but that's the easy case. The harder question: does the *relative ordering* of actions match ground truth? If the ground truth says `favorite > repost > reply > ... > block > report`, does the learned model agree?
+
+If rank correlation turns out to be high (say 0.85+), then the 0.554 Pearson is purely a scale artifact and the model IS learning the right structure — the 0.8 gate was the wrong metric, not an unmet bar. If rank correlation is also low, something else is going on. One experiment would resolve this.
+
+### The penalty-based hypothesis: reasonable but falsified
+
+The Phase 4 expectation — "adding stakeholder-specific penalty terms to BT will shift models to different weight optima" — was grounded in standard ML intuition. In most supervised learning settings, changing the loss *does* change the model: BCE, MSE, and hinge produce different decision boundaries on the same data.
+
+Where this breaks down for BT: the ranking loss operates on *all 50,000 preference pairs*, while penalty terms (discomfort, diversity) operate on derived signals from those same pairs. The ranking gradient overwhelms the penalty gradient. And more fundamentally: when preference pairs are identical across stakeholders, the ranking-optimal weights are identical — penalties try to push away from this shared optimum but swim upstream against a much stronger signal.
+
+It IS fair to call this a failed hypothesis. The hypothesis was stated, tested rigorously, and falsified. The falsification is the contribution — "no loss function modification can overcome identical training signals" is a stronger, more general claim than "our penalties worked on the first try." The 87 experiments weren't wasted; they produced a proof by exhaustion.
+
+### Phoenix zero-initialization: current status
+
+Phase 6 discovered that Phoenix's vendored transformer code (`phoenix/grok.py`) uses `Constant(0)` for weight initialization, causing the attention mechanism to compute zero. The model effectively bypasses the transformer and relies only on embeddings.
+
+We fixed this to Xavier initialization directly in the vendored file (`phoenix/grok.py`, commit `0e16441`). Current state:
+- `phoenix/grok.py` now uses `VarianceScaling` (Xavier) for weights and `Constant(1)` for RMSNorm scale
+- Our trained models (MovieLens, synthetic Twitter) have working transformers
+- Open question: was the original `Constant(0)` intentional upstream (perhaps a placeholder for pre-trained weights) or a bug?
+
+### The diversity knob: scoring vs mechanism
+
+The serving-time diversity system has two distinct parts:
+
+**Scoring** (the weak link): `favorite + 0.8*repost + 0.5*follow_author` in `enhancements/reward_modeling/stakeholder_utilities.py:399-402`. Three actions out of 18. Coefficients chosen by hand with no empirical basis. This reduces 18-dimensional action probabilities to a scalar engagement score.
+
+**Mechanism** (the valuable part): Greedy diversity-aware selection in `enhancements/reward_modeling/stakeholder_utilities.py:415-430`. Interpolates between engagement and diversity bonus: `(1 - α) * engagement + α * (1 / (topic_count + 1))`. The α parameter (diversity_weight) controls the tradeoff. This mechanism is sound — it naturally trades off engagement for topic diversity.
+
+F4's contribution: the learned 18D BT weight vector replaces the 3-coefficient scoring function while reusing the same mechanism. Result: user_utility 1.149 vs 1.087 hardcoded — a 5.7% improvement from better scoring alone (`results/pareto_comparison.json`).
+
+### End-to-end integration: what would prove the value?
+
+The Pareto comparison already gives a figure of merit: 5.7% user utility improvement by swapping 3 hardcoded coefficients for 18 learned ones, achievable at lower diversity sacrifice (div_weight 0.1 vs 0.3).
+
+What's missing is the per-archetype breakdown. If the learned scorer helps sports fans and tech users but hurts lurkers, the aggregate improvement is misleading. The right evaluation computes Pareto frontiers per archetype and measures whether all user groups benefit or improvement concentrates in a few.
+
+### Pushing history-level causality
+
+Two fronts, with concrete next steps:
+
+**Phase 3 (50% → ?)**: The two-stage model uses cluster assignment to encode user type, then applies identical per-cluster weights regardless of content topic. It can't model topic-conditional preferences.
+
+- **Topic-conditional weights**: `w[cluster, topic]` instead of `w[cluster]`. A 6×6 matrix of 18D weight vectors — 648 parameters, matching ground truth dimensionality exactly. This directly models the missing interaction.
+
+**Phase 7 (86% → ?)**: The contrastive learning approach works but 14% of archetype flips fail.
+
+- **Embedding dropout**: Zero out user embeddings during 50% of training steps. Forces the model to rely on transformer history processing instead of the embedding shortcut. This directly targets the known root cause — user embeddings were so informative that the transformer was bypassed.
+- **Hard-negative mining**: Find history-candidate pairs where the model currently gets the wrong answer. Oversample these in contrastive training batches.
+- **Attention supervision**: Add a loss encouraging attention weights on history tokens to correlate with the candidate's topic.
+
+Embedding dropout is the highest-leverage, lowest-effort approach.
+
+### Calibrated-BT accuracy hit: why it happens
+
+Calibrated-BT adds a secondary objective: predicted scores should match observed engagement rates (MSE term). This conflicts with the primary ranking objective.
+
+For Platform specifically, the utility function values all engagement, so most content has high engagement rates. Calibration pushes all scores toward high values, compressing the score distribution. With compressed scores, the model has less room for fine-grained ranking distinctions. The degradation is monotonic: λ=0 (standard BT) → 91.9% accuracy; λ=0.5 → 86.0%. Source: `results/loss_experiments/calibrated_bt_platform_cal*.json`.
+
+User and Society utilities are more discriminating (they penalize negative actions), so calibration targets are more varied and accuracy degrades less.
+
+### Was utility function design the original F4 question?
+
+No. The design doc (`docs/design_doc.md:365-448`) framed F4 as three tiers:
+1. **Tier 1**: Pluralistic causal rewards (discover K value systems, verify causality)
+2. **Tier 2**: Multi-stakeholder framework (define stakeholder utility functions, compute Pareto frontiers)
+3. **Tier 3**: Game-theoretic analysis (optional)
+
+Tier 2 lists "stakeholder utility functions" as a deliverable but *assumes* they can be specified. The design doc never asks "how do you define user utility?" — it assumes you hand it a definition and asks "given these definitions, can we train differentiated models?"
+
+F4 answered that question: yes, with stakeholder-specific preference labels. The deeper question — *how to design the right utility functions for real data* — emerges from F4 as the natural next-order problem. It's not a gap in F4; it's the question F4 unlocks.
+
+### Why we searched under the lamppost
+
+Four factors, in order of importance:
+
+1. **Wrong abstraction level.** We were thinking "loss function determines model behavior." When stakeholders didn't differentiate, we changed the loss. We never questioned the input because the loss felt like the natural lever. Classic case of searching where the light is.
+
+2. **Misinterpreted early evidence.** Phase 1's 0.997 cosine similarity across archetypes was read as "great generalization" — a positive signal. In retrospect, it was "identical training signal" — a diagnostic signal we missed. The data was telling us the answer; our framing prevented us from hearing it.
+
+3. **Label generation was buried.** Preference pairs were generated by a formula inside the data pipeline. It wasn't a first-class concept in the design. You had to trace: `ground_truth.py` → engagement probabilities → preference pairs → BT labels → training. The fact that all stakeholders shared this pipeline wasn't architecturally visible.
+
+4. **Standard ML intuition misled.** In most settings, changing the loss DOES change the model. BT is special: it only cares about *which item of a pair is preferred*, not by how much. When all stakeholders agree on every pair, no loss modification can introduce disagreement. This property of pairwise ranking losses isn't intuitive from experience with pointwise losses.
+
+These four factors compounded: we started at the wrong abstraction level, misread early evidence, couldn't see the data pipeline as a first-class component, and our ML intuition didn't transfer to pairwise ranking losses.
+
 ---
 
 ## Summary
 
-F4 is a genuine research contribution: it discovered (and rigorously proved through 87+ experiments) that Bradley-Terry preference learning differentiates stakeholders through training labels, not loss functions. It built a complete verification stack from synthetic ground truth through causal intervention tests. It validated on two external datasets.
+F4 is a genuine research contribution: it discovered (and rigorously proved through 87 experiments) that Bradley-Terry preference learning differentiates stakeholders through training labels, not loss functions. It built a complete verification stack from synthetic ground truth through causal intervention tests. It validated on MovieLens (real data) and a 648-parameter synthetic Twitter ground truth.
 
-But it is *research*, not product. Every result is on synthetic or proxy data. The central unanswered question — how to design stakeholder utility functions for real engagement data — is a product/policy problem that F4's modeling infrastructure can support but cannot answer. The most valuable next step is not more modeling experiments but rather: bring real data in and see what breaks.
+But it is *research*, not product. Every result is on synthetic or proxy data. The central unanswered question — how to design stakeholder utility functions for real engagement data — is a product/policy problem that F4's modeling infrastructure can support but cannot answer.
+
+The natural next step is not more modeling but deeper investigation of the identifiability and robustness properties of what we've built: what can BT actually recover from preference data, how sensitive are Pareto frontiers to utility specification, and what happens when stakeholders go unobserved? These are questions practitioners will face when deploying any multistakeholder system, and F4's infrastructure — 648-parameter ground truth, verified training pipeline, Pareto frontier computation — is well-positioned to answer them.
