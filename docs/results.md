@@ -2070,6 +2070,41 @@ Platform and Society disagree most (35%) because they have the most divergent at
 
 **No alternative loss function was needed.** Standard Bradley-Terry achieves cosine similarity of 0.48 — far below the 0.95 target — when trained on stakeholder-specific preference labels.
 
+#### Disagreement → Differentiation Bound
+
+A 34-point sweep of the negative-penalty parameter α (two reference sweeps: Platform-fixed and User-fixed) establishes the functional relationship between label disagreement rate and cosine similarity:
+
+| Disagreement threshold | Cosine similarity drops below |
+|------------------------|-------------------------------|
+| ≥10% | 0.95 |
+| ≥19% | 0.80 |
+| ≥37% | 0.50 |
+
+The relationship is strongly monotonic (Spearman ρ = -0.984) with a linear R² of 0.898 across both sweeps combined. The exact slope is reference-dependent: the Platform-fixed sweep shows steeper differentiation at moderate disagreement than the User-fixed sweep.
+
+**Margin-augmented model**: Disagreement rate alone is insufficient — the same rate can produce different cosine similarities depending on the *depth* of disagreements. Adding mean total margin (average utility gap on disagreed pairs) as a second predictor yields R² = 0.977:
+
+| Model | R² |
+|-------|----|
+| Disagreement rate only | 0.898 |
+| 2-variable (rate + margin) | **0.977** |
+| Product (rate × margin) | 0.863 |
+| Margin only | 0.786 |
+| \|Δα\| only | 0.437 |
+
+The 2-variable fit: `cos = 1.098 − 1.127d − 0.088m` (d = disagreement rate, m = mean total margin). Both variables are needed independently — the product alone (R² = 0.863) is worse than disagreement alone. For the utility family U = pos − α·neg, the mean total margin decomposes as |Δα| · E[Δneg | disagreement], separating parameter distance from content structure. See `results/disagreement_bound_analysis.json`.
+
+**LLM confidence as margin proxy (CONDITIONAL_GO)**: Tested whether the 2-variable structure holds when the annotator uses a different utility function. Claude Haiku was given natural language stakeholder descriptions and content as engagement/negativity scores (0-100) — no formula. Results across 15 sweep points × 200 pairs:
+
+| Criterion | Threshold | Value | Result |
+|-----------|-----------|-------|--------|
+| LLM 2-var Spearman | ≥ 0.85 | **0.929** | PASS (MUST) |
+| d correlation (Pearson) | ≥ 0.90 | **0.921** | PASS (MUST) |
+| Conf-margin Spearman | ≥ 0.70 | 0.668 | FAIL (SHOULD) |
+| Spearman gap (analytic − LLM) | ≤ 0.10 | **0.064** | PASS (NICE) |
+
+The LLM's implicit utility function differs from ours (d_llm ≠ d_analytic), but the *ranking* of which stakeholder pairs are most differentiated is preserved (Spearman = 0.929). LLM confidence adds value over disagreement rate alone (+0.135 Spearman boost) but is compressed in range [1.40, 1.66], making it a weak margin substitute for linear prediction (R² = 0.80). The go/no-go uses Spearman rather than R² because rank-ordering is the practically relevant question. See `results/llm_margin_proxy.json`.
+
 Weight vectors show clear stakeholder patterns:
 
 | Action | User | Platform | Society | Interpretation |
