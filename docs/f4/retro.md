@@ -390,7 +390,7 @@ F4's contribution: the learned 18D BT weight vector replaces the 3-coefficient s
 
 The Pareto comparison already gives a figure of merit: 5.7% user utility improvement by swapping 3 hardcoded coefficients for 18 learned ones, achievable at lower diversity sacrifice (div_weight 0.1 vs 0.3).
 
-What's missing is the per-archetype breakdown. If the learned scorer helps sports fans and tech users but hurts lurkers, the aggregate improvement is misleading. The right evaluation computes Pareto frontiers per archetype and measures whether all user groups benefit or improvement concentrates in a few.
+Per-archetype analysis *(resolved)*: The user-trained BT scorer benefits **all 6 archetypes** — no losers. At div_weight=0.1: tech_bro gains most (+34.4%), political archetypes gain modestly (+0.9-1.2%), lurker/power_user gain +7.1%. Mean improvement across diversity weights ranges from +0.062 (lurker) to +0.195 (tech_bro). The aggregate 7.9% improvement is not masking harm to any group. Platform scorer hurts most archetypes (trades user utility for platform engagement). See `results/archetype_pareto_analysis.json`.
 
 ### Pushing history-level causality
 
