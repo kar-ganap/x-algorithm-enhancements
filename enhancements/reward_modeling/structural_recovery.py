@@ -15,6 +15,7 @@ from dataclasses import dataclass
 import jax.numpy as jnp
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+from scipy.stats import kendalltau, spearmanr
 
 from enhancements.data import ContentTopic, UserArchetype, get_engagement_probs
 from enhancements.reward_modeling.pluralistic import (
@@ -28,10 +29,16 @@ from enhancements.reward_modeling.weights import NUM_ACTIONS
 class RecoveryMetrics:
     """Metrics for structural recovery evaluation."""
 
-    # Weight-based metrics
+    # Weight-based metrics (Pearson)
     weight_correlations: dict[int, tuple[str, float]]  # system_k -> (best_archetype, correlation)
     mean_correlation: float
     correlation_matrix: np.ndarray  # [K, num_archetypes]
+
+    # Rank-order metrics (scale-invariant)
+    kendall_matrix: np.ndarray  # [K, num_archetypes]
+    spearman_matrix: np.ndarray  # [K, num_archetypes]
+    mean_kendall: float
+    mean_spearman: float
 
     # Assignment-based metrics
     assignment_accuracy: float
@@ -117,6 +124,42 @@ def compute_correlation_matrix(
             correlation_matrix[k, i] = corr if not np.isnan(corr) else 0.0
 
     return correlation_matrix
+
+
+def compute_rank_correlation_matrix(
+    learned_weights: jnp.ndarray | np.ndarray,
+    gt_weights: dict[UserArchetype, np.ndarray],
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute rank-order correlations between learned and ground truth weights.
+
+    Unlike Pearson (sensitive to scale), Kendall's tau and Spearman rho
+    measure rank agreement — appropriate for BT-learned weights where
+    only the ordering of weights is identifiable, not magnitudes.
+
+    Args:
+        learned_weights: [K, num_actions] learned value system weights
+        gt_weights: Dictionary mapping archetype -> weights
+
+    Returns:
+        (kendall_matrix, spearman_matrix) each [K, num_archetypes]
+    """
+    K = learned_weights.shape[0]
+    archetypes = list(UserArchetype)
+    num_archetypes = len(archetypes)
+
+    kendall_matrix = np.zeros((K, num_archetypes), dtype=np.float32)
+    spearman_matrix = np.zeros((K, num_archetypes), dtype=np.float32)
+
+    for k in range(K):
+        learned_k = np.array(learned_weights[k])
+        for i, arch in enumerate(archetypes):
+            gt = gt_weights[arch]
+            tau, _ = kendalltau(learned_k, gt)
+            rho, _ = spearmanr(learned_k, gt)
+            kendall_matrix[k, i] = tau if not np.isnan(tau) else 0.0
+            spearman_matrix[k, i] = rho if not np.isnan(rho) else 0.0
+
+    return kendall_matrix, spearman_matrix
 
 
 def match_systems_to_archetypes(
@@ -308,12 +351,24 @@ def measure_structural_recovery(
     # Get ground truth
     gt_weights = get_all_ground_truth_weights()
 
-    # Compute correlation matrix
+    # Compute correlation matrices
     corr_matrix = compute_correlation_matrix(state.weights, gt_weights)
+    kendall_matrix, spearman_matrix = compute_rank_correlation_matrix(state.weights, gt_weights)
 
-    # Match systems to archetypes
+    # Match systems to archetypes (using Pearson for backward compat)
     matches = match_systems_to_archetypes(corr_matrix)
     mean_corr = np.mean([corr for _, corr in matches.values()])
+
+    # Compute rank means using same matching
+    archetypes = list(UserArchetype)
+    mean_kendall = float(np.mean([
+        kendall_matrix[k, archetypes.index(UserArchetype(arch))]
+        for k, (arch, _) in matches.items()
+    ]))
+    mean_spearman = float(np.mean([
+        spearman_matrix[k, archetypes.index(UserArchetype(arch))]
+        for k, (arch, _) in matches.items()
+    ]))
 
     # Compute assignment accuracy
     overall_acc, per_arch_acc, confusion = compute_assignment_accuracy(
@@ -336,8 +391,10 @@ def measure_structural_recovery(
             print(f"  System {k} -> {arch:15s} (correlation: {corr:.3f})")
 
         print("\n--- Weight Correlation ---")
-        print(f"  Mean correlation: {mean_corr:.3f}")
-        print("  Gate threshold:   0.80")
+        print(f"  Mean Pearson:   {mean_corr:.3f}")
+        print(f"  Mean Kendall τ: {mean_kendall:.3f}")
+        print(f"  Mean Spearman ρ:{mean_spearman:.3f}")
+        print("  Gate threshold:   0.80 (Pearson)")
         print(f"  Status:           {'PASS' if mean_corr > 0.8 else 'FAIL'}")
 
         print("\n--- Assignment Accuracy ---")
@@ -362,6 +419,10 @@ def measure_structural_recovery(
         weight_correlations=matches,
         mean_correlation=mean_corr,
         correlation_matrix=corr_matrix,
+        kendall_matrix=kendall_matrix,
+        spearman_matrix=spearman_matrix,
+        mean_kendall=mean_kendall,
+        mean_spearman=mean_spearman,
         assignment_accuracy=overall_acc,
         per_archetype_accuracy=per_arch_acc,
         confusion_matrix=confusion,

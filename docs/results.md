@@ -1515,7 +1515,7 @@ Goal: **recover ground truth archetypes** from preference learning.
 | 7 | **Two-stage (topic features)** | **99.3%** | **0.60** | **100%** |
 | 8 | **Two-stage (topic×action)** | **99.5%** | **0.54** | **100%** |
 
-**Key Finding**: All approaches fail the 0.8 weight correlation gate due to fundamental Bradley-Terry limitations.
+**Key Finding**: All approaches fail the 0.8 Pearson correlation gate. Rank-order analysis (Kendall τ = 0.612, Spearman ρ = 0.767) shows the model recovers broad action ordering better than magnitudes, but genuine recovery limitations remain beyond BT scale invariance. See `results/f4_rank_recovery.json`.
 
 ---
 
@@ -1680,9 +1680,11 @@ This is intrinsic to pairwise ranking losses and cannot be fixed by changing the
 | Metric | Value | Meaning |
 |--------|-------|---------|
 | Prediction accuracy | 99%+ | Model predicts preferences correctly |
-| Weight correlation | ~0.5 | Weights don't match ground truth |
+| Weight Pearson | ~0.6 | Magnitudes don't match ground truth |
+| Weight Spearman ρ | 0.77 | Rank ordering partially recovered |
+| Weight Kendall τ | 0.61 | Pairwise concordance ≈ Pearson |
 
-**These are independent.** Perfect prediction doesn't require recovering true weights.
+**These are independent.** Perfect prediction doesn't require recovering true weights. Rank metrics confirm partial scale artifact but genuine recovery limits.
 
 #### 3. Feature Engineering > Model Complexity
 
@@ -1746,10 +1748,11 @@ Users who like both sports AND tech don't scatter - they form coherent "hybrid" 
 |--------|-------|------|--------|
 | Preference prediction | 99.5% | >90% | ✅ PASS |
 | Cluster purity | 100% | >80% | ✅ PASS |
-| Weight correlation | 0.55 | >0.8 | ❌ FAIL (accepted) |
+| Weight Pearson | 0.60 | >0.8 | ❌ FAIL (accepted) |
+| Weight Spearman ρ | 0.77 | — | Rank recovery partial |
 | Interpretability | 98% | >90% | ✅ PASS |
 
-**Decision**: Accept weight correlation failure as fundamental limitation. The model works for production use (personalized ranking) even without recovering "true" weights.
+**Decision**: Accept weight correlation failure. Rank-order analysis confirmed it is partially but not primarily a BT scale artifact (Spearman 0.77 > Pearson 0.60, but Kendall 0.61 ≈ Pearson). Single-stakeholder BT achieves Pearson 0.94 — the pluralistic clustering step introduces the main recovery loss.
 
 ---
 

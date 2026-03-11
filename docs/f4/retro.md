@@ -195,7 +195,7 @@ F4's original question — "given stakeholder utility definitions, can we train 
 
 BT's scale invariance means absolute weight values are unrecoverable. But Phase 4 showed weight *differentiation* IS recoverable (cosine sim 0.478). The open question: what's the full identifiability frontier? Specifically:
 
-- **Rank-order recovery**: We measured Pearson correlation (0.554). We never measured Kendall's τ or Spearman ρ on weight ranks. If rank correlation is high, the low Pearson is purely a scale artifact and the model is learning correct structure.
+- **Rank-order recovery** *(resolved)*: Kendall's τ = 0.612, Spearman ρ = 0.767, Pearson = 0.604 (two-stage model, K=6). Spearman is notably higher (+0.163), indicating partial nonlinear/scale suppression of Pearson. But Kendall ≈ Pearson, meaning pairwise concordance isn't much better than linear fit. **Conclusion**: the low Pearson is partially but not primarily a scale artifact — the model recovers broad rank ordering (ρ=0.767) but has genuine weight recovery limitations. See `results/f4_rank_recovery.json`.
 - **Disagreement → differentiation bound**: P-S disagreement 35% → cosine sim 0.478. U-S disagreement 12% → cosine sim 0.884. Is there a formal relationship? Can we prove: "given X% label disagreement, the minimum achievable cosine similarity is Y"?
 - **What's recoverable vs not**: Weight magnitudes (no), weight ordering (likely yes), relative stakeholder importance (unknown). Characterize each.
 
@@ -353,11 +353,11 @@ Deeper analysis of the F4 journey, organized thematically.
 
 ### Weight recovery: fundamental or worth revisiting?
 
-The 0.554 Pearson correlation was declared a fundamental BT limitation and accepted. But there's a nuance we didn't explore: we only measured *Pearson correlation* (sensitive to scale). We never measured *rank-order correlation* — Kendall's τ or Spearman ρ on the weight vector.
+The 0.554 Pearson correlation was declared a fundamental BT limitation and accepted. We later ran rank-order recovery analysis to test whether this was a BT scale artifact.
 
-BT's scale invariance means `[1.0, 0.5, 0.3]` and `[2.0, 1.0, 0.6]` are equivalent for ranking. Pearson correlation between these is 1.0 (perfect), but that's the easy case. The harder question: does the *relative ordering* of actions match ground truth? If the ground truth says `favorite > repost > reply > ... > block > report`, does the learned model agree?
+**Result**: Kendall's τ = 0.612, Spearman ρ = 0.767, Pearson = 0.604 (two-stage model rerun). Spearman is higher by +0.163, confirming that nonlinear/scale effects partially suppress Pearson. The model recovers the *broad* rank ordering of action weights (ρ = 0.767) better than magnitudes. But Kendall τ ≈ Pearson, meaning pairwise concordance (how many pairs are correctly ordered) is similar to the linear correlation — many individual action pairs are still misordered.
 
-If rank correlation turns out to be high (say 0.85+), then the 0.554 Pearson is purely a scale artifact and the model IS learning the right structure — the 0.8 gate was the wrong metric, not an unmet bar. If rank correlation is also low, something else is going on. One experiment would resolve this.
+**Interpretation**: The 0.554 Pearson (or 0.604 in this rerun) is *partially* a scale artifact but the model has genuine recovery limitations. The 0.8 Pearson gate was too strict for BT-learned weights, but a hypothetical 0.85 Spearman gate would also fail (0.767). Single-stakeholder BT does better: user BT achieves Pearson 0.944, Spearman 0.840 — the pluralistic clustering step introduces the main recovery loss, not BT's scale invariance.
 
 ### The penalty-based hypothesis: reasonable but falsified
 
