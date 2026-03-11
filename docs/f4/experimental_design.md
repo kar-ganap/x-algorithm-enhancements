@@ -665,7 +665,26 @@ The platform-trained scorer produces concentrated scores (narrow range across to
 
 The society-trained scorer suffers from double-penalization: it already down-ranks divisive content, and then the diversity knob penalizes topic concentration. The two mechanisms partially duplicate each other, causing its frontier to sit below the hardcoded baseline for user utility (1.059 vs 1.087).
 
-Source: `results/pareto_comparison.json`.
+#### Per-archetype equity
+
+A natural concern: does the aggregate 5.7% user utility improvement mask harm to specific user groups? Per-archetype analysis (slicing the same 600-user recommendations by archetype, then averaging within each group) shows the user-trained scorer benefits **all 6 archetypes**:
+
+| Archetype | Hardcoded | Learned (user) | $\Delta$ | $\Delta\%$ |
+|-----------|-----------|----------------|----------|------------|
+| `sports_fan` | 1.305 | 1.342 | +0.037 | +2.8% |
+| `tech_bro` | 0.902 | 1.213 | +0.311 | +34.4% |
+| `political_L` | 1.203 | 1.218 | +0.015 | +1.2% |
+| `political_R` | 1.179 | 1.190 | +0.011 | +0.9% |
+| `lurker` | 0.902 | 0.967 | +0.064 | +7.1% |
+| `power_user` | 0.902 | 0.967 | +0.064 | +7.1% |
+
+(Values at $\alpha = 0.1$.)
+
+The largest beneficiary is `tech_bro` (+34.4%) — the learned scorer discovers their strong topic preferences. The smallest beneficiaries are the political archetypes (+0.9-1.2%), whose engagement patterns are more uniform across topics. No archetype is harmed.
+
+The platform-trained scorer, by contrast, hurts most archetypes (especially `sports_fan`, $-21.1\%$) because it over-optimizes for raw engagement at the expense of user satisfaction.
+
+Source: `results/archetype_pareto_analysis.json`.
 
 ---
 
@@ -716,7 +735,17 @@ The ~14 free parameters in `UtilityWeights` are hand-specified. We do not know h
 
 ### 10.3 Weight recovery
 
-BT training achieves 0.554 Pearson correlation between learned and ground-truth weights. This was initially declared a fundamental limitation, but may be an artifact of the metric: BT's scale invariance means Pearson correlation is not the right measure. Rank-order correlation (Kendall's $\tau$, Spearman $\rho$) on the weight vector has never been computed. If rank correlation is high, the 0.554 Pearson is purely a scale artifact and the model is learning the correct structure.
+BT training achieves 0.604 mean Pearson correlation between learned and ground-truth weights (two-stage model, K=6). Rank-order analysis reveals this is partially but not primarily a BT scale artifact:
+
+| Metric | Two-stage (K=6) | Single BT (user) |
+|--------|----------------|-------------------|
+| Pearson | 0.604 | 0.944 |
+| Kendall $\tau$ | 0.612 | 0.687 |
+| Spearman $\rho$ | 0.767 | 0.840 |
+
+Spearman $\rho$ is notably higher than Pearson (+0.163), confirming that nonlinear/scale effects partially suppress the linear correlation. The model recovers the broad rank ordering of action weights ($\rho = 0.767$) better than magnitudes. But Kendall $\tau \approx$ Pearson, meaning many individual action pairs are still misordered.
+
+The key insight: single-stakeholder BT achieves Pearson 0.944 — the pluralistic clustering step (K-means), not BT's scale invariance, introduces the main recovery loss. Source: `results/f4_rank_recovery.json`.
 
 ### 10.4 History-level causality
 

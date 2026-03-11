@@ -2181,6 +2181,8 @@ Calibration loss anchors predicted scores to ground-truth engagement rates. Plat
 
 5. **Label disagreement rate predicts differentiation**: Platform-Society (35% disagreement → cosine sim 0.478), User-Platform (23% → 0.830), User-Society (12% → 0.884). This is a direct, monotonic relationship.
 
+6. **Per-archetype equity**: The user-trained BT scorer benefits all 6 archetypes (no losers). At div_weight=0.1: tech_bro +34.4%, lurker/power_user +7.1%, political archetypes +0.9-1.2%, sports_fan +2.8%. The aggregate 7.9% improvement is not masking harm to any group. See `results/archetype_pareto_analysis.json`.
+
 ### Key Files
 
 ```
