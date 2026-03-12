@@ -11,6 +11,11 @@ Experiment 2 — Training-based LOSO:
   Train BT models for 2 observed stakeholders only, compute learned
   frontiers, compare against full 3-stakeholder trained frontier.
 
+Experiment 3 — Aggregation Proxy:
+  Given observed weight vectors, find best proxy for hidden stakeholder.
+  Oracle linear proxy (ceiling), diversity knob (practical), and
+  α-extrapolation (structural).
+
 Usage:
     uv run python scripts/analyze_partial_observation.py
 """
@@ -675,95 +680,563 @@ def run_exp2_training(seeds: list[int]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Exp 3: Optimal Aggregation Proxy
+# ---------------------------------------------------------------------------
+
+# Affine calibration from results/alpha_recovery.json (Direction 1)
+ALPHA_AFFINE_SLOPE = 1.3207
+ALPHA_AFFINE_INTERCEPT = -0.0619
+
+
+def load_trained_weight_vectors() -> dict[str, np.ndarray]:
+    """Load pre-trained BT weight vectors from results/loss_experiments/."""
+    vectors: dict[str, np.ndarray] = {}
+    for s in STAKEHOLDERS:
+        path = os.path.join(
+            project_root, f"results/loss_experiments/bradley_terry_{s}.json",
+        )
+        with open(path) as f:
+            data = json.load(f)
+        vectors[s] = np.array(data["weights_vector"], dtype=np.float64)
+    return vectors
+
+
+def compute_oracle_linear_proxy(
+    w_obs1: np.ndarray,
+    w_obs2: np.ndarray,
+    w_hidden: np.ndarray,
+) -> dict[str, Any]:
+    """Find optimal a, b such that a*w_obs1 + b*w_obs2 ≈ w_hidden (least-squares)."""
+    X = np.column_stack([w_obs1, w_obs2])
+    coeffs, _, _, _ = np.linalg.lstsq(X, w_hidden, rcond=None)
+    w_proxy = X @ coeffs
+    cos_sim = float(
+        np.dot(w_proxy, w_hidden)
+        / (np.linalg.norm(w_proxy) * np.linalg.norm(w_hidden) + 1e-12)
+    )
+    residual_norm = float(np.linalg.norm(w_hidden - w_proxy))
+    ss_res = float(np.sum((w_hidden - w_proxy) ** 2))
+    ss_tot = float(np.sum((w_hidden - np.mean(w_hidden)) ** 2))
+    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 1.0
+    return {
+        "coefficients": (float(coeffs[0]), float(coeffs[1])),
+        "proxy_weights": w_proxy,
+        "cosine_sim": cos_sim,
+        "residual_norm": residual_norm,
+        "r_squared": r_squared,
+    }
+
+
+def recover_alpha_from_weights(weights: np.ndarray, calibrate: bool = True) -> float:
+    """Recover α as -mean(w_neg)/mean(w_pos), optionally with affine calibration."""
+    pos_mean = float(np.mean(weights[POSITIVE_INDICES]))
+    neg_mean = float(np.mean(weights[NEGATIVE_INDICES]))
+    if abs(pos_mean) < 1e-12:
+        return 0.0
+    raw = -neg_mean / pos_mean
+    if calibrate:
+        return (raw - ALPHA_AFFINE_INTERCEPT) / ALPHA_AFFINE_SLOPE
+    return raw
+
+
+def synthesize_weights_interpolation(
+    w1: np.ndarray, alpha1: float,
+    w2: np.ndarray, alpha2: float,
+    alpha_target: float,
+) -> np.ndarray:
+    """Linear interpolation/extrapolation in weight space."""
+    if abs(alpha1 - alpha2) < 1e-12:
+        return (w1 + w2) / 2.0
+    t = (alpha_target - alpha2) / (alpha1 - alpha2)
+    return w2 + t * (w1 - w2)
+
+
+def synthesize_weights_structural(
+    observed_weights: dict[str, np.ndarray],
+    alpha_target: float,
+) -> np.ndarray:
+    """Structural synthesis: mean pos/neg/neutral + target α scaling."""
+    all_w = np.stack(list(observed_weights.values()))
+    mean_w = np.mean(all_w, axis=0)
+
+    pos_mean = float(np.mean(mean_w[POSITIVE_INDICES]))
+    all_special = set(POSITIVE_INDICES) | set(NEGATIVE_INDICES)
+    neutral_indices = [i for i in range(NUM_ACTIONS) if i not in all_special]
+
+    result = np.zeros(NUM_ACTIONS, dtype=np.float64)
+    result[POSITIVE_INDICES] = pos_mean
+    result[NEGATIVE_INDICES] = -alpha_target * abs(pos_mean)
+    result[neutral_indices] = mean_w[neutral_indices]
+    return result
+
+
+def find_best_hidden_utility(
+    frontier: list[UtilityPoint],
+    hidden_dim: str,
+) -> tuple[float, float]:
+    """Find point maximizing hidden utility. Returns (diversity_weight, utility)."""
+    if not frontier:
+        return (0.0, 0.0)
+    best = max(frontier, key=lambda p: p[hidden_dim])
+    return (best.get("diversity_weight", 0.0), best[hidden_dim])
+
+
+def compute_recovery_rate(
+    proxy_utility: float,
+    no_proxy_utility: float,
+    full_utility: float,
+) -> float:
+    """Recovery rate = (proxy - no_proxy) / (full - no_proxy)."""
+    gap = full_utility - no_proxy_utility
+    if abs(gap) < 1e-12:
+        return 1.0
+    return (proxy_utility - no_proxy_utility) / gap
+
+
+def _evaluate_proxy_on_seed(
+    proxy_weights: np.ndarray,
+    base_probs: np.ndarray,
+    user_archetypes: np.ndarray,
+    content_topics: np.ndarray,
+    full_pareto: list[UtilityPoint],
+    loso_frontier: list[UtilityPoint],
+    hidden_dim: str,
+    observed_dims: list[str],
+) -> dict[str, float]:
+    """Evaluate a proxy weight vector on one seed's data.
+
+    Uses proxy to generate frontier, extracts 2D Pareto on observed dims,
+    and measures hidden utility / recovery rate.
+    """
+    proxy_frontier = compute_learned_frontier(
+        proxy_weights, base_probs, DIVERSITY_WEIGHTS,
+        user_archetypes, content_topics,
+    )
+    proxy_loso = extract_pareto_front_2d(
+        proxy_frontier, observed_dims[0], observed_dims[1],
+    )
+    # Hidden utility on the proxy's 2D Pareto front
+    _, proxy_best_hidden = find_best_hidden_utility(proxy_loso, hidden_dim)
+
+    # Baselines
+    full_best_hidden = max(p[hidden_dim] for p in full_pareto)
+    _, loso_best_hidden = find_best_hidden_utility(loso_frontier, hidden_dim)
+
+    recovery = compute_recovery_rate(proxy_best_hidden, loso_best_hidden, full_best_hidden)
+
+    regret = compute_regret(proxy_loso, full_pareto, hidden_dim)
+
+    return {
+        "proxy_best_hidden": proxy_best_hidden,
+        "loso_best_hidden": loso_best_hidden,
+        "full_best_hidden": full_best_hidden,
+        "recovery_rate": recovery,
+        "avg_regret": regret["avg_regret"],
+        "max_regret": regret["max_regret"],
+    }
+
+
+def run_exp3_proxy(
+    seeds: list[int],
+) -> dict[str, Any]:
+    """Exp 3: Optimal aggregation proxy for hidden stakeholder."""
+    flush_print("\n" + "=" * 60)
+    flush_print("EXPERIMENT 3: AGGREGATION PROXY")
+    flush_print("=" * 60)
+
+    # Load pre-trained weight vectors (for 3a oracle and 3c alpha recovery)
+    trained_weights = load_trained_weight_vectors()
+    flush_print("  Loaded pre-trained weight vectors")
+
+    results: dict[str, Any] = {}
+
+    for config in LOSO_CONFIGS:
+        hidden = config["hidden"]
+        hidden_dim = config["hidden_dim"]
+        observed_dims = config["observed_dims"]
+        observed_stakeholders = [s for s in STAKEHOLDERS if s != hidden]
+
+        flush_print(f"\n  Hidden: {hidden}")
+
+        # --- 3a: Oracle linear proxy (one set of coefficients) ---
+        w_obs1 = trained_weights[observed_stakeholders[0]]
+        w_obs2 = trained_weights[observed_stakeholders[1]]
+        w_hidden = trained_weights[hidden]
+
+        oracle_result = compute_oracle_linear_proxy(w_obs1, w_obs2, w_hidden)
+        oracle_proxy = oracle_result["proxy_weights"]
+        flush_print(
+            f"    3a oracle: cosine={oracle_result['cosine_sim']:.4f}"
+            f"  residual={oracle_result['residual_norm']:.4f}"
+            f"  R²={oracle_result['r_squared']:.4f}"
+            f"  coeffs=({oracle_result['coefficients'][0]:.3f}, {oracle_result['coefficients'][1]:.3f})"
+        )
+
+        # --- 3c: Alpha recovery + synthesis ---
+        alpha_obs = {}
+        for s in observed_stakeholders:
+            alpha_obs[s] = recover_alpha_from_weights(trained_weights[s], calibrate=True)
+        alpha_obs_raw = {}
+        for s in observed_stakeholders:
+            alpha_obs_raw[s] = recover_alpha_from_weights(trained_weights[s], calibrate=False)
+        flush_print(
+            "    3c α recovery (calibrated): "
+            + ", ".join(f"{s}={alpha_obs[s]:.3f}" for s in observed_stakeholders)
+        )
+
+        # Known stakeholder alphas for ground truth
+        true_alphas = {"user": 1.0, "platform": 0.3, "society": 4.0}
+
+        # Synthesis variants
+        obs_weights = {s: trained_weights[s] for s in observed_stakeholders}
+        alpha_true_hidden = true_alphas[hidden]
+        alpha_max_obs_cal = max(alpha_obs.values())
+        alpha_blind = 2.0 * alpha_max_obs_cal
+
+        synthesis_configs: dict[str, dict[str, Any]] = {
+            "interp_oracle_alpha": {
+                "method": "interpolation",
+                "alpha_target": alpha_true_hidden,
+                "label": f"interp α={alpha_true_hidden:.1f} (oracle)",
+            },
+            "struct_oracle_alpha": {
+                "method": "structural",
+                "alpha_target": alpha_true_hidden,
+                "label": f"struct α={alpha_true_hidden:.1f} (oracle)",
+            },
+            "interp_blind_alpha": {
+                "method": "interpolation",
+                "alpha_target": alpha_blind,
+                "label": f"interp α={alpha_blind:.1f} (blind 2×max)",
+            },
+            "struct_blind_alpha": {
+                "method": "structural",
+                "alpha_target": alpha_blind,
+                "label": f"struct α={alpha_blind:.1f} (blind 2×max)",
+            },
+        }
+
+        synth_weights: dict[str, np.ndarray] = {}
+        for key, sc in synthesis_configs.items():
+            if sc["method"] == "interpolation":
+                s1, s2 = observed_stakeholders
+                synth_weights[key] = synthesize_weights_interpolation(
+                    trained_weights[s1], alpha_obs[s1],
+                    trained_weights[s2], alpha_obs[s2],
+                    sc["alpha_target"],
+                )
+            else:
+                synth_weights[key] = synthesize_weights_structural(
+                    obs_weights, sc["alpha_target"],
+                )
+            # Report cosine with true hidden
+            cos = float(
+                np.dot(synth_weights[key], w_hidden)
+                / (np.linalg.norm(synth_weights[key]) * np.linalg.norm(w_hidden) + 1e-12)
+            )
+            flush_print(f"    3c {sc['label']}: cosine={cos:.4f}")
+
+        # --- Per-seed evaluation ---
+        seed_results: list[dict[str, Any]] = []
+
+        for seed_idx, seed in enumerate(seeds):
+            data = generate_synthetic_data(
+                num_users=NUM_USERS, num_content=NUM_CONTENT,
+                num_topics=NUM_TOPICS, seed=seed,
+            )
+            base_probs = build_base_action_probs(data)
+
+            # Full frontier + Pareto
+            full_frontier = compute_full_frontier(
+                base_probs, data["user_archetypes"], data["content_topics"],
+            )
+            full_pareto = [
+                p for p in full_frontier
+                if not is_dominated(p, full_frontier, UTILITY_DIMS)
+            ]
+            # LOSO baseline
+            loso_frontier = extract_pareto_front_2d(
+                full_frontier, observed_dims[0], observed_dims[1],
+            )
+
+            seed_data: dict[str, Any] = {}
+
+            # 3a: Oracle proxy evaluation
+            seed_data["oracle_linear"] = _evaluate_proxy_on_seed(
+                oracle_proxy, base_probs,
+                data["user_archetypes"], data["content_topics"],
+                full_pareto, loso_frontier, hidden_dim, observed_dims,
+            )
+
+            # 3b: Diversity knob (from full frontier data, no proxy weights)
+            full_best_hidden = max(p[hidden_dim] for p in full_pareto)
+            _, loso_best_hidden = find_best_hidden_utility(loso_frontier, hidden_dim)
+            # Oracle best dw
+            dw_oracle, util_oracle = find_best_hidden_utility(full_frontier, hidden_dim)
+            # Fixed dw values
+            dw_results: dict[str, Any] = {
+                "oracle_best_dw": {
+                    "diversity_weight": dw_oracle,
+                    "hidden_utility": util_oracle,
+                    "recovery_rate": compute_recovery_rate(
+                        util_oracle, loso_best_hidden, full_best_hidden,
+                    ),
+                },
+            }
+            for fixed_dw in [0.3, 0.5, 0.7]:
+                # Find the frontier point closest to this dw
+                closest = min(
+                    full_frontier, key=lambda p: abs(p["diversity_weight"] - fixed_dw),
+                )
+                dw_results[f"dw_{fixed_dw}"] = {
+                    "diversity_weight": closest["diversity_weight"],
+                    "hidden_utility": closest[hidden_dim],
+                    "recovery_rate": compute_recovery_rate(
+                        closest[hidden_dim], loso_best_hidden, full_best_hidden,
+                    ),
+                }
+            seed_data["diversity_knob"] = dw_results
+
+            # 3c: Alpha extrapolation variants
+            for key in synthesis_configs:
+                seed_data[key] = _evaluate_proxy_on_seed(
+                    synth_weights[key], base_probs,
+                    data["user_archetypes"], data["content_topics"],
+                    full_pareto, loso_frontier, hidden_dim, observed_dims,
+                )
+
+            seed_results.append(seed_data)
+            flush_print(f"    seed {seed_idx + 1}/{len(seeds)} done")
+
+        # --- Aggregate across seeds ---
+        proxy_methods = (
+            ["oracle_linear"]
+            + list(synthesis_configs.keys())
+        )
+        aggregated: dict[str, Any] = {}
+
+        for method in proxy_methods:
+            recovery_vals = [s[method]["recovery_rate"] for s in seed_results]
+            regret_vals = [s[method]["avg_regret"] for s in seed_results]
+            aggregated[method] = {
+                "recovery_rate_mean": float(np.mean(recovery_vals)),
+                "recovery_rate_std": float(np.std(recovery_vals)),
+                "avg_regret_mean": float(np.mean(regret_vals)),
+                "avg_regret_std": float(np.std(regret_vals)),
+            }
+            flush_print(
+                f"    {method}: recovery={aggregated[method]['recovery_rate_mean']:.3f}"
+                f"±{aggregated[method]['recovery_rate_std']:.3f}"
+                f"  regret={aggregated[method]['avg_regret_mean']:.3f}"
+            )
+
+        # Diversity knob aggregation
+        dw_keys = ["oracle_best_dw", "dw_0.3", "dw_0.5", "dw_0.7"]
+        dw_agg: dict[str, Any] = {}
+        for dk in dw_keys:
+            rec_vals = [s["diversity_knob"][dk]["recovery_rate"] for s in seed_results]
+            dw_agg[dk] = {
+                "recovery_rate_mean": float(np.mean(rec_vals)),
+                "recovery_rate_std": float(np.std(rec_vals)),
+            }
+            flush_print(
+                f"    diversity_knob/{dk}: recovery={dw_agg[dk]['recovery_rate_mean']:.3f}"
+                f"±{dw_agg[dk]['recovery_rate_std']:.3f}"
+            )
+        aggregated["diversity_knob"] = dw_agg
+
+        results[f"hide_{hidden}"] = {
+            "oracle_proxy_info": {
+                "coefficients": oracle_result["coefficients"],
+                "cosine_sim": oracle_result["cosine_sim"],
+                "residual_norm": oracle_result["residual_norm"],
+                "r_squared": oracle_result["r_squared"],
+            },
+            "alpha_recovery": {
+                s: {"calibrated": alpha_obs[s], "raw": alpha_obs_raw[s]}
+                for s in observed_stakeholders
+            },
+            "synthesis_cosines": {
+                key: float(
+                    np.dot(synth_weights[key], w_hidden)
+                    / (np.linalg.norm(synth_weights[key]) * np.linalg.norm(w_hidden) + 1e-12)
+                )
+                for key in synthesis_configs
+            },
+            "aggregated": aggregated,
+            "per_seed": seed_results,
+        }
+
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 
+OUTPUT_PATH = os.path.join(project_root, "results/partial_observation.json")
+
+
+def load_cached_results() -> dict[str, Any]:
+    """Load previously saved results from JSON, or return empty dict."""
+    if os.path.exists(OUTPUT_PATH):
+        with open(OUTPUT_PATH) as f:
+            return json.load(f)
+    return {}
+
+
+def save_results(output: dict[str, Any]) -> None:
+    """Save results to JSON."""
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    with open(OUTPUT_PATH, "w") as f:
+        json.dump(output, f, indent=2, cls=NumpyEncoder)
+    flush_print(f"\nResults saved to: {OUTPUT_PATH}")
+
+
+def parse_experiments(args: list[str]) -> set[int]:
+    """Parse --exp flag to determine which experiments to run.
+
+    Usage: --exp 3       (run only Exp 3)
+           --exp 1,3     (run Exp 1 and 3)
+           (no flag)     (run all)
+    """
+    for i, arg in enumerate(args):
+        if arg == "--exp" and i + 1 < len(args):
+            return {int(x) for x in args[i + 1].split(",")}
+    return {1, 2, 3}
+
+
 def main() -> None:
     t0 = time.time()
+    requested = parse_experiments(sys.argv[1:])
 
     flush_print("=" * 60)
     flush_print("DIRECTION 3: PARTIAL OBSERVATION ANALYSIS")
     flush_print("=" * 60)
     flush_print(f"Seeds: {N_SEEDS}, Users: {NUM_USERS}, Content: {NUM_CONTENT}")
     flush_print(f"Diversity weights: {len(DIVERSITY_WEIGHTS)} points (step 0.05)")
+    flush_print(f"Experiments: {sorted(requested)}")
 
     seeds = [BASE_SEED + i * 100 for i in range(N_SEEDS)]
+    cached = load_cached_results()
 
     # Exp 1
-    exp1_results = run_exp1_geometry(seeds)
+    if 1 in requested:
+        exp1_results = run_exp1_geometry(seeds)
+    elif "exp1_loso_geometry" in cached:
+        exp1_results = cached["exp1_loso_geometry"]
+        flush_print("\n  Exp 1: loaded from cache")
+    else:
+        flush_print("\n  WARNING: Exp 1 not cached and not requested, skipping")
+        exp1_results = {}
 
     # Exp 2
-    exp2_results = run_exp2_training(seeds)
+    if 2 in requested:
+        exp2_results = run_exp2_training(seeds)
+    elif "exp2_training_loso" in cached:
+        exp2_results = cached["exp2_training_loso"]
+        flush_print("  Exp 2: loaded from cache")
+    else:
+        flush_print("  WARNING: Exp 2 not cached and not requested, skipping")
+        exp2_results = {}
+
+    # Exp 3
+    if 3 in requested:
+        exp3_results = run_exp3_proxy(seeds)
+    elif "exp3_aggregation_proxy" in cached:
+        exp3_results = cached["exp3_aggregation_proxy"]
+        flush_print("  Exp 3: loaded from cache")
+    else:
+        exp3_results = {}
 
     # Summary
     flush_print("\n" + "=" * 60)
     flush_print("SUMMARY")
     flush_print("=" * 60)
 
-    flush_print("\nExp 1 — LOSO Geometry:")
-    flush_print(f"  {'Hidden':<10} {'Dom.Frac':>10} {'Avg Regret':>12} {'Max Regret':>12} {'HV Ratio':>10}")
-    flush_print("  " + "-" * 56)
-    for config in LOSO_CONFIGS:
-        hidden = config["hidden"]
-        m = exp1_results[f"hide_{hidden}"]["metrics_mean"]
-        flush_print(
-            f"  {hidden:<10} "
-            f"{m['dominated_fraction']:>10.3f} "
-            f"{m['avg_regret']:>12.4f} "
-            f"{m['max_regret']:>12.4f} "
-            f"{m['hypervolume_ratio_observed_2d']:>10.4f}"
-        )
+    if exp1_results:
+        flush_print("\nExp 1 — LOSO Geometry:")
+        flush_print(f"  {'Hidden':<10} {'Dom.Frac':>10} {'Avg Regret':>12} {'Max Regret':>12} {'HV Ratio':>10}")
+        flush_print("  " + "-" * 56)
+        for config in LOSO_CONFIGS:
+            hidden = config["hidden"]
+            m = exp1_results[f"hide_{hidden}"]["metrics_mean"]
+            flush_print(
+                f"  {hidden:<10} "
+                f"{m['dominated_fraction']:>10.3f} "
+                f"{m['avg_regret']:>12.4f} "
+                f"{m['max_regret']:>12.4f} "
+                f"{m['hypervolume_ratio_observed_2d']:>10.4f}"
+            )
 
-    flush_print("\nExp 2 — Training-based LOSO (combined best-of-two scorer):")
-    flush_print(f"  {'Hidden':<10} {'Dom.Frac':>10} {'Avg Regret':>12} {'Max Regret':>12}")
-    flush_print("  " + "-" * 46)
-    for config in LOSO_CONFIGS:
-        hidden = config["hidden"]
-        m = exp2_results[f"hide_{hidden}"]["combined_metrics_mean"]
-        flush_print(
-            f"  {hidden:<10} "
-            f"{m['dominated_fraction']:>10.3f} "
-            f"{m['avg_regret']:>12.4f} "
-            f"{m['max_regret']:>12.4f}"
-        )
+    if exp2_results:
+        flush_print("\nExp 2 — Training-based LOSO (combined best-of-two scorer):")
+        flush_print(f"  {'Hidden':<10} {'Dom.Frac':>10} {'Avg Regret':>12} {'Max Regret':>12}")
+        flush_print("  " + "-" * 46)
+        for config in LOSO_CONFIGS:
+            hidden = config["hidden"]
+            m = exp2_results[f"hide_{hidden}"]["combined_metrics_mean"]
+            flush_print(
+                f"  {hidden:<10} "
+                f"{m['dominated_fraction']:>10.3f} "
+                f"{m['avg_regret']:>12.4f} "
+                f"{m['max_regret']:>12.4f}"
+            )
 
-    # Degradation ranking
-    exp1_ranking = sorted(
-        LOSO_CONFIGS,
-        key=lambda c: exp1_results[f"hide_{c['hidden']}"]["metrics_mean"]["avg_regret"],
-        reverse=True,
-    )
-    flush_print(
-        f"\n  Degradation ranking (Exp 1, by avg regret): "
-        f"{' > '.join(c['hidden'] for c in exp1_ranking)}"
-    )
+    if exp3_results:
+        flush_print("\nExp 3 — Aggregation Proxy (recovery rate):")
+        hdr = f"  {'Hidden':<10} {'Oracle':>10} {'IntOrc':>10} {'StrOrc':>10} {'DW0.5':>10} {'IntBld':>10}"
+        flush_print(hdr)
+        flush_print("  " + "-" * 62)
+        for config in LOSO_CONFIGS:
+            hidden = config["hidden"]
+            agg = exp3_results[f"hide_{hidden}"]["aggregated"]
+            dw_agg = agg.get("diversity_knob", {})
+            flush_print(
+                f"  {hidden:<10} "
+                f"{agg['oracle_linear']['recovery_rate_mean']:>10.3f} "
+                f"{agg['interp_oracle_alpha']['recovery_rate_mean']:>10.3f} "
+                f"{agg['struct_oracle_alpha']['recovery_rate_mean']:>10.3f} "
+                f"{dw_agg.get('dw_0.5', {}).get('recovery_rate_mean', 0):>10.3f} "
+                f"{agg['interp_blind_alpha']['recovery_rate_mean']:>10.3f}"
+            )
+
+    if exp1_results:
+        exp1_ranking = sorted(
+            LOSO_CONFIGS,
+            key=lambda c: exp1_results[f"hide_{c['hidden']}"]["metrics_mean"]["avg_regret"],
+            reverse=True,
+        )
+        flush_print(
+            f"\n  Degradation ranking (Exp 1, by avg regret): "
+            f"{' > '.join(c['hidden'] for c in exp1_ranking)}"
+        )
 
     wall_time = time.time() - t0
     flush_print(f"\n  Wall time: {wall_time:.1f}s ({wall_time / 60:.1f}m)")
 
-    # Save results
-    output = {
-        "config": {
-            "n_seeds": N_SEEDS,
-            "num_users": NUM_USERS,
-            "num_content": NUM_CONTENT,
-            "num_topics": NUM_TOPICS,
-            "top_k": TOP_K,
-            "diversity_weights": DIVERSITY_WEIGHTS,
-            "seeds": seeds,
-            "n_pairs_exp2": N_PAIRS,
-            "num_epochs_exp2": NUM_EPOCHS,
-        },
-        "exp1_loso_geometry": exp1_results,
-        "exp2_training_loso": exp2_results,
+    # Save results (merge with cached)
+    output = cached.copy()
+    output["config"] = {
+        "n_seeds": N_SEEDS,
+        "num_users": NUM_USERS,
+        "num_content": NUM_CONTENT,
+        "num_topics": NUM_TOPICS,
+        "top_k": TOP_K,
+        "diversity_weights": DIVERSITY_WEIGHTS,
+        "seeds": seeds,
+        "n_pairs_exp2": N_PAIRS,
+        "num_epochs_exp2": NUM_EPOCHS,
     }
+    if exp1_results:
+        output["exp1_loso_geometry"] = exp1_results
+    if exp2_results:
+        output["exp2_training_loso"] = exp2_results
+    if exp3_results:
+        output["exp3_aggregation_proxy"] = exp3_results
 
-    output_path = os.path.join(project_root, "results/partial_observation.json")
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(output, f, indent=2, cls=NumpyEncoder)
-    flush_print(f"\nResults saved to: {output_path}")
+    save_results(output)
 
 
 if __name__ == "__main__":

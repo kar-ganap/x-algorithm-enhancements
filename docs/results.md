@@ -2144,7 +2144,20 @@ Key findings: (1) Recovery is remarkably robust — tolerates 20% label noise an
 | Platform | 0.369±0.062 | 0.308 | 0–8.5% |
 | User | 0.111±0.013 | 0.141 | 6.4–14.4% |
 
-Key findings: (1) **Society is the most dangerous stakeholder to miss** — 10× more regret than user, confirming that the least-observable stakeholder is the most costly to ignore. (2) The 2D-Pareto frontiers are rarely dominated in 3D (0% for society/platform) — the cost of partial observation is entirely in the hidden dimension, not in the observed utilities. (3) Geometric (oracle) and training-based LOSO produce highly consistent degradation rankings: society > platform > user. (4) The degradation ranking matches the pairwise correlation structure: society has the lowest cosine similarity (0.478) with the most-correlated observed stakeholder. See `results/partial_observation.json`.
+Key findings: (1) **Society is the most dangerous stakeholder to miss** — 10× more regret than user, confirming that the least-observable stakeholder is the most costly to ignore. (2) The 2D-Pareto frontiers are rarely dominated in 3D (0% for society/platform) — the cost of partial observation is entirely in the hidden dimension, not in the observed utilities. (3) Geometric (oracle) and training-based LOSO produce highly consistent degradation rankings: society > platform > user. (4) The degradation ranking matches the pairwise correlation structure: society has the lowest cosine similarity (0.478) with the most-correlated observed stakeholder.
+
+**Aggregation proxy (Exp 3)**: Can we recover the hidden stakeholder's utility using proxies? Six methods tested (hiding society, 5 seeds):
+
+| Proxy | Recovery Rate | Type |
+|-------|--------------|------|
+| α-interpolation (oracle α=4.0) | **1.000** | Structural, oracle α |
+| α-interpolation (blind α=2.2) | **1.000** | Structural, heuristic α |
+| Diversity knob (dw=0.7) | **0.699** | Practical, no oracle |
+| Oracle linear (LS proxy) | 0.566 | Oracle, ceiling |
+| Diversity knob (dw=0.5) | 0.415 | Practical, no oracle |
+| Structural synthesis (oracle α) | 0.153 | Structural, oracle α |
+
+Key findings: (1) **Weight-space interpolation achieves perfect recovery** when the utility family structure is known — even with a heuristic α (2.2 instead of true 4.0). (2) The diversity knob at dw=0.7 recovers 70% of society's utility without any oracle knowledge — the best practical approach. (3) Oracle linear proxy only recovers 57%, below the diversity knob, because least-squares regression dilutes action-level structure. (4) Structural synthesis (fixed pos/neg templates) is too crude (15%) — it ignores within-group weight variation. See `results/partial_observation.json`.
 
 Weight vectors show clear stakeholder patterns:
 

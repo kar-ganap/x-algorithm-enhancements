@@ -750,7 +750,19 @@ This result means practitioners can **predict differentiation before training** 
   | Platform | 0.369 ± 0.042 | 0.308 ± 0.014 | U-P cosine = 0.830, disagreement = 23% |
   | User | 0.111 ± 0.029 | 0.141 ± 0.025 | U-S cosine = 0.884, disagreement = 12% |
 
-  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) HV ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection. Follow-up experiments (optimal aggregation proxy, partial observation sampling, degradation bounds) are designed but pending. See `results/partial_observation.json` and `scripts/analyze_partial_observation.py`.
+  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) HV ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection.
+
+- **Aggregation proxy (Exp 3)**: Tested 6 proxy methods for recovering the hidden stakeholder's utility. Hiding society (primary case):
+
+  | Proxy | Recovery Rate | Type |
+  |---|---|---|
+  | α-interpolation (oracle α=4.0) | 1.000 | Weight-space extrapolation with known α |
+  | α-interpolation (blind α=2.2) | 1.000 | Same, heuristic α (2× max observed) |
+  | Diversity knob (dw=0.7) | 0.699 | Best practical — no oracle |
+  | Oracle linear (LS proxy) | 0.566 | Best linear combination of w_user, w_platform |
+  | Structural synthesis (oracle α) | 0.153 | Pos/neg template too crude |
+
+  Key insights: (1) weight-space interpolation achieves perfect recovery because it preserves action-level structure learned during BT training; (2) the diversity knob at dw=0.7 is the best practical approach (70% recovery, no oracle needed); (3) oracle linear proxy only achieves 57% — below the diversity knob — because LS regression dilutes the per-action weight patterns; (4) for platform/user hiding, absolute regret is small (<0.1), making recovery rates noisy and less meaningful. Follow-up experiments (partial observation sampling, degradation bounds) pending. See `results/partial_observation.json` and `scripts/analyze_partial_observation.py`.
 
 ### 9.3 External validation
 

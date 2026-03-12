@@ -2,8 +2,12 @@
 
 Self-contained tests with no pipeline imports.
 Verifies: 2D Pareto extraction, dominance checks, regret computation,
-hypervolume indicator, frontier distance, and LOSO frontier construction.
+hypervolume indicator, frontier distance, LOSO frontier construction,
+and Exp 3 proxy helpers (oracle linear proxy, α-extrapolation,
+recovery rate, diversity knob proxy).
 """
+
+from typing import Any
 
 import numpy as np
 
@@ -454,3 +458,270 @@ class TestPartialObservationIntegration:
 
         # Hiding the anti-correlated dimension produces more regret
         assert regret_s["max_regret"] > regret_u["max_regret"]
+
+
+# ---------------------------------------------------------------------------
+# Exp 3: Standalone helpers for proxy experiments
+# ---------------------------------------------------------------------------
+
+
+def compute_oracle_linear_proxy(
+    w_obs1: np.ndarray,
+    w_obs2: np.ndarray,
+    w_hidden: np.ndarray,
+) -> dict[str, Any]:
+    """Find optimal a, b such that a*w_obs1 + b*w_obs2 ≈ w_hidden (least-squares)."""
+    X = np.column_stack([w_obs1, w_obs2])
+    coeffs, _, _, _ = np.linalg.lstsq(X, w_hidden, rcond=None)
+    w_proxy = X @ coeffs
+    cos_sim = float(
+        np.dot(w_proxy, w_hidden)
+        / (np.linalg.norm(w_proxy) * np.linalg.norm(w_hidden) + 1e-12)
+    )
+    residual_norm = float(np.linalg.norm(w_hidden - w_proxy))
+    return {
+        "coefficients": (float(coeffs[0]), float(coeffs[1])),
+        "proxy_weights": w_proxy,
+        "cosine_sim": cos_sim,
+        "residual_norm": residual_norm,
+    }
+
+
+def recover_alpha_from_weights(
+    weights: np.ndarray,
+    pos_indices: list[int],
+    neg_indices: list[int],
+) -> float:
+    """Recover α as -mean(w_neg) / mean(w_pos)."""
+    pos_mean = float(np.mean(weights[pos_indices]))
+    neg_mean = float(np.mean(weights[neg_indices]))
+    if abs(pos_mean) < 1e-12:
+        return 0.0
+    return -neg_mean / pos_mean
+
+
+def synthesize_weights_interpolation(
+    w1: np.ndarray,
+    alpha1: float,
+    w2: np.ndarray,
+    alpha2: float,
+    alpha_target: float,
+) -> np.ndarray:
+    """Linear interpolation/extrapolation in weight space."""
+    if abs(alpha1 - alpha2) < 1e-12:
+        return (w1 + w2) / 2.0
+    t = (alpha_target - alpha2) / (alpha1 - alpha2)
+    return w2 + t * (w1 - w2)
+
+
+def synthesize_weights_structural(
+    observed_weights: dict[str, np.ndarray],
+    alpha_target: float,
+    pos_indices: list[int],
+    neg_indices: list[int],
+) -> np.ndarray:
+    """Structural synthesis: mean pos/neg/neutral patterns + target α scaling."""
+    all_w = np.stack(list(observed_weights.values()))
+    mean_w = np.mean(all_w, axis=0)
+
+    pos_mean = float(np.mean(mean_w[pos_indices]))
+    all_indices = set(pos_indices) | set(neg_indices)
+    neutral_indices = [i for i in range(len(mean_w)) if i not in all_indices]
+
+    result = np.zeros_like(mean_w)
+    result[pos_indices] = pos_mean
+    result[neg_indices] = -alpha_target * abs(pos_mean)
+    result[neutral_indices] = mean_w[neutral_indices]
+    return result
+
+
+def compute_recovery_rate(
+    proxy_utility: float,
+    no_proxy_utility: float,
+    full_utility: float,
+) -> float:
+    """Recovery rate = (proxy - no_proxy) / (full - no_proxy)."""
+    gap = full_utility - no_proxy_utility
+    if abs(gap) < 1e-12:
+        return 1.0  # No gap to close
+    return (proxy_utility - no_proxy_utility) / gap
+
+
+def find_best_hidden_utility(
+    frontier: list[UtilityPoint],
+    hidden_dim: str,
+) -> tuple[float, float]:
+    """Find the point maximizing hidden utility. Returns (diversity_weight, utility)."""
+    if not frontier:
+        return (0.0, 0.0)
+    best = max(frontier, key=lambda p: p[hidden_dim])
+    return (best.get("diversity_weight", 0.0), best[hidden_dim])
+
+
+# ---------------------------------------------------------------------------
+# Exp 3: Test classes
+# ---------------------------------------------------------------------------
+
+
+class TestOracleLinearProxy:
+    """Tests for Exp 3a: oracle linear proxy (least-squares)."""
+
+    def test_perfect_recovery_when_in_span(self) -> None:
+        """If w_hidden = 0.5*w1 + 0.5*w2, proxy should be exact."""
+        w1 = np.array([1.0, 0.0, 0.0, 0.0])
+        w2 = np.array([0.0, 1.0, 0.0, 0.0])
+        w_hidden = 0.5 * w1 + 0.5 * w2
+        result = compute_oracle_linear_proxy(w1, w2, w_hidden)
+        assert result["residual_norm"] < 1e-8
+        assert result["cosine_sim"] > 0.999
+
+    def test_residual_positive_when_orthogonal_component(self) -> None:
+        """If w_hidden has component outside span, residual > 0."""
+        w1 = np.array([1.0, 0.0, 0.0])
+        w2 = np.array([0.0, 1.0, 0.0])
+        w_hidden = np.array([0.5, 0.5, 1.0])  # z component not in span
+        result = compute_oracle_linear_proxy(w1, w2, w_hidden)
+        assert result["residual_norm"] > 0.5
+
+    def test_cosine_at_least_as_good_as_best_single(self) -> None:
+        """Proxy cosine sim >= max of individual cosine sims."""
+        w1 = np.array([3.0, 2.0, -1.0, 0.5])
+        w2 = np.array([1.0, -1.0, 2.0, 0.5])
+        w_hidden = np.array([2.0, 1.0, 0.5, 1.0])
+        result = compute_oracle_linear_proxy(w1, w2, w_hidden)
+        cos1 = np.dot(w1, w_hidden) / (np.linalg.norm(w1) * np.linalg.norm(w_hidden))
+        cos2 = np.dot(w2, w_hidden) / (np.linalg.norm(w2) * np.linalg.norm(w_hidden))
+        assert result["cosine_sim"] >= max(cos1, cos2) - 1e-8
+
+    def test_works_with_18_dim_vectors(self) -> None:
+        """Real-sized weight vectors."""
+        rng = np.random.default_rng(42)
+        w1 = rng.normal(0, 1, 18)
+        w2 = rng.normal(0, 1, 18)
+        w_hidden = rng.normal(0, 1, 18)
+        result = compute_oracle_linear_proxy(w1, w2, w_hidden)
+        assert -1.0 <= result["cosine_sim"] <= 1.0
+        assert result["residual_norm"] >= 0.0
+        a, b = result["coefficients"]
+        proxy = a * w1 + b * w2
+        np.testing.assert_allclose(proxy, result["proxy_weights"], atol=1e-8)
+
+
+class TestAlphaExtrapolation:
+    """Tests for Exp 3c: α-based weight synthesis."""
+
+    def test_interpolation_recovers_endpoints(self) -> None:
+        """At alpha=alpha1, returns w1; at alpha=alpha2, returns w2."""
+        w1 = np.array([1.0, 2.0, 3.0])
+        w2 = np.array([4.0, 5.0, 6.0])
+        result_at_1 = synthesize_weights_interpolation(w1, 1.0, w2, 0.3, 1.0)
+        result_at_2 = synthesize_weights_interpolation(w1, 1.0, w2, 0.3, 0.3)
+        np.testing.assert_allclose(result_at_1, w1, atol=1e-10)
+        np.testing.assert_allclose(result_at_2, w2, atol=1e-10)
+
+    def test_extrapolation_beyond_range(self) -> None:
+        """At alpha > max, extrapolates linearly."""
+        w1 = np.array([2.0, -1.0])
+        w2 = np.array([4.0, -0.3])
+        # alpha_target=4.0, alpha1=1.0, alpha2=0.3
+        # t = (4.0 - 0.3) / (1.0 - 0.3) = 3.7 / 0.7 ≈ 5.286
+        result = synthesize_weights_interpolation(w1, 1.0, w2, 0.3, 4.0)
+        t = (4.0 - 0.3) / (1.0 - 0.3)
+        expected = w2 + t * (w1 - w2)
+        np.testing.assert_allclose(result, expected, atol=1e-10)
+
+    def test_structural_correct_sign_pattern(self) -> None:
+        """Positive indices positive, negative indices negative (for alpha > 0)."""
+        pos_idx = [0, 1]
+        neg_idx = [2, 3]
+        observed = {
+            "a": np.array([2.0, 3.0, -1.0, -2.0, 0.1]),
+            "b": np.array([4.0, 3.0, -0.5, -1.0, -0.1]),
+        }
+        result = synthesize_weights_structural(observed, 4.0, pos_idx, neg_idx)
+        assert all(result[i] > 0 for i in pos_idx)
+        assert all(result[i] < 0 for i in neg_idx)
+
+    def test_structural_alpha_scaling(self) -> None:
+        """Doubling alpha doubles the magnitude of negative weights."""
+        pos_idx = [0, 1]
+        neg_idx = [2, 3]
+        observed = {"a": np.array([2.0, 3.0, -1.0, -2.0, 0.0])}
+        r1 = synthesize_weights_structural(observed, 2.0, pos_idx, neg_idx)
+        r2 = synthesize_weights_structural(observed, 4.0, pos_idx, neg_idx)
+        np.testing.assert_allclose(r2[neg_idx], 2.0 * r1[neg_idx], atol=1e-10)
+
+    def test_interpolation_vs_structural_agree_for_ideal(self) -> None:
+        """When weights perfectly follow U=pos-α·neg, both approaches should
+        produce vectors with the correct α ratio for the target."""
+        pos_idx = [0, 1]
+        neg_idx = [2, 3]
+        # Ideal weights: w[pos] = 1.0, w[neg] = -α
+        w1 = np.array([1.0, 1.0, -1.0, -1.0])  # α=1.0
+        w2 = np.array([1.0, 1.0, -0.3, -0.3])   # α=0.3
+
+        alpha_target = 4.0
+        interp = synthesize_weights_interpolation(w1, 1.0, w2, 0.3, alpha_target)
+        struct = synthesize_weights_structural(
+            {"a": w1, "b": w2}, alpha_target, pos_idx, neg_idx,
+        )
+        # Both should have neg ≈ -4.0 * pos_mean
+        interp_ratio = -np.mean(interp[neg_idx]) / np.mean(interp[pos_idx])
+        struct_ratio = -np.mean(struct[neg_idx]) / np.mean(struct[pos_idx])
+        assert abs(struct_ratio - alpha_target) < 1e-10
+        assert abs(interp_ratio - alpha_target) < 1e-10
+
+
+class TestRecoveryRate:
+    """Tests for Exp 3d: recovery rate metric."""
+
+    def test_full_recovery_returns_1(self) -> None:
+        assert compute_recovery_rate(10.0, 5.0, 10.0) == 1.0
+
+    def test_zero_recovery_returns_0(self) -> None:
+        assert compute_recovery_rate(5.0, 5.0, 10.0) == 0.0
+
+    def test_partial_recovery_midpoint(self) -> None:
+        assert abs(compute_recovery_rate(7.5, 5.0, 10.0) - 0.5) < 1e-10
+
+    def test_over_recovery_greater_than_1(self) -> None:
+        """Proxy does better than full 3D optimum (shouldn't happen, but handle)."""
+        rate = compute_recovery_rate(12.0, 5.0, 10.0)
+        assert rate > 1.0
+
+    def test_no_gap_returns_1(self) -> None:
+        """When full == no_proxy (no gap), recovery is 1.0 by convention."""
+        assert compute_recovery_rate(5.0, 5.0, 5.0) == 1.0
+
+
+class TestDiversityKnobProxy:
+    """Tests for Exp 3b: diversity knob as society proxy."""
+
+    def test_finds_point_with_max_hidden_utility(self) -> None:
+        frontier: list[UtilityPoint] = [
+            {"diversity_weight": 0.0, "society_utility": -1.0},
+            {"diversity_weight": 0.5, "society_utility": 0.5},
+            {"diversity_weight": 1.0, "society_utility": 2.0},
+        ]
+        dw, util = find_best_hidden_utility(frontier, "society_utility")
+        assert dw == 1.0
+        assert util == 2.0
+
+    def test_works_with_single_point(self) -> None:
+        frontier: list[UtilityPoint] = [
+            {"diversity_weight": 0.3, "society_utility": 1.5},
+        ]
+        dw, util = find_best_hidden_utility(frontier, "society_utility")
+        assert dw == 0.3
+        assert util == 1.5
+
+    def test_returns_correct_diversity_weight(self) -> None:
+        """When max hidden utility is not at extreme dw."""
+        frontier: list[UtilityPoint] = [
+            {"diversity_weight": 0.0, "society_utility": 0.0},
+            {"diversity_weight": 0.4, "society_utility": 3.0},
+            {"diversity_weight": 0.8, "society_utility": 2.0},
+        ]
+        dw, util = find_best_hidden_utility(frontier, "society_utility")
+        assert dw == 0.4
+        assert util == 3.0

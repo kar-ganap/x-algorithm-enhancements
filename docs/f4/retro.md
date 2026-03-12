@@ -239,7 +239,20 @@ In practice, societal impact is the hardest stakeholder to observe — there's n
 - **Training-based LOSO** *(resolved)*: Train BT models using only the 2 observed stakeholders' preference labels. Compute learned frontiers. Results match geometric LOSO closely: hiding society → avg regret 1.100, platform → 0.308, user → 0.141. Training-based LOSO shows slightly more dominated points (14.4% when hiding user) because learned scorers introduce additional misalignment beyond operating-point selection.
 
 - **Degradation ranking** *(resolved)*: society > platform > user. Matches the pairwise correlation structure: society has lowest cosine similarity (0.478) with the observed pair's complement, user has highest (0.884).
-- **Follow-up experiments** *(pending)*: optimal aggregation proxy (can `a·w_user + b·w_platform` approximate w_society?), partial observation sampling (how much society feedback suffices?), degradation bound (predict degradation from correlation structure).
+- **Aggregation proxy** *(resolved)*: Can proxies recover the hidden stakeholder's utility? Tested 6 proxy methods (5 seeds each):
+
+  | Proxy (hiding society) | Recovery Rate | Notes |
+  |---|---|---|
+  | α-interpolation (oracle α=4.0) | **1.000** | Perfect — structural knowledge + correct α |
+  | α-interpolation (blind α=2.2) | **1.000** | Even wrong α fully recovers |
+  | Diversity knob (dw=0.7) | **0.699** | Best practical method — no oracle |
+  | Oracle linear (LS proxy) | 0.566 | Ceiling for linear combination |
+  | Diversity knob (dw=0.5) | 0.415 | Moderate diversity also helps |
+  | Structural synthesis (oracle α) | 0.153 | Pos/neg template too crude |
+
+  **Key insight**: Weight-space interpolation outperforms least-squares because it preserves the action-level structure learned during BT training, while LS regression dilutes it. The diversity knob at dw=0.7 is the best no-oracle approach — a practitioner can recover 70% of society's utility by simply increasing content diversity. For platform/user hiding, recovery rates are noisy (small baseline gap makes ratios unstable) but absolute regret is low (<0.1).
+
+- **Follow-up experiments** *(pending)*: partial observation sampling (how much society feedback suffices?), degradation bound (predict degradation from correlation structure).
 
 Connects to: Goodhart's Law in reinforcement learning (ICLR 2024); Pareto-optimal learning with hidden context (arXiv 2406.15599); multistakeholder evaluation (arXiv 2501.05170).
 
