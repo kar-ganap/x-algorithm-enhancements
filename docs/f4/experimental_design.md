@@ -727,6 +727,17 @@ This result means practitioners can **predict differentiation before training** 
 
 - **LLM confidence as margin proxy (CONDITIONAL_GO)**: The 2-variable model requires knowing the analytic margin, which requires knowing the utility function. We tested whether an LLM's confidence could substitute: Claude Haiku was given natural language stakeholder descriptions (e.g., "you're a safety-first moderator") and content as engagement/negativity scores (0-100), with no formula. The LLM applied its own implicit utility function across 15 sweep points × 200 pairs. Results: the 2-variable *structure* is robust — LLM disagreement tracks analytic disagreement (Pearson = 0.921) and the LLM 2-var model ranks cosine similarities correctly (Spearman = 0.929). However, LLM confidence is too compressed (range [1.40, 1.66]) to serve as a precise margin substitute (R² = 0.80). The go/no-go criterion was changed from R² to Spearman during analysis: rank-ordering is the practically relevant question — if the model correctly ranks which stakeholder pairs are most differentiated, a calibration curve can recover the scale. See `results/llm_margin_proxy.json` and `scripts/llm_margin_proxy.py`.
 
+- **α-recovery from weight vectors**: For the utility family $U = \text{pos} - \alpha \cdot \text{neg}$, trained BT models across 13 $\alpha$ values (0.1–8.0) and tested whether $\alpha$ is recoverable from the learned weight vector via the ratio $-\bar{w}_\text{neg} / \bar{w}_\text{pos}$. Under ideal conditions: Spearman = 1.0 (perfect monotonic recovery), Pearson = 0.999, with systematic amplification ($\alpha_\text{rec} \approx -0.06 + 1.32 \cdot \alpha_\text{true}$). Stress-tested across 4 dimensions (1300 runs × 5 seeds × 13 $\alpha$ values):
+
+  | Stress dimension | Breaking point ($\rho < 0.95$) | Practical threshold |
+  |-----------------|-------------------------------|---------------------|
+  | Label noise (random flip) | $p = 0.30$ | $\leq 20\%$ annotation error |
+  | Sample size | $n = 50$ pairs | $\geq 250$ pairs sufficient |
+  | BT temperature | $\beta = 0.5$ | $\beta \geq 0.5$ (decisive preferences) |
+  | Content correlation $\rho(\text{pos}, \text{neg})$ | $\rho = 0.8$ | $\rho \leq 0.6$ (moderate OK) |
+
+  Key findings: (1) recovery is remarkably robust — tolerates 20% label noise and works with 250 pairs; (2) BT temperature is the strongest stressor; (3) moderate content correlation ($\rho = 0.3$) *improves* recovery; (4) Spearman degrades much slower than Pearson — rank ordering survives conditions that destroy linear fit. See `results/alpha_recovery.json`, `results/alpha_recovery_stress.json`, and `scripts/analyze_alpha_recovery.py`, `scripts/analyze_alpha_stress.py`.
+
 ### 9.3 External validation
 
 **MovieLens (Phase 6)**: Real movie rating data. The reward model architecture (learned embeddings + transformer) achieves NDCG@3 of 0.4112, a 59% improvement over an untrained baseline. Key discovery: the transformer and embeddings exhibit a 107.5% synergy effect — neither component works alone; all improvement comes from their interaction.

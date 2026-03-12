@@ -2105,6 +2105,37 @@ The 2-variable fit: `cos = 1.098 − 1.127d − 0.088m` (d = disagreement rate, 
 
 The LLM's implicit utility function differs from ours (d_llm ≠ d_analytic), but the *ranking* of which stakeholder pairs are most differentiated is preserved (Spearman = 0.929). LLM confidence adds value over disagreement rate alone (+0.135 Spearman boost) but is compressed in range [1.40, 1.66], making it a weak margin substitute for linear prediction (R² = 0.80). The go/no-go uses Spearman rather than R² because rank-ordering is the practically relevant question. See `results/llm_margin_proxy.json`.
 
+**α-recovery from BT weight vectors**: For the utility family U = pos − α·neg, can you recover α from the trained BT weight vector? Trained 13 BT models with α ∈ {0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 7.0, 8.0} and computed α_recovered = -mean(w_neg) / mean(w_pos).
+
+| Metric | Value |
+|--------|-------|
+| Spearman (α_true vs α_recovered) | **1.0000** |
+| Pearson | 0.9985 |
+| R² | 0.9971 |
+| Affine fit | α_rec ≈ -0.062 + 1.321 · α_true |
+| MAE after affine transform | 0.120 |
+
+Stakeholder validation (independent seed):
+
+| Stakeholder | α_true | α_recovered |
+|-------------|--------|-------------|
+| Platform | 0.3 | 0.344 |
+| User | 1.0 | 1.345 |
+| Society | 4.0 | 5.594 |
+
+The systematic amplification (slope 1.32 instead of 1.0) means recovered α values are stretched but perfectly ordered. All three recovery methods (mean ratio, sum ratio, regression) achieve identical Spearman = 1.0. BT's scale invariance prevents recovering absolute weight magnitudes, but the *ratio* structure within the weight vector encodes α up to an affine transform. See `results/alpha_recovery.json`.
+
+**α-recovery stress tests**: The baseline recovery used ideal conditions (deterministic labels, 5000 pairs, known pos/neg groupings). Stress-tested across 4 dimensions (1300 training runs × 5 seeds × 13 α values):
+
+| Dimension | Breaking point (ρ < 0.95) | Spearman at worst | Practical threshold |
+|-----------|--------------------------|-------------------|---------------------|
+| Label noise (p_flip) | 0.30 | 0.836±0.159 @30% | ≤20% annotation error |
+| Sample size (n_pairs) | 50 | 0.877±0.053 @50 | ≥250 pairs sufficient |
+| BT temperature (β) | 0.5 | 0.610±0.176 @β=0.2 | β ≥ 0.5 (clear preferences) |
+| Content correlation (ρ) | 0.8 | 0.825±0.210 @ρ=0.8 | ρ ≤ 0.6 (moderate OK) |
+
+Key findings: (1) Recovery is remarkably robust — tolerates 20% label noise and works with 250 pairs. (2) BT temperature is the strongest stressor — when preferences are nearly random (β=0.2), recovery collapses. (3) Moderate content correlation (ρ=0.3) *improves* recovery to perfect Spearman 1.0, likely because correlated content provides more signal about α when positive and negative actions co-vary. (4) Spearman (rank ordering) degrades much slower than Pearson (linear fit) across all dimensions — the ordering of α values is robust to conditions that destroy the linear relationship. See `results/alpha_recovery_stress.json`.
+
 Weight vectors show clear stakeholder patterns:
 
 | Action | User | Platform | Society | Interpretation |
