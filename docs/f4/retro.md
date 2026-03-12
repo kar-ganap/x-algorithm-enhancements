@@ -226,13 +226,24 @@ This answers a practitioner question: *"how precisely must I specify my utility 
 
 In practice, societal impact is the hardest stakeholder to observe — there's no direct engagement signal for "this content increased polarization." Platforms optimize what they can measure (user engagement, platform retention) and hope societal outcomes follow.
 
-- Train on K-1 of K stakeholders. Compute the Pareto frontier. Then reveal the Kth stakeholder and measure frontier degradation.
-- Does the frontier shift predictably? Is the shift bounded by the correlation structure between observed and unobserved stakeholders?
-- Which stakeholder is most dangerous to miss? (Hypothesis: society, because it's most anti-correlated with platform.)
+- **Leave-One-Stakeholder-Out (LOSO) — Geometry** *(resolved)*: For each of 3 stakeholders, hide it and compute the 2-stakeholder Pareto frontier. Measure hidden dimension regret. Results (5 seeds, 21 diversity weights):
 
-Connects to: robustness under partial identifiability (Skalse et al., 2025); multistakeholder evaluation of recommender systems (de Vrieze et al., 2025).
+  | Hidden | Avg Regret | Max Regret | Dom. Fraction |
+  |--------|-----------|-----------|---------------|
+  | Society | **1.082** | 1.167 | 0.0% |
+  | Platform | 0.369 | 0.606 | 0.0% |
+  | User | 0.111 | 0.252 | 6.4% |
 
-**Infrastructure**: Train on subsets of `{user, platform, society}`, compare frontiers via existing Pareto machinery.
+  **Hypothesis confirmed**: society is the most dangerous stakeholder to miss (10× more regret than user). The 2D-Pareto frontiers are rarely dominated in 3D (0% for society/platform) — the cost is entirely in the hidden dimension. HV ratio = 1.0 in all cases.
+
+- **Training-based LOSO** *(resolved)*: Train BT models using only the 2 observed stakeholders' preference labels. Compute learned frontiers. Results match geometric LOSO closely: hiding society → avg regret 1.100, platform → 0.308, user → 0.141. Training-based LOSO shows slightly more dominated points (14.4% when hiding user) because learned scorers introduce additional misalignment beyond operating-point selection.
+
+- **Degradation ranking** *(resolved)*: society > platform > user. Matches the pairwise correlation structure: society has lowest cosine similarity (0.478) with the observed pair's complement, user has highest (0.884).
+- **Follow-up experiments** *(pending)*: optimal aggregation proxy (can `a·w_user + b·w_platform` approximate w_society?), partial observation sampling (how much society feedback suffices?), degradation bound (predict degradation from correlation structure).
+
+Connects to: Goodhart's Law in reinforcement learning (ICLR 2024); Pareto-optimal learning with hidden context (arXiv 2406.15599); multistakeholder evaluation (arXiv 2501.05170).
+
+**Infrastructure**: `scripts/analyze_partial_observation.py`, `results/partial_observation.json`.
 
 ### How these connect
 

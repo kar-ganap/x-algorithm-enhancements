@@ -738,6 +738,20 @@ This result means practitioners can **predict differentiation before training** 
 
   Key findings: (1) recovery is remarkably robust — tolerates 20% label noise and works with 250 pairs; (2) BT temperature is the strongest stressor; (3) moderate content correlation ($\rho = 0.3$) *improves* recovery; (4) Spearman degrades much slower than Pearson — rank ordering survives conditions that destroy linear fit. See `results/alpha_recovery.json`, `results/alpha_recovery_stress.json`, and `scripts/analyze_alpha_recovery.py`, `scripts/analyze_alpha_stress.py`.
 
+- **Partial observation / missing stakeholders (Direction 3)**: If you optimize for observable stakeholders only, how much does the hidden stakeholder suffer? This is a Goodhart's Law experiment — platforms optimize what they can measure (engagement, retention) while societal impact (polarization, diversity) is hard to observe. We can measure the cost precisely because we know all three utility functions.
+
+  **Exp 1 — LOSO Geometry**: Project the existing 3D utility frontier to 2D by hiding one stakeholder, find the 2-stakeholder Pareto front, and measure hidden-dimension regret. No training — purely geometric analysis of the 21-point diversity weight sweep (5 seeds × 21 weights).
+
+  **Exp 2 — Training-based LOSO**: Train BT models using only the observed stakeholders' preference labels (2000 pairs, 50 epochs, convergence-checked). Use learned weight vectors as scorers. This tests a more realistic scenario — you don't just pick the wrong operating point, you have *different models* that score content differently.
+
+  | Hidden stakeholder | Avg regret (Exp 1) | Avg regret (Exp 2) | Rationale |
+  |---|---|---|---|
+  | Society | 1.082 ± 0.041 | 1.100 ± 0.046 | P-S cosine = 0.478, disagreement = 35% |
+  | Platform | 0.369 ± 0.042 | 0.308 ± 0.014 | U-P cosine = 0.830, disagreement = 23% |
+  | User | 0.111 ± 0.029 | 0.141 ± 0.025 | U-S cosine = 0.884, disagreement = 12% |
+
+  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) HV ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection. Follow-up experiments (optimal aggregation proxy, partial observation sampling, degradation bounds) are designed but pending. See `results/partial_observation.json` and `scripts/analyze_partial_observation.py`.
+
 ### 9.3 External validation
 
 **MovieLens (Phase 6)**: Real movie rating data. The reward model architecture (learned embeddings + transformer) achieves NDCG@3 of 0.4112, a 59% improvement over an untrained baseline. Key discovery: the transformer and embeddings exhibit a 107.5% synergy effect — neither component works alone; all improvement comes from their interaction.

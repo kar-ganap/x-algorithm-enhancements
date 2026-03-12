@@ -2136,6 +2136,16 @@ The systematic amplification (slope 1.32 instead of 1.0) means recovered α valu
 
 Key findings: (1) Recovery is remarkably robust — tolerates 20% label noise and works with 250 pairs. (2) BT temperature is the strongest stressor — when preferences are nearly random (β=0.2), recovery collapses. (3) Moderate content correlation (ρ=0.3) *improves* recovery to perfect Spearman 1.0, likely because correlated content provides more signal about α when positive and negative actions co-vary. (4) Spearman (rank ordering) degrades much slower than Pearson (linear fit) across all dimensions — the ordering of α values is robust to conditions that destroy the linear relationship. See `results/alpha_recovery_stress.json`.
 
+**Partial observation (Direction 3)**: What happens to the Pareto frontier when a stakeholder is unobservable? Leave-One-Stakeholder-Out (LOSO) analysis across 2 experiments (5 seeds, 21 diversity weights):
+
+| Hidden | Exp 1: Geometry Avg Regret | Exp 2: Training Avg Regret | Dom. Fraction |
+|--------|---------------------------|---------------------------|---------------|
+| **Society** | **1.082±0.041** | **1.100** | 0.0% |
+| Platform | 0.369±0.062 | 0.308 | 0–8.5% |
+| User | 0.111±0.013 | 0.141 | 6.4–14.4% |
+
+Key findings: (1) **Society is the most dangerous stakeholder to miss** — 10× more regret than user, confirming that the least-observable stakeholder is the most costly to ignore. (2) The 2D-Pareto frontiers are rarely dominated in 3D (0% for society/platform) — the cost of partial observation is entirely in the hidden dimension, not in the observed utilities. (3) Geometric (oracle) and training-based LOSO produce highly consistent degradation rankings: society > platform > user. (4) The degradation ranking matches the pairwise correlation structure: society has the lowest cosine similarity (0.478) with the most-correlated observed stakeholder. See `results/partial_observation.json`.
+
 Weight vectors show clear stakeholder patterns:
 
 | Action | User | Platform | Society | Interpretation |
