@@ -161,7 +161,7 @@ weights---per-action multipliers for favorites, reposts, blocks, and
 15 other engagement signals. The 2026 release exposes
 \emph{structure without weights}: the prediction targets (action
 types) are visible, but the actual utility weighting is implicit in
-8B learned parameters. This transition from explicit to implicit
+8B learned parameters. This transition (\cref{fig:transition}) from explicit to implicit
 specification raises a concrete audit question: can regulators assess
 multi-stakeholder welfare from released code when the weights are
 opaque?~\cite{shaped2023secrets}
@@ -210,9 +210,65 @@ externally on MovieLens-100K (+59\% NDCG) and a 648-parameter
 synthetic Twitter environment. Code and data are available at
 \url{https://github.com/kar-ganap/x-algorithm-enhancements}.
 
-% TODO: Figure 1 (TikZ) — X algorithm transition schematic
-% TODO: Figure 2 (TikZ) — System pipeline schematic
-% Deferred to final formatting pass — schematics need design iteration.
+% ── Figure 1: X algorithm transition ──────────────────────────────
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, minimum height=1.4cm, text width=3.8cm, align=center, font=\small},
+  weight/.style={draw, rounded corners=2pt, minimum height=0.6cm, font=\scriptsize\ttfamily, fill=blue!5},
+  opaque/.style={draw, rounded corners=2pt, minimum height=0.6cm, font=\scriptsize, fill=gray!15, draw=gray},
+  arrow/.style={-{Stealth[length=6pt]}, thick},
+  label/.style={font=\footnotesize\itshape, text=gray!70!black},
+]
+
+% 2023: Explicit weights
+\node[box, fill=blue!8] (scorer2023) at (0, 0) {\textbf{Phoenix Heavy Ranker}\\[2pt]MaskNet neural network};
+\node[weight] (w1) at (-2.2, -1.8) {fav: 1.0};
+\node[weight] (w2) at (-0.7, -1.8) {repost: 0.8};
+\node[weight] (w3) at (0.8, -1.8) {block: $-$1.5};
+\node[weight] (w4) at (2.3, -1.8) {report: $-$3.0};
+
+\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w1.north);
+\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w2.north);
+\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w3.north);
+\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w4.north);
+
+\node[label] at (0, -2.7) {Per-action weights \textbf{visible}};
+\node[font=\small\bfseries] at (0, 1.2) {March 2023};
+
+% Arrow between eras
+\draw[-{Stealth[length=8pt]}, ultra thick, gray!50] (4.5, 0) -- node[above, font=\small\itshape] {``eliminated all} node[below, font=\small\itshape] {hand-engineered features''} (7.5, 0);
+
+% 2026: Implicit weights
+\node[box, fill=red!8] (scorer2026) at (11, 0) {\textbf{Grok Transformer}\\[2pt]8B learned parameters};
+\node[opaque] (t1) at (8.8, -1.8) {P(fav)};
+\node[opaque] (t2) at (10.0, -1.8) {P(repost)};
+\node[opaque] (t3) at (11.2, -1.8) {P(block)};
+\node[opaque] (t4) at (12.5, -1.8) {P(report)};
+\node[font=\scriptsize, text=gray] at (13.5, -1.8) {$\cdots$};
+
+\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t1.north);
+\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t2.north);
+\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t3.north);
+\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t4.north);
+
+\node[label] at (11, -2.7) {Action \emph{types} visible, weights \textbf{opaque}};
+\node[font=\small\bfseries] at (11, 1.2) {January 2026};
+
+% Brace underneath
+\draw[decorate, decoration={brace, mirror, amplitude=6pt}, thick, red!60!black]
+  (-3, -3.2) -- (14, -3.2)
+  node[midway, below=8pt, font=\small, text=red!60!black, align=center]
+  {How precisely must utility weights be specified for meaningful\\multi-stakeholder audit?};
+
+\end{tikzpicture}
+\caption{X's algorithm transition. The 2023 Phoenix release exposed
+  explicit per-action weights (left). The 2026 Grok release exposes
+  prediction targets but not weights (right). Our study tests how much
+  of the multi-stakeholder frontier is recoverable from structure
+  alone.}
+\label{fig:transition}
+\end{figure*}
 
 The remainder of the paper is organized as follows.
 \Cref{sec:background} reviews multi-stakeholder recommendation, BT
@@ -356,6 +412,69 @@ studied on the opaque production system.
 \label{sec:system}
 %═══════════════════════════════════════════════════════════════════
 
+% ── Figure 2: System pipeline ─────────────────────────────────────
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  stage/.style={draw, rounded corners=4pt, minimum height=1.2cm, align=center, font=\small},
+  data/.style={stage, fill=green!8, text width=2.8cm},
+  proc/.style={stage, fill=blue!8, text width=2.8cm},
+  eval/.style={stage, fill=orange!8, text width=2.8cm},
+  metric/.style={stage, fill=red!8, text width=2.2cm, minimum height=0.9cm, font=\scriptsize},
+  arrow/.style={-{Stealth[length=5pt]}, thick},
+  note/.style={font=\scriptsize\itshape, text=gray!60!black},
+]
+
+% Row 1: Data generation
+\node[data] (content) at (0, 0) {\textbf{Content Pool}\\[1pt]500 items\\18 actions each};
+\node[data] (users) at (3.5, 0) {\textbf{Users}\\[1pt]600 users\\5 archetypes};
+\node[proc] (utility) at (7, 0) {\textbf{Utility}\\$U_k = \text{pos} - \alpha_k \cdot \text{neg}$\\[1pt]$\alpha \in \{0.3, 1.0, 4.0\}$};
+\node[proc] (pairs) at (10.5, 0) {\textbf{Preference Pairs}\\[1pt]2000 pairs\\per stakeholder};
+
+\draw[arrow] (content) -- (users);
+\draw[arrow] (users) -- (utility);
+\draw[arrow] (utility) -- (pairs);
+
+% Row 2: Training
+\node[proc, fill=blue!12] (bt) at (3.5, -2.2) {\textbf{BT Training}\\[1pt]4 loss variants\\50 epochs};
+\node[proc, fill=blue!15] (weights) at (7, -2.2) {\textbf{Weight Vectors}\\[1pt]$\mathbf{w} \in \mathbb{R}^{18}$\\per stakeholder};
+
+\draw[arrow] (pairs) |- (bt);
+\draw[arrow] (bt) -- (weights);
+
+% Row 3: Evaluation
+\node[eval] (scorer) at (0, -2.2) {\textbf{Content Scorer}\\$s = \mathbf{w}^\top \mathbf{p}$\\+ diversity knob $\delta$};
+\node[eval] (frontier) at (0, -4.2) {\textbf{Pareto Frontier}\\[1pt]21 diversity weights\\3 utility dimensions};
+
+\draw[arrow] (weights) -- (scorer);
+\draw[arrow] (scorer) -- (frontier);
+
+% Metrics
+\node[metric] (regret) at (3.5, -4.2) {Regret\\(LOSO)};
+\node[metric] (recovery) at (5.7, -4.2) {Recovery\\rate};
+\node[metric] (rankstab) at (7.9, -4.2) {Rank\\stability};
+\node[metric] (hausdorff) at (10.1, -4.2) {Hausdorff\\distance};
+
+\draw[arrow] (frontier) -- (regret);
+\draw[arrow] (frontier) -- (recovery);
+\draw[arrow] (frontier) -- (rankstab);
+\draw[arrow] (frontier) -- (hausdorff);
+
+% Direction labels
+\node[note, text width=3cm, align=right] at (13, 0) {Direction 1:\\What does BT\\recover?};
+\node[note, text width=3cm, align=right] at (13, -2.2) {Direction 3:\\What's lost\\when hidden?};
+\node[note, text width=3cm, align=right] at (13, -4.2) {Direction 2:\\How precise\\must spec be?};
+
+\draw[dotted, gray] (11.5, 0.8) -- (11.5, -5);
+
+\end{tikzpicture}
+\caption{System pipeline. Content and users produce preference pairs
+  via stakeholder utility functions. BT training yields 18-dim weight
+  vectors. Scoring and Pareto frontier computation enable four
+  evaluation metrics, each addressing a different research direction.}
+\label{fig:pipeline}
+\end{figure*}
+
 \subsection{Action Space}
 
 The Phoenix action space defines 18 user actions on content, inherited
@@ -477,6 +596,7 @@ identical weight vectors when trained on identical preference data.
 \subsection{Evaluation Framework}
 \label{sec:evalframework}
 
+The full data flow is shown in \cref{fig:pipeline}.
 Stakeholder tradeoffs are measured via the \emph{Pareto frontier}: we
 sweep a diversity weight $\delta \in \{0.0, 0.05, \ldots, 1.0\}$ (21
 points) that controls the tradeoff between engagement-based content
