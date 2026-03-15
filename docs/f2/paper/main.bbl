@@ -1,0 +1,129 @@
+\begin{thebibliography}{10}
+
+\bibitem{eval2025multistakeholder}
+Himan Abdollahpouri, Robin Burke, et~al.
+\newblock De-centering the (traditional) user: Multistakeholder evaluation of
+  recommender systems.
+\newblock {\em arXiv preprint arXiv:2501.05170}, 2025.
+
+\bibitem{multifr2022}
+Himan Abdollahpouri et~al.
+\newblock A multi-objective optimization framework for multi-stakeholder
+  fairness-aware recommendation.
+\newblock {\em ACM Transactions on Information Systems}, 2022.
+
+\bibitem{bradley1952rank}
+Ralph~Allan Bradley and Milton~E Terry.
+\newblock Rank analysis of incomplete block designs: {I}. the method of paired
+  comparisons.
+\newblock {\em Biometrika}, 39(3/4):324--345, 1952.
+
+\bibitem{burke2017multistakeholder}
+Robin Burke and Himan Abdollahpouri.
+\newblock Towards multi-stakeholder utility evaluation of recommender systems.
+\newblock 2017.
+
+\bibitem{casper2023open}
+Stephen Casper et~al.
+\newblock Open problems and fundamental limitations of reinforcement learning
+  from human feedback.
+\newblock {\em arXiv preprint arXiv:2307.15217}, 2023.
+
+\bibitem{farmer1987testing}
+Timothy~A Farmer.
+\newblock Testing the robustness of multiattribute utility theory in an applied
+  setting.
+\newblock {\em Decision Sciences}, 18(2):178--193, 1987.
+
+\bibitem{howard1966information}
+Ronald~A Howard.
+\newblock Information value theory.
+\newblock {\em IEEE Transactions on Systems Science and Cybernetics},
+  2(1):22--26, 1966.
+
+\bibitem{iancu2014pareto}
+Dan~A Iancu and Nikolaos Trichakis.
+\newblock Pareto efficiency in robust optimization.
+\newblock {\em Management Science}, 60(1):130--147, 2014.
+
+\bibitem{keeney1976decisions}
+Ralph~L Keeney and Howard Raiffa.
+\newblock {\em Decisions with Multiple Objectives: Preferences and Value
+  Tradeoffs}.
+\newblock Wiley, 1976.
+
+\bibitem{lasser2025designing}
+Jana Lasser et~al.
+\newblock Designing social media content recommendation algorithms for societal
+  good.
+\newblock {\em Annals of the New York Academy of Sciences}, 2025.
+
+\bibitem{shaped2023secrets}
+{Shaped.ai}.
+\newblock X's open source algorithm --- unveiling the code, but not the
+  secrets.
+\newblock
+  \url{https://www.shaped.ai/blog/twitters-open-source-algorithm-unveiling-the-code-but-not-the-secrets},
+  2023.
+
+\bibitem{skalse2024goodhart}
+Joar Skalse et~al.
+\newblock Goodhart's law in reinforcement learning.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2024.
+
+\bibitem{sorensen2024roadmap}
+Taylor Sorensen et~al.
+\newblock A roadmap to pluralistic alignment.
+\newblock {\em arXiv preprint arXiv:2402.05070}, 2024.
+
+\bibitem{sun2025rethinking}
+Hao Sun, Yunyi Shen, and Jean-Francois Ton.
+\newblock Rethinking {Bradley-Terry} models in preference-based reward
+  modeling: Foundations, theory, and alternatives.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2025.
+
+\bibitem{mcda2023sensitivity}
+various.
+\newblock Sensitivity analysis approaches in multi-criteria decision analysis:
+  A systematic review.
+\newblock {\em Expert Systems with Applications}, 2023.
+
+\bibitem{beyondbt2025}
+various.
+\newblock Beyond {Bradley-Terry} models: A general preference model for
+  language model alignment.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2025.
+
+\bibitem{pad2025personalized}
+various.
+\newblock {PAD}: Personalized alignment at decoding-time.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2025.
+
+\bibitem{weightstability2025}
+various.
+\newblock Weight stability intervals for multi-criteria decision analysis using
+  the weighted sum model.
+\newblock {\em Expert Systems with Applications}, 2025.
+
+\bibitem{weng2024reward}
+Lilian Weng.
+\newblock Reward hacking in reinforcement learning.
+\newblock 2024.
+
+\bibitem{xalgorithm2023}
+{X Engineering}.
+\newblock Twitter's recommendation algorithm.
+\newblock
+  \url{https://blog.x.com/engineering/en_us/topics/open-source/2023/twitter-recommendation-algorithm},
+  2023.
+
+\bibitem{xalgorithm2026}
+{xAI}.
+\newblock X open sources algorithm powered by {Grok AI}.
+\newblock \url{https://github.com/xai-org/x-algorithm}, 2026.
+
+\end{thebibliography}

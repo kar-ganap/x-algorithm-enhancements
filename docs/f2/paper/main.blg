@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: plain.bst
+Database file #1: references.bib
+Warning--empty journal in burke2017multistakeholder
+Warning--empty journal in weng2024reward
+You've used 21 entries,
+            2118 wiz_defined-function locations,
+            592 strings with 6947 characters,
+and the built_in function-call counts, 5253 in all, are:
+= -- 500
+> -- 223
+< -- 0
++ -- 91
+- -- 68
+* -- 270
+:= -- 931
+add.period$ -- 63
+call.type$ -- 21
+change.case$ -- 90
+chr.to.int$ -- 0
+cite$ -- 23
+duplicate$ -- 223
+empty$ -- 460
+format.name$ -- 68
+if$ -- 1087
+int.to.chr$ -- 0
+int.to.str$ -- 21
+missing$ -- 19
+newline$ -- 108
+num.names$ -- 42
+pop$ -- 119
+preamble$ -- 1
+purify$ -- 70
+quote$ -- 0
+skip$ -- 160
+stack$ -- 0
+substring$ -- 201
+swap$ -- 23
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 82
+warning$ -- 2
+while$ -- 50
+width$ -- 23
+write$ -- 214
+(There were 2 warnings)
