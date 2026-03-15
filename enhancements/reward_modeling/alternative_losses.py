@@ -263,9 +263,10 @@ def constrained_bt_loss(
 
     elif stakeholder == "society":
         # Society constraint: encourage diverse weights (not all same)
-        # Penalize if weight standard deviation is too low
-        pos_weights = weights[jnp.array(POSITIVE_INDICES)]
-        weight_std = jnp.std(pos_weights)
+        # Penalize if weight standard deviation is too low.
+        # Uses full weight vector — society's diversity comes from the
+        # pos/neg spread, not from variation within positive weights alone.
+        weight_std = jnp.std(weights)
 
         # Want diversity (high std), penalize if below target
         constraint = jnp.maximum(0.0, diversity_target - weight_std)
