@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  15 MAR 2026 16:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  15 MAR 2026 16:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1591,29 +1591,29 @@ Package pdftex.def Info: figures/fig6_spec_vs_data.pdf  used on input line 1037
 
 [17]
 LaTeX Font Info:    Font shape `OT1/minntx/b/n' will be
-(Font)              scaled to size 12.0pt on input line 1361.
+(Font)              scaled to size 12.0pt on input line 1364.
 LaTeX Font Info:    Font shape `OT1/minntx/b/n' will be
-(Font)              scaled to size 8.8pt on input line 1361.
+(Font)              scaled to size 8.8pt on input line 1364.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1361.
+(hyperref)                removing `math shift' on input line 1364.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\times' on input line 1361.
+(hyperref)                removing `\times' on input line 1364.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1361.
+(hyperref)                removing `math shift' on input line 1364.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1384.
+(hyperref)                removing `math shift' on input line 1388.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 1384.
+(hyperref)                removing `math shift' on input line 1388.
 
 
 
@@ -1630,10 +1630,10 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: F4694EBC52995805FD1A57006815E418;10080.
  ) 
 Here is how much of TeX's memory you used:
- 33275 strings out of 473190
- 618854 string characters out of 5715801
- 1000310 words of memory out of 5000000
- 55573 multiletter control sequences out of 15000+600000
+ 33291 strings out of 473190
+ 619210 string characters out of 5715801
+ 1001400 words of memory out of 5000000
+ 55589 multiletter control sequences out of 15000+600000
  704894 words of font info for 347 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,13n,117p,1193b,818s stack positions out of 10000i,1000n,20000p,200000b,200000s
