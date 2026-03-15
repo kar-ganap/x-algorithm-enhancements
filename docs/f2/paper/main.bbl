@@ -44,6 +44,12 @@ Stephen Casper et~al.
   from human feedback.
 \newblock {\em arXiv preprint arXiv:2307.15217}, 2023.
 
+\bibitem{pad2025personalized}
+Ruizhe Chen, Xiaotian Zhang, Meng Luo, Wenhao Chai, and Zuozhu Liu.
+\newblock {PAD}: Personalized alignment at decoding-time.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2025.
+
 \bibitem{farmer1987testing}
 Timothy~A Farmer.
 \newblock Testing the robustness of multiattribute utility theory in an applied
@@ -66,6 +72,13 @@ Dan~A Iancu and Nikolaos Trichakis.
 \newblock Pareto efficiency in robust optimization.
 \newblock {\em Management Science}, 60(1):130--147, 2014.
 
+\bibitem{skalse2024goodhart}
+Jacek Karwowski, Oliver Hayman, Xingjian Bai, Klaus Kiendlhofer, Charlie
+  Griffin, and Joar Skalse.
+\newblock Goodhart's law in reinforcement learning.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2024.
+
 \bibitem{keeney1976decisions}
 Ralph~L Keeney and Howard Raiffa.
 \newblock {\em Decisions with Multiple Objectives: Preferences and Value
@@ -73,10 +86,16 @@ Ralph~L Keeney and Howard Raiffa.
 \newblock Wiley, 1976.
 
 \bibitem{lasser2025designing}
-Jana Lasser et~al.
+Jana Lasser and Nikolaus Poechhacker.
 \newblock Designing social media content recommendation algorithms for societal
   good.
-\newblock {\em Annals of the New York Academy of Sciences}, 2025.
+\newblock {\em Annals of the New York Academy of Sciences}, 1548:20--28, 2025.
+
+\bibitem{weightstability2025}
+Ronan O'Shea, Peter Deeney, and Michael Bruen.
+\newblock Weight stability intervals for multi-criteria decision analysis using
+  the weighted sum model.
+\newblock {\em Expert Systems with Applications}, 296:127042, 2025.
 
 \bibitem{savage1951theory}
 Leonard~J Savage.
@@ -91,12 +110,6 @@ Leonard~J Savage.
 \newblock
   \url{https://www.shaped.ai/blog/twitters-open-source-algorithm-unveiling-the-code-but-not-the-secrets},
   2023.
-
-\bibitem{skalse2024goodhart}
-Joar Skalse et~al.
-\newblock Goodhart's law in reinforcement learning.
-\newblock In {\em International Conference on Learning Representations (ICLR)},
-  2024.
 
 \bibitem{sorensen2024roadmap}
 Taylor Sorensen et~al.
@@ -116,41 +129,17 @@ Hao Sun, Yunyi Shen, and Jean-Francois Ton.
 \newblock In {\em International Conference on Learning Representations (ICLR)},
   2025.
 
-\bibitem{mcda2023sensitivity}
-various.
-\newblock Sensitivity analysis approaches in multi-criteria decision analysis:
-  A systematic review.
-\newblock {\em Expert Systems with Applications}, 2023.
-
-\bibitem{beyondbt2025}
-various.
-\newblock Beyond {Bradley-Terry} models: A general preference model for
-  language model alignment.
-\newblock In {\em International Conference on Learning Representations (ICLR)},
-  2025.
-
-\bibitem{pad2025personalized}
-various.
-\newblock {PAD}: Personalized alignment at decoding-time.
-\newblock In {\em International Conference on Learning Representations (ICLR)},
-  2025.
-
-\bibitem{robust2025survey}
-various.
-\newblock Robust recommender system: A survey and future directions.
-\newblock {\em ACM Computing Surveys}, 2025.
-
-\bibitem{weightstability2025}
-various.
-\newblock Weight stability intervals for multi-criteria decision analysis using
-  the weighted sum model.
-\newblock {\em Expert Systems with Applications}, 2025.
-
 \bibitem{weng2024reward}
 Lilian Weng.
 \newblock Reward hacking in reinforcement learning.
 \newblock Lil'Log, 2024.
 \newblock \url{https://lilianweng.github.io/posts/2024-11-28-reward-hacking/}.
+
+\bibitem{mcda2023sensitivity}
+Jakub Wi\k{e}ckowski and Wojciech Sa{\l}abun.
+\newblock Sensitivity analysis approaches in multi-criteria decision analysis:
+  A systematic review.
+\newblock {\em Applied Soft Computing}, 148:110915, 2023.
 
 \bibitem{xalgorithm2023}
 {X Engineering}.
@@ -163,5 +152,17 @@ Lilian Weng.
 {xAI}.
 \newblock X open sources algorithm powered by {Grok AI}.
 \newblock \url{https://github.com/xai-org/x-algorithm}, 2026.
+
+\bibitem{robust2025survey}
+Kaike Zhang, Qi~Cao, Fei Sun, Yunfan Wu, Shuchang Tao, Huawei Shen, and Xueqi
+  Cheng.
+\newblock Robust recommender system: A survey and future directions.
+\newblock {\em ACM Computing Surveys}, 58(1):1--38, 2025.
+
+\bibitem{beyondbt2025}
+Yifan Zhang, Ge~Zhang, Yue Wu, Kangping Xu, and Quanquan Gu.
+\newblock Beyond {Bradley-Terry} models: A general preference model for
+  language model alignment.
+\newblock In {\em International Conference on Machine Learning (ICML)}, 2025.
 
 \end{thebibliography}
