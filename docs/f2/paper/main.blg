@@ -3,47 +3,44 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: plain.bst
 Database file #1: references.bib
-Warning--empty journal in burke2017multistakeholder
-Warning--empty journal in weng2024reward
 You've used 27 entries,
             2118 wiz_defined-function locations,
-            623 strings with 7906 characters,
-and the built_in function-call counts, 6895 in all, are:
-= -- 658
+            625 strings with 7979 characters,
+and the built_in function-call counts, 6942 in all, are:
+= -- 662
 > -- 294
 < -- 0
 + -- 120
 - -- 90
-* -- 366
+* -- 365
 := -- 1215
-add.period$ -- 81
+add.period$ -- 82
 call.type$ -- 27
 change.case$ -- 116
 chr.to.int$ -- 0
-cite$ -- 29
-duplicate$ -- 293
-empty$ -- 604
+cite$ -- 27
+duplicate$ -- 294
+empty$ -- 620
 format.name$ -- 90
-if$ -- 1428
+if$ -- 1448
 int.to.chr$ -- 0
 int.to.str$ -- 27
-missing$ -- 25
-newline$ -- 138
+missing$ -- 24
+newline$ -- 139
 num.names$ -- 54
-pop$ -- 149
+pop$ -- 153
 preamble$ -- 1
 purify$ -- 90
 quote$ -- 0
-skip$ -- 208
+skip$ -- 207
 stack$ -- 0
 substring$ -- 282
-swap$ -- 31
+swap$ -- 34
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 106
-warning$ -- 2
+warning$ -- 0
 while$ -- 66
 width$ -- 29
-write$ -- 276
-(There were 2 warnings)
+write$ -- 280

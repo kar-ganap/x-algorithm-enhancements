@@ -35,7 +35,8 @@ Ralph~Allan Bradley and Milton~E Terry.
 \bibitem{burke2017multistakeholder}
 Robin Burke and Himan Abdollahpouri.
 \newblock Towards multi-stakeholder utility evaluation of recommender systems.
-\newblock 2017.
+\newblock In {\em Workshop on Value-Aware and Multistakeholder Recommendation
+  (VAMS)}, 2017.
 
 \bibitem{casper2023open}
 Stephen Casper et~al.
@@ -148,7 +149,8 @@ various.
 \bibitem{weng2024reward}
 Lilian Weng.
 \newblock Reward hacking in reinforcement learning.
-\newblock 2024.
+\newblock Lil'Log, 2024.
+\newblock \url{https://lilianweng.github.io/posts/2024-11-28-reward-hacking/}.
 
 \bibitem{xalgorithm2023}
 {X Engineering}.
