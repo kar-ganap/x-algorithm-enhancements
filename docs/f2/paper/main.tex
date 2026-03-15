@@ -412,68 +412,80 @@ studied on the opaque production system.
 \label{sec:system}
 %═══════════════════════════════════════════════════════════════════
 
-% ── Figure 2: System pipeline ─────────────────────────────────────
-\begin{figure*}[t]
+% ── Figure 2: System pipeline (vertical flow) ────────────────────
+\begin{figure}[t]
 \centering
 \begin{tikzpicture}[
-  stage/.style={draw, rounded corners=4pt, minimum height=1.2cm, align=center, font=\small},
-  data/.style={stage, fill=green!8, text width=2.8cm},
-  proc/.style={stage, fill=blue!8, text width=2.8cm},
-  eval/.style={stage, fill=orange!8, text width=2.8cm},
-  metric/.style={stage, fill=red!8, text width=2.2cm, minimum height=0.9cm, font=\scriptsize},
+  box/.style={draw, rounded corners=4pt, minimum height=0.9cm, align=center, font=\small},
+  data/.style={box, fill=green!8},
+  proc/.style={box, fill=blue!8},
+  eval/.style={box, fill=orange!8},
+  metric/.style={box, fill=red!8, font=\scriptsize, minimum height=0.7cm},
   arrow/.style={-{Stealth[length=5pt]}, thick},
-  note/.style={font=\scriptsize\itshape, text=gray!60!black},
+  dirlabel/.style={font=\scriptsize\itshape, text=gray!60!black, align=left},
 ]
 
-% Row 1: Data generation
-\node[data] (content) at (0, 0) {\textbf{Content Pool}\\[1pt]500 items\\18 actions each};
-\node[data] (users) at (3.5, 0) {\textbf{Users}\\[1pt]600 users\\5 archetypes};
-\node[proc] (utility) at (7, 0) {\textbf{Utility}\\$U_k = \text{pos} - \alpha_k \cdot \text{neg}$\\[1pt]$\alpha \in \{0.3, 1.0, 4.0\}$};
-\node[proc] (pairs) at (10.5, 0) {\textbf{Preference Pairs}\\[1pt]2000 pairs\\per stakeholder};
+% Vertical pipeline — each step flows strictly downward
+\node[data, text width=6cm] (data) at (0, 0)
+  {\textbf{Content \& Users} --- 500 items $\times$ 600 users, 5 archetypes};
 
-\draw[arrow] (content) -- (users);
-\draw[arrow] (users) -- (utility);
+\node[proc, text width=6cm] (utility) at (0, -1.3)
+  {\textbf{Utility Functions} --- $U_k = \text{pos} - \alpha_k \cdot \text{neg}$, \;
+   $\alpha \in \{0.3, 1.0, 4.0\}$};
+
+\node[proc, text width=6cm] (pairs) at (0, -2.6)
+  {\textbf{Preference Pairs} --- 2{,}000 pairs per stakeholder};
+
+\node[proc, text width=6cm, fill=blue!12] (bt) at (0, -3.9)
+  {\textbf{BT Training} --- 4 loss variants, 50 epochs, Adam};
+
+\node[proc, text width=6cm, fill=blue!15] (weights) at (0, -5.2)
+  {\textbf{Weight Vectors} --- $\mathbf{w}_k \in \mathbb{R}^{18}$ per stakeholder};
+
+\node[eval, text width=6cm] (frontier) at (0, -6.5)
+  {\textbf{Scorer + Pareto Frontier} --- $s = \mathbf{w}^\top\!\mathbf{p}$
+   + diversity knob $\delta$, 21 operating points};
+
+% Metrics row
+\node[metric, text width=1.4cm] (regret) at (-2.7, -7.9) {Regret\\(LOSO)};
+\node[metric, text width=1.4cm] (recovery) at (-0.9, -7.9) {Recovery\\rate};
+\node[metric, text width=1.4cm] (rankstab) at (0.9, -7.9) {Rank\\stability};
+\node[metric, text width=1.4cm] (hausdorff) at (2.7, -7.9) {Hausdorff\\distance};
+
+% Strictly downward arrows
+\draw[arrow] (data) -- (utility);
 \draw[arrow] (utility) -- (pairs);
-
-% Row 2: Training
-\node[proc, fill=blue!12] (bt) at (3.5, -2.2) {\textbf{BT Training}\\[1pt]4 loss variants\\50 epochs};
-\node[proc, fill=blue!15] (weights) at (7, -2.2) {\textbf{Weight Vectors}\\[1pt]$\mathbf{w} \in \mathbb{R}^{18}$\\per stakeholder};
-
-\draw[arrow] (pairs) |- (bt);
+\draw[arrow] (pairs) -- (bt);
 \draw[arrow] (bt) -- (weights);
-
-% Row 3: Evaluation
-\node[eval, text width=3.4cm] (scorer) at (0, -2.2) {\textbf{Content Scorer}\\$s = \mathbf{w}^\top \mathbf{p}$\\+ diversity knob $\delta$};
-\node[eval, text width=3.4cm] (frontier) at (0, -4.2) {\textbf{Pareto Frontier}\\[1pt]21 diversity weights\\3 utility dims};
-
-\draw[arrow] (weights) -- (scorer);
-\draw[arrow] (scorer) -- (frontier);
-
-% Metrics
-\node[metric] (regret) at (3.5, -4.2) {Regret\\(LOSO)};
-\node[metric] (recovery) at (5.7, -4.2) {Recovery\\rate};
-\node[metric] (rankstab) at (7.9, -4.2) {Rank\\stability};
-\node[metric] (hausdorff) at (10.1, -4.2) {Hausdorff\\distance};
-
+\draw[arrow] (weights) -- (frontier);
 \draw[arrow] (frontier) -- (regret);
 \draw[arrow] (frontier) -- (recovery);
 \draw[arrow] (frontier) -- (rankstab);
 \draw[arrow] (frontier) -- (hausdorff);
 
-% Direction labels
-\node[note, text width=3cm, align=right] at (13, 0) {Direction 1:\\What does BT\\recover?};
-\node[note, text width=3cm, align=right] at (13, -2.2) {Direction 3:\\What's lost\\when hidden?};
-\node[note, text width=3cm, align=right] at (13, -4.2) {Direction 2:\\How precise\\must spec be?};
+% Direction labels on right
+\draw[dotted, gray] (4, 0.5) -- (4, -8.5);
+\node[dirlabel] at (5.2, -1.3) {Direction 1:\\What does BT\\recover?};
+\node[dirlabel] at (5.2, -4.6) {Direction 3:\\What's lost\\when hidden?};
+\node[dirlabel] at (5.2, -7.2) {Direction 2:\\How precise\\must spec be?};
 
-\draw[dotted, gray] (11.5, 0.8) -- (11.5, -5);
+% Bracket for D1 scope
+\draw[decorate, decoration={brace, amplitude=4pt}, gray]
+  (3.8, -0.7) -- (3.8, -3.3);
+% Bracket for D3 scope
+\draw[decorate, decoration={brace, amplitude=4pt}, gray]
+  (3.8, -3.5) -- (3.8, -5.8);
+% Bracket for D2 scope
+\draw[decorate, decoration={brace, amplitude=4pt}, gray]
+  (3.8, -6.0) -- (3.8, -8.3);
 
 \end{tikzpicture}
-\caption{System pipeline. Content and users produce preference pairs
-  via stakeholder utility functions. BT training yields 18-dim weight
-  vectors. Scoring and Pareto frontier computation enable four
-  evaluation metrics, each addressing a different research direction.}
+\caption{System pipeline. Each step flows strictly downward: data
+  generation, utility specification, preference pair construction,
+  BT training, and Pareto frontier evaluation. Braces indicate the
+  scope of each research direction.}
 \label{fig:pipeline}
-\end{figure*}
+\end{figure}
 
 \subsection{Action Space}
 
