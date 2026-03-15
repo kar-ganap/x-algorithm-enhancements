@@ -1,4 +1,4 @@
-# F4 Preprint: Multi-Stakeholder Reward Modeling for Open-Source Recommendation Algorithms
+# F2 Preprint: Multi-Stakeholder Reward Modeling for Open-Source Recommendation Algorithms
 
 ## 1. Results Inventory (Aggregated)
 
@@ -306,7 +306,7 @@ The **pluralistic alignment** literature (Sorensen, Bakker, PAD) addresses diver
 | "14 parameters collapse to 3" | Directly refuted by test #3 | **Remove entirely.** |
 | LLM margin proxy (Spearman=0.929) | Tangential, go/no-go criterion changed | **Appendix only.** |
 | Phase 2 pluralistic models (100% purity) | Earlier phase, doesn't contribute to D1-D3 arc | **Appendix only.** |
-| Phase 3 causal verification (100% block, 50% history) | Important for F4 but not for this paper | **Appendix only.** |
+| Phase 3 causal verification (100% block, 50% history) | Important for F2 but not for this paper | **Appendix only.** |
 | MovieLens 107.5% synergy | Validates architecture, not multi-stakeholder analysis | **Brief mention in §8, details in appendix.** |
 
 ### Structural vulnerability: all results are on synthetic data

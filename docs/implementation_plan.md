@@ -22,7 +22,7 @@ x-algorithm-enhancements/
 │   │   ├── metrics.py                # Benchmark/eval utilities
 │   │   └── viz.py                    # Visualization helpers
 │   │
-│   ├── optimization/                 # F2: JAX Optimization
+│   ├── optimization/                 # F1: JAX Optimization
 │   │   ├── __init__.py
 │   │   ├── benchmark.py
 │   │   ├── profiler.py
@@ -32,7 +32,7 @@ x-algorithm-enhancements/
 │   │   ├── quantization.py
 │   │   └── optimized_runner.py
 │   │
-│   ├── reward_modeling/              # F4: RL Reward Modeling (Pluralistic + Multi-Stakeholder)
+│   ├── reward_modeling/              # F2: RL Reward Modeling (Pluralistic + Multi-Stakeholder)
 │   │   ├── __init__.py
 │   │   ├── reward_model.py           # Basic + Contextual reward models
 │   │   ├── pluralistic.py            # Pluralistic (mixture) reward model
@@ -95,7 +95,7 @@ x-algorithm-enhancements/
 
 ---
 
-# F2: JAX Optimization - Testable Phases
+# F1: JAX Optimization - Testable Phases
 
 ## Phase 0: Setup & Baseline (Gate: Can we run and measure?)
 
@@ -945,11 +945,11 @@ def test_archetype_flip():
 
 ---
 
-# F4: RL Reward Modeling - Testable Phases
+# F2: RL Reward Modeling - Testable Phases
 
 ## Overview: Risk-Tiered Approach
 
-F4 builds progressively from basic reward learning to novel multi-stakeholder analysis:
+F2 builds progressively from basic reward learning to novel multi-stakeholder analysis:
 
 ```
 Day 13+:   Phase 6 (Game Theory) ─────────────── Tier 3: Novel (optional)
@@ -965,9 +965,9 @@ Day 1-2:   Phase 0 (Basic Reward) ────────────── Fou
 
 ### F2 Integration
 
-F4 leverages F2 components throughout:
+F2 leverages F2 components throughout:
 
-| F2 Component | F4 Phase | How Used |
+| F2 Component | F2 Phase | How Used |
 |--------------|----------|----------|
 | Trained Phoenix | All | Base model for action probabilities |
 | Synthetic Data | Phase 2+ | Ground truth archetypes |
@@ -2005,7 +2005,7 @@ class RecommendationGame:
 
 ---
 
-## Summary: F4 Gates
+## Summary: F2 Gates
 
 | Phase | Gate Criterion | Required | Target |
 |-------|---------------|----------|--------|
@@ -2017,7 +2017,7 @@ class RecommendationGame:
 | 5 | Impact table generated | ✅ | Stakeholder analysis complete |
 | 6 | Equilibrium characterized | ⚠️ | (Optional) Game theory insights |
 
-## F4 Exit Points
+## F2 Exit Points
 
 | After Phase | Deliverable | Value |
 |-------------|-------------|-------|
@@ -2242,7 +2242,7 @@ def test_comparison_with_clip():
 
 # Summary: All Gates
 
-## F2: JAX Optimization
+## F1: JAX Optimization
 | Phase | Gate Criterion | Required |
 |-------|---------------|----------|
 | 0 | Can run and measure baseline | ✅ |
@@ -2254,7 +2254,7 @@ def test_comparison_with_clip():
 | 6 | MovieLens training, NDCG > random | ✅ |
 | 7 | Synthetic verification: patterns recovered | ⬜ |
 
-## F4: RL Reward Modeling (Pluralistic + Multi-Stakeholder)
+## F2: RL Reward Modeling (Pluralistic + Multi-Stakeholder)
 | Phase | Gate Criterion | Required |
 |-------|---------------|----------|
 | 0 | Basic rewards compute, KV-cache integrated | ✅ |

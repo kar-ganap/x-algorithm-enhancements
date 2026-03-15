@@ -1,6 +1,6 @@
 # Architecture
 
-System diagrams for the x-algorithm-enhancements project. Two enhancement features (F2, F4) built on top of xAI's vendored recommendation system.
+System diagrams for the x-algorithm-enhancements project. Two enhancement features (F1, F2) built on top of xAI's vendored recommendation system.
 
 ## System Overview
 
@@ -13,13 +13,13 @@ graph TB
         CP["Candidate Pipeline<br/><i>Framework</i>"]
     end
 
-    subgraph f2 ["F2: KV-Cache Optimization"]
+    subgraph f2 ["F1: KV-Cache Optimization"]
         JIT["JIT Compilation<br/><i>10.3x speedup</i>"]
         KV["KV-Cache<br/><i>9.6x inference</i>"]
         Q["INT8 Quantization<br/><i>58% memory reduction</i>"]
     end
 
-    subgraph f4 ["F4: Multi-Stakeholder Reward Modeling"]
+    subgraph f4 ["F2: Multi-Stakeholder Reward Modeling"]
         BT["Bradley-Terry<br/>Training"]
         SU["Stakeholder<br/>Utilities"]
         PF["Pareto Frontier<br/>Analysis"]
@@ -31,7 +31,7 @@ graph TB
     PF --> LOSO
 ```
 
-## F4: Research Pipeline
+## F2: Research Pipeline
 
 Three research directions, each building on the previous:
 
@@ -62,7 +62,7 @@ graph LR
     d1 --> d2
 ```
 
-## F4: Data Flow
+## F2: Data Flow
 
 From synthetic data through BT training to Pareto frontier evaluation:
 
@@ -96,7 +96,7 @@ graph TD
     end
 ```
 
-## F4: Stakeholder Utility Model
+## F2: Stakeholder Utility Model
 
 ```mermaid
 graph LR
@@ -116,7 +116,7 @@ graph LR
     Neg --> U & Pl & S
 ```
 
-## F2: Optimization Pipeline
+## F1: Optimization Pipeline
 
 ```mermaid
 graph LR

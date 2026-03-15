@@ -1,12 +1,12 @@
 # x-algorithm-enhancements
 
-Enhancements to xAI's open-sourced recommendation algorithm (Phoenix/Grok). Two features: KV-cache optimization (F2) and multi-stakeholder reward modeling (F4).
+Enhancements to xAI's open-sourced recommendation algorithm (Phoenix/Grok). Two features: KV-cache optimization (F1) and multi-stakeholder reward modeling (F2).
 
 ## Current State
 
-**Feature F2 (KV-Cache Optimization):** Complete, dormant. 10.3x JIT speedup, 9.6x KV-cache, 58% INT8 memory reduction. 166 tests (9 failures, environment-related). See `docs/f2/retro.md`.
+**Feature F1 (KV-Cache Optimization):** Complete, dormant. 10.3x JIT speedup, 9.6x KV-cache, 58% INT8 memory reduction. 166 tests (9 failures, environment-related). See `docs/f1/retro.md`.
 
-**Feature F4 (Reward Modeling):** All 7 phases complete.
+**Feature F2 (Reward Modeling):** All 7 phases complete.
 
 | Phase | What | Key Result |
 |-------|------|------------|
@@ -63,7 +63,7 @@ make all        # all three in sequence
 ## Key Paths
 
 ```
-enhancements/reward_modeling/   # F4 core: reward model, training, utilities
+enhancements/reward_modeling/   # F2 core: reward model, training, utilities
   reward_model.py               # ContextualRewardModel
   training.py                   # Bradley-Terry loss
   pluralistic.py                # Phase 2: pluralistic models
@@ -88,7 +88,7 @@ docs/results.md                 # Full results narrative (all phases)
 docs/process.md                 # PLAN→TEST→IMPLEMENT→RETRO lifecycle
 docs/design_doc.md              # Architecture and vision
 docs/implementation_plan.md     # Risk-tiered implementation strategy
-docs/f4/                        # F4-specific: retro, plans, reports
+docs/f2/                        # F2-specific: retro, plans, reports
 results/loss_experiments/       # 87+ Phase 4 experiment JSONs
 results/pareto_comparison.*     # Pareto frontier analysis
 ```
@@ -98,7 +98,7 @@ results/pareto_comparison.*     # Pareto frontier analysis
 Lint and type errors exist in pre-existing code (baseline as of Feb 2026):
 - **136 ruff errors** — mostly E501 (line too long), F841 (unused vars), E701 (one-line ifs)
 - **365 mypy errors** — mostly missing type annotations, numpy type mismatches, dynamic module loading
-- **9 test failures** — all in `tests/test_optimization/` (F2 code, not actively developed)
+- **9 test failures** — all in `tests/test_optimization/` (F1 code, not actively developed)
 
 Rule: don't add new violations. Fix existing ones opportunistically when touching a file.
 

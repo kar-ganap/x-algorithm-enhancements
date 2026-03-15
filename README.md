@@ -4,7 +4,7 @@ Research enhancements to xAI's open-sourced recommendation algorithm. This fork 
 
 ## Enhancements
 
-### F2: KV-Cache Optimization (Complete)
+### F1: KV-Cache Optimization (Complete)
 
 Inference optimization for the Phoenix transformer, targeting latency and memory:
 
@@ -13,7 +13,7 @@ Inference optimization for the Phoenix transformer, targeting latency and memory
 - **58% memory reduction** via INT8 quantization (~90% top-3 score agreement)
 - See [`enhancements/optimization/`](enhancements/optimization/) and [`docs/f2/`](docs/f2/)
 
-### F4: Multi-Stakeholder Reward Modeling (Complete)
+### F2: Multi-Stakeholder Reward Modeling (Complete)
 
 Bradley-Terry preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare:
 
@@ -35,10 +35,10 @@ See [`docs/architecture.md`](docs/architecture.md) for system diagrams (Mermaid)
 # Install dependencies
 uv sync
 
-# Run F4 tests (reward modeling + analysis)
+# Run F2 tests (reward modeling + analysis)
 make test
 
-# Run all tests (includes F2 optimization)
+# Run all tests (includes F1 optimization)
 make test-all
 
 # Quality gates
@@ -58,8 +58,8 @@ uv run python scripts/analysis/analyze_partial_observation.py --exp 4
 
 ```
 enhancements/               # Enhancement code
-├── optimization/           # F2: KV-cache, JIT, INT8 quantization
-├── reward_modeling/        # F4: BT training, stakeholder utilities, Pareto analysis
+├── optimization/           # F1: KV-cache, JIT, INT8 quantization
+├── reward_modeling/        # F2: BT training, stakeholder utilities, Pareto analysis
 ├── data/                   # Data adapters (synthetic, MovieLens)
 ├── analysis/               # Trajectory & sensitivity analysis
 ├── verification/           # Test suites for synthetic verification
