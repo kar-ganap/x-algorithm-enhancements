@@ -75,7 +75,7 @@ graph TB
             prefdata["preference_data.py"]
         end
 
-        subgraph f1["multimodal/ (F1)"]
+        subgraph f_unused["multimodal/ (planned, not built)"]
             clip["clip_encoder.py"]
             mmtower["candidate_tower.py"]
             mmretrieval["retrieval.py"]
@@ -111,7 +111,7 @@ graph LR
         G["wraps & reframes"]
     end
 
-    subgraph F1["F1: Multimodal"]
+    subgraph F_unused["Multimodal (planned, not built)"]
         H["MultimodalRetriever"]
         I["extends & enhances"]
     end
@@ -362,7 +362,7 @@ graph TB
 
 ---
 
-## Feature 4 (F2): RL Reward Modeling
+## Feature 2 (F2): RL Reward Modeling
 
 ### Vision: Beyond Simple Reward Weights
 
@@ -754,7 +754,7 @@ graph TB
 
 ---
 
-## Feature 1 (F1): Multimodal Retrieval
+## Multimodal Retrieval (Originally F1, not implemented)
 
 ### Architecture
 

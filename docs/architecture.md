@@ -13,13 +13,13 @@ graph TB
         CP["Candidate Pipeline<br/><i>Framework</i>"]
     end
 
-    subgraph f2 ["F1: KV-Cache Optimization"]
+    subgraph f1 ["F1: KV-Cache Optimization"]
         JIT["JIT Compilation<br/><i>10.3x speedup</i>"]
         KV["KV-Cache<br/><i>9.6x inference</i>"]
         Q["INT8 Quantization<br/><i>58% memory reduction</i>"]
     end
 
-    subgraph f4 ["F2: Multi-Stakeholder Reward Modeling"]
+    subgraph f2 ["F2: Multi-Stakeholder Reward Modeling"]
         BT["Bradley-Terry<br/>Training"]
         SU["Stakeholder<br/>Utilities"]
         PF["Pareto Frontier<br/>Analysis"]
