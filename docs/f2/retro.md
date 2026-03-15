@@ -15,7 +15,7 @@
 | 2 | Pluralistic reward models | 100% cluster purity (topic×action features) | Weight correlation stuck at 0.554 (gate was 0.8) |
 | 3 | Causal verification | Block/follow 100%, 7/7 stress tests | History intervention only 50% |
 | 4 | Multi-stakeholder differentiation | Cosine sim 0.478 (target was <0.95) | 87 experiments to discover "it's the labels" |
-| 6 | MovieLens validation | NDCG 0.4112 (+59% vs untrained) | BCE overfitting; had to pivot to BPR |
+| 6 | MovieLens validation | Normalized Discounted Cumulative Gain (NDCG) 0.4112 (+59% vs untrained) | BCE overfitting; had to pivot to BPR |
 | 7 | Synthetic Twitter verification | All 5 test suites pass | Three separate fixes needed for causal learning |
 
 The narrative arc: starts with "99% accuracy, easy" → discovers weight recovery is fundamentally limited → spends 87 experiments trying to fix differentiation via loss functions → realizes the fix was always in the data.
@@ -238,7 +238,7 @@ In practice, societal impact is the hardest stakeholder to observe — there's n
   | Platform | 0.369 | 0.606 | 0.0% |
   | User | 0.111 | 0.252 | 6.4% |
 
-  **Hypothesis confirmed**: society is the most dangerous stakeholder to miss (10× more regret than user). The 2D-Pareto frontiers are rarely dominated in 3D (0% for society/platform) — the cost is entirely in the hidden dimension. HV ratio = 1.0 in all cases.
+  **Hypothesis confirmed**: society is the most dangerous stakeholder to miss (10× more regret than user). The 2D-Pareto frontiers are rarely dominated in 3D (0% for society/platform) — the cost is entirely in the hidden dimension. Hypervolume (HV) ratio = 1.0 in all cases.
 
 - **Training-based LOSO** *(resolved)*: Train BT models using only the 2 observed stakeholders' preference labels. Compute learned frontiers. Results match geometric LOSO closely: hiding society → avg regret 1.100, platform → 0.308, user → 0.141. Training-based LOSO shows slightly more dominated points (14.4% when hiding user) because learned scorers introduce additional misalignment beyond operating-point selection.
 

@@ -444,7 +444,7 @@ After training the Phoenix model on MovieLens-100K with BPR + in-batch negatives
 
 #### Training Context
 - **Model**: 64d embeddings, 4 transformer layers
-- **Best NDCG@3**: 0.4112 (epoch 9)
+- **Best Normalized Discounted Cumulative Gain (NDCG)@3**: 0.4112 (epoch 9)
 - **Training approach**: BPR loss with in-batch negatives (31 per positive)
 - **Ablation finding**: 107.5% synergy - transformer and embeddings only work together
 

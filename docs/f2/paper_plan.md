@@ -112,8 +112,8 @@ We validate on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter 
 - §2.1 Multi-stakeholder recommender systems (Burke '17, Multi-FR '22, Eval '25, Lasser '25)
 - §2.2 Bradley-Terry preference learning and multi-attribute utility theory (Keeney & Raiffa '76)
 - §2.3 Reward misspecification and Goodhart's law (Skalse '24, Casper '23, Weng '24)
-- §2.4 Sensitivity analysis in multi-criteria decision analysis (MCDA review '23, weight stability '25)
-- §2.5 Platform transparency and algorithmic audit (EU DSA '24, Shaped.ai analysis '23)
+- §2.4 Sensitivity analysis in multi-criteria decision analysis (multi-criteria decision analysis (MCDA) review '23, weight stability '25)
+- §2.5 Platform transparency and algorithmic audit (EU Digital Services Act (DSA) '24, Shaped.ai analysis '23)
 - §2.6 X's algorithm: Phoenix heavy ranker architecture
 
 **§3 System, Data, and Methodology** (~2 pages)

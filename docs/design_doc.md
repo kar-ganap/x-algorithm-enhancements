@@ -366,7 +366,7 @@ graph TB
 
 ### Vision: Beyond Simple Reward Weights
 
-F2 goes beyond basic RLHF reward learning to address fundamental limitations:
+F2 goes beyond basic reinforcement learning from human feedback (RLHF) reward learning to address fundamental limitations:
 
 1. **Pluralistic Values**: Different users have different reward functions (sports fans vs political users)
 2. **Causal Verification**: Rewards should capture causation, not just correlation

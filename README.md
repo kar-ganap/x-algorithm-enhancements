@@ -15,7 +15,7 @@ Inference optimization for the Phoenix transformer, targeting latency and memory
 
 ### F2: Multi-Stakeholder Reward Modeling (Complete)
 
-Bradley-Terry preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare:
+Bradley-Terry (BT) preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare:
 
 - **Core finding:** Stakeholder differentiation comes from training *labels*, not the loss function. 79 of 87 experiments across 4 BT loss variants converge to near-identical weights (cosine similarity >0.92) when trained on identical preference pairs.
 - **Three research directions:**

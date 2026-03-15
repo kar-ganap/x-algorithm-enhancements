@@ -750,7 +750,7 @@ This result means practitioners can **predict differentiation before training** 
   | Platform | 0.369 ± 0.042 | 0.308 ± 0.014 | U-P cosine = 0.830, disagreement = 23% |
   | User | 0.111 ± 0.029 | 0.141 ± 0.025 | U-S cosine = 0.884, disagreement = 12% |
 
-  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) HV ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection.
+  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) Hypervolume (HV) ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection.
 
 - **Aggregation proxy (Exp 3)**: Tested 6 proxy methods for recovering the hidden stakeholder's utility. Hiding society (primary case):
 
