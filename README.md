@@ -1,26 +1,87 @@
-# X For You Feed Algorithm
+# x-algorithm-enhancements
 
-This repository contains the core recommendation system powering the "For You" feed on X. It combines in-network content (from accounts you follow) with out-of-network content (discovered through ML-based retrieval) and ranks everything using a Grok-based transformer model.
+Research enhancements to xAI's open-sourced recommendation algorithm. This fork adds two features on top of the vendored Phoenix/Grok system:
 
-> **Note:** The transformer implementation is ported from the [Grok-1 open source release](https://github.com/xai-org/grok-1) by xAI, adapted for recommendation system use cases.
+## Enhancements
 
-## Table of Contents
+### F2: KV-Cache Optimization (Complete)
 
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
-- [Components](#components)
-  - [Home Mixer](#home-mixer)
-  - [Thunder](#thunder)
-  - [Phoenix](#phoenix)
-  - [Candidate Pipeline](#candidate-pipeline)
-- [How It Works](#how-it-works)
-  - [Pipeline Stages](#pipeline-stages)
-  - [Scoring and Ranking](#scoring-and-ranking)
-  - [Filtering](#filtering)
-- [Key Design Decisions](#key-design-decisions)
-- [License](#license)
+Inference optimization for the Phoenix transformer, targeting latency and memory:
+
+- **10.3x JIT speedup** (103.8 ms → 10.0 ms per forward pass)
+- **9.6x KV-cache speedup** with full key-value tensor caching
+- **58% memory reduction** via INT8 quantization (~90% top-3 score agreement)
+- See [`enhancements/optimization/`](enhancements/optimization/) and [`docs/f2/`](docs/f2/)
+
+### F4: Multi-Stakeholder Reward Modeling (Complete)
+
+Bradley-Terry preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare:
+
+- **Core finding:** Stakeholder differentiation comes from training *labels*, not the loss function. 79 of 87 experiments across 4 BT loss variants converge to near-identical weights (cosine similarity >0.92) when trained on identical preference pairs.
+- **Three research directions:**
+  - **Direction 1 (Identifiability):** The negativity-aversion parameter α is recoverable from learned weights (Spearman=1.0), robust to ≤20% label noise and ≥250 preference pairs
+  - **Direction 2 (Utility Sensitivity):** The Pareto frontier is robust to weight permutation and selection-level perturbation, but individual weight magnitudes matter at matched perturbation budgets
+  - **Direction 3 (Partial Observation):** Hiding society costs 10x more regret than hiding user; even 25 preference pairs from the hidden stakeholder cuts regret by 42%
+- Validated on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter environment
+- See [`enhancements/reward_modeling/`](enhancements/reward_modeling/) and [`docs/f4/`](docs/f4/)
+
+## Architecture
+
+See [`docs/architecture.md`](docs/architecture.md) for system diagrams (Mermaid).
+
+## Quick Start
+
+```bash
+# Install dependencies
+uv sync
+
+# Run F4 tests (reward modeling + analysis)
+make test
+
+# Run all tests (includes F2 optimization)
+make test-all
+
+# Quality gates
+make all    # test + lint + typecheck
+
+# Train a reward model
+uv run python scripts/train_reward_model.py
+
+# Run the 87-experiment loss function comparison
+uv run python scripts/run_loss_experiments.py
+
+# Run partial observation analysis
+uv run python scripts/analyze_partial_observation.py --exp 4
+```
+
+## Repository Structure
+
+```
+enhancements/               # Enhancement code
+├── optimization/           # F2: KV-cache, JIT, INT8 quantization
+├── reward_modeling/        # F4: BT training, stakeholder utilities, Pareto analysis
+├── data/                   # Data adapters (synthetic, MovieLens)
+├── analysis/               # Trajectory & sensitivity analysis
+├── verification/           # Test suites for synthetic verification
+└── training/               # Training harness
+
+scripts/                    # Training, analysis, and experiment scripts
+tests/                      # Pytest suite (reward_modeling, analysis, optimization)
+results/                    # Experiment outputs (JSON, PNG)
+docs/                       # Documentation (design, results, retrospectives)
+
+# Vendored (xAI, read-only):
+phoenix/                    # Grok-based transformer model
+home-mixer/                 # Rust orchestration layer
+thunder/                    # Rust in-memory post store
+candidate-pipeline/         # Rust pipeline framework
+```
 
 ---
+
+# Vendored System: X For You Feed Algorithm
+
+*The sections below describe the original xAI system. Our enhancements build on top of this architecture.*
 
 ## Overview
 

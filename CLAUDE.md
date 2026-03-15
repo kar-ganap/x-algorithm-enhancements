@@ -1,10 +1,12 @@
 # x-algorithm-enhancements
 
-Enhancements to xAI's open-sourced recommendation algorithm (Grok/Phoenix). Focus areas: KV-cache optimization, reward modeling, and multimodal retrieval.
+Enhancements to xAI's open-sourced recommendation algorithm (Phoenix/Grok). Two features: KV-cache optimization (F2) and multi-stakeholder reward modeling (F4).
 
 ## Current State
 
-**Feature F4 (Reward Modeling):** All 4 phases complete.
+**Feature F2 (KV-Cache Optimization):** Complete, dormant. 10.3x JIT speedup, 9.6x KV-cache, 58% INT8 memory reduction. 166 tests (9 failures, environment-related). See `docs/f2/retro.md`.
+
+**Feature F4 (Reward Modeling):** All 7 phases complete.
 
 | Phase | What | Key Result |
 |-------|------|------------|
@@ -12,10 +14,13 @@ Enhancements to xAI's open-sourced recommendation algorithm (Grok/Phoenix). Focu
 | Phase 2 | Pluralistic reward models | 100% cluster purity with two-stage approach |
 | Phase 3 | Causal verification | 5/5 test suites pass (action-level); 50% history-level |
 | Phase 4 | Multi-stakeholder differentiation | Cosine sim 0.478 with standard BT |
+| Phase 5 | MovieLens validation | +59% NDCG; 107.5% synergy effect |
+| Phase 6 | Synthetic Twitter verification | All 5 test suites pass; 648 params recovered |
+| Phase 7 | Research directions (D1-D3) | Labels-not-loss; partial observation; sensitivity |
 
-Validated on MovieLens (Phase 6, +59% NDCG) and 648-parameter synthetic Twitter ground truth (Phase 7).
+**Core insight:** Stakeholder differentiation comes from the training labels, not the loss function. 79 of 87 experiments across 4 loss functions converged: when all stakeholders train on identical preference pairs, they converge to identical weights regardless of loss (8 constrained-BT-society experiments diverged due to numerical instability in the diversity constraint, since fixed). Different utility functions → different labels → different models.
 
-**Core insight:** Stakeholder differentiation comes from the training labels, not the loss function. 87 experiments across 4 loss functions confirmed: when all stakeholders train on identical preference pairs, they converge to identical weights regardless of loss. Different utility functions → different labels → different models.
+**Nonlinear robustness:** Tested under Concave (prospect theory) and Threshold (dead zone) utility families. Labels-not-loss holds (cos sim >0.92), α-recovery Spearman=1.0 for both. α-interpolation proxy degrades under threshold (0.738→0.499) but diversity knob is invariant (0.724). See `results/nonlinear_robustness.json`.
 
 Full narrative: `docs/results.md`
 

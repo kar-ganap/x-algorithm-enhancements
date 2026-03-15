@@ -122,7 +122,7 @@ Then GMM soft clustering (equivalent to k-means with good features), plus 4 stre
 
 1. **Penalty-based differentiation** (failed): Added stakeholder-specific loss terms. All three models converged to identical weights (cosine sim ~1.0). Incorrectly diagnosed as "BT loss dominates penalties."
 
-2. **Alternative loss functions** (failed): 87 experiments across 4 loss functions (standard BT baseline, Margin-BT, Calibrated-BT, Constrained-BT). All produced identical weights when trained on the same preference pairs. This proved the issue wasn't the loss.
+2. **Alternative loss functions** (failed): 87 experiments across 4 loss functions (standard BT baseline, Margin-BT, Calibrated-BT, Constrained-BT). 79 converged — all to identical weights when trained on the same preference pairs. 8 constrained-BT-society experiments diverged (NaN loss) due to numerical instability in the diversity constraint. This proved the issue wasn't the loss.
 
 3. **Stakeholder-specific preference labels** (succeeded): Different utility functions per stakeholder → different (preferred, rejected) pairs → different learned weights. Cosine sim dropped from 1.0 to 0.478. The winning approach was conceptually the simplest.
 
@@ -206,19 +206,23 @@ Connects to: Skalse et al. (2025) on partial identifiability in reward learning;
 
 **Infrastructure**: Existing 87 experiments + synthetic ground truth directly support empirical measurement. Need to add rank-correlation metrics and theoretical analysis.
 
-### Direction 2: Utility function sensitivity
+### Direction 2: Utility function sensitivity *(resolved)*
 
 **Question**: How sensitive is the Pareto frontier to utility function parameterization?
 
-The `UtilityWeights` dataclass in `stakeholder_utilities.py` defines utility functions with ~14 free parameters (action weights for user positive/negative, platform weights). We used one set of values. What happens if you perturb them?
+**Key finding — two levels of robustness**: Individual parameter perturbation is safe (rank stability=1.0 at all tested levels, even ×3.0). But simultaneous perturbation of multiple parameters is not — at matched σ=0.3, within-group magnitude perturbation causes 2× more frontier shift than α-only perturbation.
 
-- If you change society's negativity penalty from 4.0 to 2.0, how much does the frontier shift?
-- Is there a "utility function tolerance" — a perturbation radius within which the Pareto-optimal policy doesn't change?
-- Which parameters matter most? (Sensitivity analysis: partial derivatives of frontier position with respect to each utility parameter.)
+- **α-dominance (Phase 1)**: Weight permutation within pos/neg groups barely affects the frontier (variance ratio 0.057 vs α-change). Holds at selection level too (ratio 0.062). But at matched perturbation magnitude, individual weight magnitudes matter more than α (ratio 1.96, reversal).
 
-This answers a practitioner question: *"how precisely must I specify my utility function before deploying a multistakeholder system?"* If the answer is "very precisely," that's a serious limitation. If it's "the frontier is robust to ±30% perturbations," that's reassuring.
+- **Parameter sweep (Angle A)**: Top-3 sensitive: platform:repost (6.6), user:favorite (5.5), user:repost (3.5) — engagement weights, not negative weights. Ranking survives scale normalization. **But rank stability = 1.000 for all params** — the Hausdorff sensitivity was measuring utility-axis rescaling, not frontier shape change. Individual misspecification doesn't change optimal operating points.
 
-**Infrastructure**: `compute_pareto_frontier()` exists. Need to add utility parameter sweep (grid over `UtilityWeights` dimensions) and frontier distance metrics.
+- **Specification vs data (Angle C)**: With misspecified weights (σ=0.3), more training data makes things *worse* after N=100 — a Goodhart effect where the model more faithfully learns the wrong utility. Data cannot compensate for misspecification; fix the weights first.
+
+- **Strengthening tests**: Magnitude perturbation (not just permutation) at σ=0.3 produces Hausdorff=3.98, below the α-change level (7.02) but above the permutation level (2.24). Selection-level test confirms α-dominance (ratio=0.062).
+
+**Practical answer**: Individual parameters are forgiving (rank stability=1.0). But correlated specification errors compound — simultaneous misspecification of multiple weights changes the frontier shape. Practitioners should prioritize engagement weights (favorite, repost) for calibration, not negative weights (block, report).
+
+**Infrastructure**: `scripts/analyze_utility_sensitivity.py`, `results/utility_sensitivity.json`.
 
 ### Direction 3: Partial observation (missing stakeholders)
 
@@ -243,20 +247,40 @@ In practice, societal impact is the hardest stakeholder to observe — there's n
 
   | Proxy (hiding society) | Recovery Rate | Notes |
   |---|---|---|
-  | α-interpolation (oracle α=4.0) | **1.000** | Perfect — structural knowledge + correct α |
-  | α-interpolation (blind α=2.2) | **1.000** | Even wrong α fully recovers |
+  | α-interpolation (oracle α=4.0) | **1.000**† | Structural knowledge + correct α |
+  | α-interpolation (blind α=2.2) | **1.000**† | Even wrong α fully recovers |
   | Diversity knob (dw=0.7) | **0.699** | Best practical method — no oracle |
   | Oracle linear (LS proxy) | 0.566 | Ceiling for linear combination |
   | Diversity knob (dw=0.5) | 0.415 | Moderate diversity also helps |
   | Structural synthesis (oracle α) | 0.153 | Pos/neg template too crude |
 
+  †*Note: 1.000 recovery was measured with a 100-item evaluation pool. With 500 items, α-interpolation (blind) recovers 0.738 — still the best structural method but not perfect. See nonlinear robustness audit below.*
+
   **Key insight**: Weight-space interpolation outperforms least-squares because it preserves the action-level structure learned during BT training, while LS regression dilutes it. The diversity knob at dw=0.7 is the best no-oracle approach — a practitioner can recover 70% of society's utility by simply increasing content diversity. For platform/user hiding, recovery rates are noisy (small baseline gap makes ratios unstable) but absolute regret is low (<0.1).
 
-- **Follow-up experiments** *(pending)*: partial observation sampling (how much society feedback suffices?), degradation bound (predict degradation from correlation structure).
+- **Partial observation sampling (Exp 4)** *(resolved)*: How much society data is enough? Swept 0–2000 preference pairs across 20 seeds. Key result: **25 pairs cuts regret by 42%** (1.111→0.644). Diminishing returns beyond ~200 pairs — the regret plateau at 0.55 is statistically indistinguishable across n=200-2000. Evaluation uses avg regret across the full frontier (not 2D Pareto-projected recovery, which saturates due to diversity-weight extremes).
 
-Connects to: Goodhart's Law in reinforcement learning (ICLR 2024); Pareto-optimal learning with hidden context (arXiv 2406.15599); multistakeholder evaluation (arXiv 2501.05170).
+- **Degradation bound (Exp 5)** *(resolved)*: Can we predict LOSO degradation from correlation structure alone? Swept α_hidden from 0.1–10.0 (13 synthetic stakeholders, 5 seeds). Oracle model (utility-space residual) achieves R²=0.954 with power law `regret ≈ 35 × std(resid)^1.8`. Proxy model (weight-space cosine) achieves R²=0.72. The gap (0.23 R²) is the information cost of not observing the hidden stakeholder. **Key theoretical finding**: within the structural utility family (pos − α·neg), all utilities are perfectly representable by the observed pair (R²=1.0). Regret arises entirely from the gap between structural and actual utility functions. Correlation features predict *ranking* (Spearman=0.96) but not exact magnitudes — magnitude depends on the hidden utility's sensitivity, which is inherently unobservable.
+
+- **Predicting the hidden stakeholder (Charter B)** *(resolved via Exp 5)*: Can you estimate society's weight vector from user + platform alone? Exp 5's R²=1.0 finding answers this directly: within the structural utility family (pos − α·neg), `w_society = ((α−0.3)/0.7)·w_user + ((1−α)/0.7)·w_platform` — an exact reconstruction. Direction 1 showed α is recoverable from BT weights (Spearman=1.0), so the full prediction pipeline is: recover α from observed stakeholders' disagreement structure → reconstruct the hidden weight vector. The prediction's accuracy is bounded by the gap between structural and actual utility functions (R²=0.957–0.994 in utility space).
+
+- **Scaling with K stakeholders (Charter E)** *(pending)*: How does frontier degradation scale when stakeholders are split into finer groups (e.g., 5+ sub-populations)? Does hiding 1 of 5 hurt less than 1 of 3?
+
+Connects to: Goodhart's Law in reinforcement learning (ICLR 2024); Pareto-optimal learning with hidden context (arXiv 2406.15599); multistakeholder evaluation (arXiv 2501.05170); minimax regret (Savage 1951); value of information (Howard 1966).
 
 **Infrastructure**: `scripts/analyze_partial_observation.py`, `results/partial_observation.json`.
+
+### Nonlinear robustness audit
+
+All results above assume linear utility (U = pos − α·neg). We tested whether F4's claims hold under two nonlinear departures: **Concave** (U = pos^γ − α·neg^γ, prospect theory diminishing returns) and **Threshold** (U = pos − α·max(neg−τ, 0), ignore low negativity). Three experiments, 156+ training runs:
+
+- **Labels vs Loss (Exp A)**: 36 training runs across 3 families × 3 stakeholders × 4 losses. All mean cosine sims >0.92 (user ~0.99, platform ~0.93, society ~0.97). The "labels not loss" claim generalizes to nonlinear utilities.
+- **α-Recovery (Exp B)**: 120 training runs. Both families preserve **Spearman = 1.0000** for α rank-ordering. Nonlinear params bias absolute α (concave inflates up to 57%, threshold deflates up to 40%) but never disrupt the ordering.
+- **Proxy Recovery (Exp C)**: Hiding society, 500 content items, 5 seeds. Diversity knob is invariant (0.724 for all families). α-interpolation degrades under threshold (0.738→0.499) because the dead zone breaks linear extrapolation, but holds under concave.
+
+**Methodological correction**: The original Exp 3 claim of interp=100% was an artifact of a 100-item evaluation pool. With 500 items, linear interp is 73.8%. The corrected Direction 3 finding: α-interpolation recovers ~74% (not 100%) of society's utility under linear assumptions, degrading to ~50% under threshold nonlinearity. The diversity knob remains the most robust practical proxy.
+
+**Infrastructure**: `scripts/analyze_nonlinear_robustness.py`, `results/nonlinear_robustness.json`.
 
 ### How these connect
 

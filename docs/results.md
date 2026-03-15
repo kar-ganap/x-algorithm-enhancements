@@ -2150,14 +2150,83 @@ Key findings: (1) **Society is the most dangerous stakeholder to miss** — 10×
 
 | Proxy | Recovery Rate | Type |
 |-------|--------------|------|
-| α-interpolation (oracle α=4.0) | **1.000** | Structural, oracle α |
-| α-interpolation (blind α=2.2) | **1.000** | Structural, heuristic α |
+| α-interpolation (oracle α=4.0) | **1.000**† | Structural, oracle α |
+| α-interpolation (blind α=2.2) | **1.000**† | Structural, heuristic α |
 | Diversity knob (dw=0.7) | **0.699** | Practical, no oracle |
 | Oracle linear (LS proxy) | 0.566 | Oracle, ceiling |
 | Diversity knob (dw=0.5) | 0.415 | Practical, no oracle |
 | Structural synthesis (oracle α) | 0.153 | Structural, oracle α |
 
-Key findings: (1) **Weight-space interpolation achieves perfect recovery** when the utility family structure is known — even with a heuristic α (2.2 instead of true 4.0). (2) The diversity knob at dw=0.7 recovers 70% of society's utility without any oracle knowledge — the best practical approach. (3) Oracle linear proxy only recovers 57%, below the diversity knob, because least-squares regression dilutes action-level structure. (4) Structural synthesis (fixed pos/neg templates) is too crude (15%) — it ignores within-group weight variation. See `results/partial_observation.json`.
+†*1.000 with 100-item pool; 0.738 with 500-item pool (see nonlinear robustness audit below).*
+
+Key findings: (1) **Weight-space interpolation achieves strong recovery** when the utility family structure is known — even with a heuristic α (2.2 instead of true 4.0), achieving 73.8% recovery at 500-item evaluation scale. (2) The diversity knob at dw=0.7 recovers 70% of society's utility without any oracle knowledge — the best practical approach. (3) Oracle linear proxy only recovers 57%, below the diversity knob, because least-squares regression dilutes action-level structure. (4) Structural synthesis (fixed pos/neg templates) is too crude (15%) — it ignores within-group weight variation. See `results/partial_observation.json`.
+
+**Partial observation sampling (Exp 4)**: How much society data is enough? Sweep from 0 to 2000 preference pairs (20 seeds, evaluated as avg regret across the full frontier):
+
+| Society pairs | Avg Regret | vs LOSO baseline |
+|--------------|-----------|-----------------|
+| 0 (LOSO) | **1.111** | — |
+| 25 | **0.644** | −42% |
+| 100 | 0.668 | −40% |
+| 200 | 0.588 | −47% |
+| 500 | 0.552 | −50% |
+| 2000 | 0.578 | −48% |
+
+Key findings: (1) **Even 25 society preference pairs cuts regret by 42%** — a minimal investment in society labels dramatically improves frontier quality. (2) **Diminishing returns beyond ~200 pairs** — the regret plateau at 0.55-0.58 is statistically indistinguishable across n=200-2000 (overlapping bootstrap CIs). (3) The evaluation uses avg regret across all diversity weights (not 2D Pareto-projected recovery) because a trained society model enables operating-point selection in all 3 dimensions.
+
+**Degradation bound (Exp 5)**: Can we predict LOSO degradation from the correlation structure alone — without running the experiment? We swept α_hidden from 0.1 to 10.0 (13 synthetic "hidden stakeholders", 5 seeds) and measured both degradation and correlation features:
+
+| Model | R²(log) | Spearman | Feature |
+|-------|---------|----------|---------|
+| Oracle (utility-space residual) | **0.954** | **0.962** | std(residual from regressing u_hidden on actual u_user, u_platform) |
+| Proxy (weight-space cosine) | 0.721 | 0.692 | 1 − cos(w_hidden, nearest observed) |
+
+The oracle model `regret ≈ 35 × std(residual)^1.8` achieves near-perfect prediction (R²=0.95). The exponent ~1.8 suggests quadratic loss structure. The proxy model (R²=0.72) is weaker because weight-space cosine compresses the high-α regime — a 0.18 range in cosine maps to a 130× range in regret.
+
+**Theoretical structure**: Decompose u_hidden = a·u_user + b·u_platform + u_⊥ (utility-space projection). Within the structural family (pos − α·neg), R² = 1.0 — all structural utilities lie in a 2D subspace, so there is no orthogonal component. The actual regret arises from the gap between structural utilities and real utility functions (`compute_user_utility`, `compute_platform_utility`), which have additional structure (engagement weighting, retention proxies). This gap is small (R² = 0.957-0.994) but generates all observed regret. **Practical implication**: correlation features predict the degradation *ranking* (Spearman=0.96) but not exact magnitudes; magnitude prediction requires knowledge of the hidden utility's sensitivity, which is inherently unobservable. The 0.23 R² gap between oracle and proxy quantifies the information value of observing the hidden stakeholder — connecting directly to Exp 4's finding that even 25 preference pairs dramatically reduce regret.
+
+**Nonlinear robustness audit**: All results above assume linear utility (U = pos − α·neg). Real stakeholder preferences may exhibit diminishing returns (prospect theory) or dead zones (ignoring low negativity). We tested two nonlinear families — Concave (U = pos^γ − α·neg^γ) and Threshold (U = pos − α·max(neg−τ, 0)) — across three experiments:
+
+**Exp A — Labels vs Loss** (mean cosine sim across 4 losses, 36 training runs):
+
+| Family | User | Platform | Society |
+|--------|------|----------|---------|
+| Linear | 0.989 | 0.929 | 0.976 |
+| Concave (γ=0.5–0.9) | 0.992 | 0.933 | 0.971 |
+| Threshold (τ=0.05–0.3) | 0.989 | 0.924 | 0.976 |
+
+All >0.92 — **the "labels not loss" claim generalizes to nonlinear utilities**. When all stakeholders train on identical (nonlinear) preference pairs, 4 loss functions converge to near-identical weights.
+
+**Exp B — α-Recovery** (120 training runs, 5 seeds each):
+
+| Family | α-Spearman | Sensitivity to nonlinear param |
+|--------|-----------|-------------------------------|
+| Concave (γ=0.7) | **1.0000** | 0.169 (γ biases absolute α upward) |
+| Threshold (τ=0.1) | **1.0000** | 0.154 (τ biases absolute α downward) |
+
+**Perfect rank-ordering of α preserved under both nonlinear families.** The nonlinear parameter shifts absolute α_recovered (concave inflates by up to 57%, threshold deflates by up to 40%) but never disrupts the ordering. Direction 1's core claim — that stakeholders can be ranked by negativity aversion — is robust.
+
+**Exp C — Proxy Recovery** (hiding society, 500 content items, 5 seeds):
+
+| Family | Oracle Linear | α-Interpolation | DW 0.7 | Interp Cosine |
+|--------|--------------|-----------------|--------|---------------|
+| Linear | 0.264 | 0.738 | 0.724 | 0.964 |
+| Concave | 0.431 | 1.000 | 0.724 | 0.961 |
+| Threshold | 0.259 | **0.499** | 0.724 | 0.966 |
+
+Key findings: (1) **Diversity knob is invariant to utility family** (0.724 everywhere) — it's structural, not parametric. (2) **α-interpolation degrades under threshold** (0.738→0.499) because the dead zone (neg<τ) creates preferences the linear proxy can't reproduce, but holds or improves under concave. (3) Weight-space cosines are nearly identical (~0.96) across families — the recovery difference comes from how small directional shifts interact with the content distribution, not from gross misalignment. (4) The original Exp 3 claim of interp=100% was an artifact of a 100-item evaluation pool; with 500 items, linear interp is 73.8%. See `results/nonlinear_robustness.json`.
+
+**Utility sensitivity (Direction 2)**: How precisely must the ~14 UtilityWeights parameters be specified? Four experiments, progressively refined:
+
+*Phase 1 — α-dominance test*: Weight permutation within positive/negative groups (preserving α = neg/pos ratio) vs α perturbation (scaling negative weights by ×0.5–2.0). Permutation produces 3.2× less frontier shift than α change (variance ratio 0.057). At the selection level (perturbed weights drive content ranking), α still dominates (ratio 0.062). **But at matched perturbation magnitude** (σ=0.3 for both), within-group magnitude perturbation causes 2× more frontier shift than α-only (Hausdorff 4.12 vs 2.10). The Pareto frontier is NOT fully robust to specification error.
+
+*Phase 2 — Parameter sweep*: Individual perturbation of 14 parameters at 8 levels (×0.5 to ×3.0), 5 seeds. Top-3 most sensitive: platform:repost (6.6), user:favorite (5.5), user:repost (3.5) — all engagement weights, not negative weights. Ranking survives scale normalization (Hausdorff/|baseline_weight|). **However, rank stability = 1.000 for all parameters at all perturbation levels** — the same Pareto-optimal operating points survive even ×3.0 perturbation of any single weight. The Hausdorff sensitivity measures scale change (utility axis stretching), not shape change. Individual parameter misspecification does not change the optimal policy.
+
+*Phase 3 — Specification vs data*: With misspecified weights (σ=0.3), more training data makes things worse after N=100 (Hausdorff: 2.27 at N=100, rising to 6.82 at N=500). This is a Goodhart effect — more data causes the BT model to more faithfully learn the wrong utility. With correct specification, Hausdorff is 0 regardless of data quantity. **Practical implication**: fix the specification first, then add data. Data cannot compensate for misspecified utilities.
+
+Summary: The frontier is robust to individual parameter perturbation (rank stability=1.0) but vulnerable to simultaneous perturbation of multiple parameters (matched-magnitude test). Engagement weights drive scale sensitivity; negative weights drive shape sensitivity through the α channel. See `results/utility_sensitivity.json`.
+
+**Linearity assumption**: Our utility family U = pos − α·neg is a special case of additive multi-attribute utility theory (MAUT; Keeney & Raiffa, 1976). MAUT decomposes a complex preference into a weighted sum of single-attribute utilities — exactly what Phoenix's dot product score = w·p assumes. The nonlinear audit tests the gap between MAUT's additive assumption and two plausible departures (diminishing returns, dead zones). The results show this gap is small: all core insights survive, with degradation only in the most parametric proxy method (α-interpolation under threshold). This also covers the LLM-as-annotator case: any LLM's implicit utility is a nonlinear function of positive and negative engagement features. If the concave and threshold families — which capture the most common departures from linearity (prospect theory, salience thresholds) — don't break F4's claims, then LLM-generated preference labels are compatible with the framework.
 
 Weight vectors show clear stakeholder patterns:
 
