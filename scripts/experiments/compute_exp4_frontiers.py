@@ -13,7 +13,7 @@ import types
 
 import numpy as np
 
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 
@@ -59,13 +59,13 @@ train_with_loss = alt_losses.train_with_loss
 
 loss_exp_mod = load_module_direct(
     "run_loss_experiments",
-    os.path.join(project_root, "scripts/run_loss_experiments.py"),
+    os.path.join(project_root, "scripts/experiments/run_loss_experiments.py"),
 )
 generate_content_pool = loss_exp_mod.generate_content_pool
 
 partial_obs_mod = load_module_direct(
     "analyze_partial_observation",
-    os.path.join(project_root, "scripts/analyze_partial_observation.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_partial_observation.py"),
 )
 compute_learned_frontier = partial_obs_mod.compute_learned_frontier
 compute_full_frontier = partial_obs_mod.compute_full_frontier
@@ -76,7 +76,7 @@ STAKEHOLDER_TYPE_MAP = partial_obs_mod.STAKEHOLDER_TYPE_MAP
 
 analyze_mod = load_module_direct(
     "analyze_stakeholder_utilities",
-    os.path.join(project_root, "scripts/analyze_stakeholder_utilities.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_stakeholder_utilities.py"),
 )
 generate_synthetic_data = analyze_mod.generate_synthetic_data
 

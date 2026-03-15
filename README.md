@@ -45,13 +45,13 @@ make test-all
 make all    # test + lint + typecheck
 
 # Train a reward model
-uv run python scripts/train_reward_model.py
+uv run python scripts/training/train_reward_model.py
 
 # Run the 87-experiment loss function comparison
-uv run python scripts/run_loss_experiments.py
+uv run python scripts/experiments/run_loss_experiments.py
 
 # Run partial observation analysis
-uv run python scripts/analyze_partial_observation.py --exp 4
+uv run python scripts/analysis/analyze_partial_observation.py --exp 4
 ```
 
 ## Repository Structure

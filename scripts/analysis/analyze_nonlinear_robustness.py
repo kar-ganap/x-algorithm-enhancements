@@ -32,7 +32,7 @@ from scipy.stats import pearsonr, spearmanr
 # ---------------------------------------------------------------------------
 # Module loading (same pattern as analyze_partial_observation.py)
 # ---------------------------------------------------------------------------
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 
@@ -94,14 +94,14 @@ ACTION_INDICES = alt_losses.ACTION_INDICES
 
 loss_exp_mod = load_module_direct(
     "run_loss_experiments",
-    os.path.join(project_root, "scripts/run_loss_experiments.py"),
+    os.path.join(project_root, "scripts/experiments/run_loss_experiments.py"),
 )
 generate_content_pool = loss_exp_mod.generate_content_pool
 
 # For Exp C: reuse partial observation infrastructure
 partial_obs_mod = load_module_direct(
     "analyze_partial_observation",
-    os.path.join(project_root, "scripts/analyze_partial_observation.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_partial_observation.py"),
 )
 compute_learned_frontier = partial_obs_mod.compute_learned_frontier
 compute_oracle_linear_proxy = partial_obs_mod.compute_oracle_linear_proxy
@@ -119,13 +119,13 @@ UTILITY_DIMS = partial_obs_mod.UTILITY_DIMS
 
 analyze_mod = load_module_direct(
     "analyze_stakeholder_utilities",
-    os.path.join(project_root, "scripts/analyze_stakeholder_utilities.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_stakeholder_utilities.py"),
 )
 generate_synthetic_data = analyze_mod.generate_synthetic_data
 
 alpha_stress_mod = load_module_direct(
     "analyze_alpha_stress",
-    os.path.join(project_root, "scripts/analyze_alpha_stress.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_alpha_stress.py"),
 )
 generate_correlated_content = alpha_stress_mod.generate_correlated_content
 

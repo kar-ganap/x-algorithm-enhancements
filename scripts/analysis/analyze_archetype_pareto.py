@@ -20,7 +20,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Module loading (same pattern as compare_pareto_frontiers.py)
 # ---------------------------------------------------------------------------
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 
@@ -64,13 +64,13 @@ compute_platform_utility = stakeholder_mod.compute_platform_utility
 # Reuse data generation and base_action_probs builder
 analyze_mod = load_module_direct(
     "analyze_stakeholder_utilities",
-    os.path.join(project_root, "scripts/analyze_stakeholder_utilities.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_stakeholder_utilities.py"),
 )
 generate_synthetic_data = analyze_mod.generate_synthetic_data
 
 pareto_mod = load_module_direct(
     "compare_pareto_frontiers",
-    os.path.join(project_root, "scripts/compare_pareto_frontiers.py"),
+    os.path.join(project_root, "scripts/evaluation/compare_pareto_frontiers.py"),
 )
 build_base_action_probs = pareto_mod.build_base_action_probs
 

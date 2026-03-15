@@ -38,7 +38,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Module loading (same pattern as compare_pareto_frontiers.py)
 # ---------------------------------------------------------------------------
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 
@@ -99,14 +99,14 @@ ACTION_INDICES = alt_losses.ACTION_INDICES
 # Reuse data generation
 analyze_mod = load_module_direct(
     "analyze_stakeholder_utilities",
-    os.path.join(project_root, "scripts/analyze_stakeholder_utilities.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_stakeholder_utilities.py"),
 )
 generate_synthetic_data = analyze_mod.generate_synthetic_data
 
 # Load run_loss_experiments for generate_content_pool
 loss_exp_mod = load_module_direct(
     "run_loss_experiments",
-    os.path.join(project_root, "scripts/run_loss_experiments.py"),
+    os.path.join(project_root, "scripts/experiments/run_loss_experiments.py"),
 )
 generate_content_pool = loss_exp_mod.generate_content_pool
 

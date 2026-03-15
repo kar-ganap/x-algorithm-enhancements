@@ -642,7 +642,7 @@ $$\text{engagement}_\text{learned}(c) = \mathbf{w}^\top \mathbf{P}(c)$$
 
 where $\mathbf{w}$ comes from the BT training on stakeholder-specific labels. Three variants: user-trained, platform-trained, and society-trained weight vectors.
 
-Implementation: `compute_learned_frontier()` in `scripts/compare_pareto_frontiers.py:151-225`.
+Implementation: `compute_learned_frontier()` in `scripts/evaluation/compare_pareto_frontiers.py:151-225`.
 
 ### 8.4 Sweeping the frontier
 
@@ -725,7 +725,7 @@ Higher label disagreement maps directly to lower cosine similarity (more differe
 
 This result means practitioners can **predict differentiation before training** by measuring label disagreement rates on a held-out sample — and if margin information is available, the prediction becomes near-deterministic (R² = 0.977).
 
-- **LLM confidence as margin proxy (CONDITIONAL_GO)**: The 2-variable model requires knowing the analytic margin, which requires knowing the utility function. We tested whether an LLM's confidence could substitute: Claude Haiku was given natural language stakeholder descriptions (e.g., "you're a safety-first moderator") and content as engagement/negativity scores (0-100), with no formula. The LLM applied its own implicit utility function across 15 sweep points × 200 pairs. Results: the 2-variable *structure* is robust — LLM disagreement tracks analytic disagreement (Pearson = 0.921) and the LLM 2-var model ranks cosine similarities correctly (Spearman = 0.929). However, LLM confidence is too compressed (range [1.40, 1.66]) to serve as a precise margin substitute (R² = 0.80). The go/no-go criterion was changed from R² to Spearman during analysis: rank-ordering is the practically relevant question — if the model correctly ranks which stakeholder pairs are most differentiated, a calibration curve can recover the scale. See `results/llm_margin_proxy.json` and `scripts/llm_margin_proxy.py`.
+- **LLM confidence as margin proxy (CONDITIONAL_GO)**: The 2-variable model requires knowing the analytic margin, which requires knowing the utility function. We tested whether an LLM's confidence could substitute: Claude Haiku was given natural language stakeholder descriptions (e.g., "you're a safety-first moderator") and content as engagement/negativity scores (0-100), with no formula. The LLM applied its own implicit utility function across 15 sweep points × 200 pairs. Results: the 2-variable *structure* is robust — LLM disagreement tracks analytic disagreement (Pearson = 0.921) and the LLM 2-var model ranks cosine similarities correctly (Spearman = 0.929). However, LLM confidence is too compressed (range [1.40, 1.66]) to serve as a precise margin substitute (R² = 0.80). The go/no-go criterion was changed from R² to Spearman during analysis: rank-ordering is the practically relevant question — if the model correctly ranks which stakeholder pairs are most differentiated, a calibration curve can recover the scale. See `results/llm_margin_proxy.json` and `scripts/experiments/llm_margin_proxy.py`.
 
 - **α-recovery from weight vectors**: For the utility family $U = \text{pos} - \alpha \cdot \text{neg}$, trained BT models across 13 $\alpha$ values (0.1–8.0) and tested whether $\alpha$ is recoverable from the learned weight vector via the ratio $-\bar{w}_\text{neg} / \bar{w}_\text{pos}$. Under ideal conditions: Spearman = 1.0 (perfect monotonic recovery), Pearson = 0.999, with systematic amplification ($\alpha_\text{rec} \approx -0.06 + 1.32 \cdot \alpha_\text{true}$). Stress-tested across 4 dimensions (1300 runs × 5 seeds × 13 $\alpha$ values):
 
@@ -736,7 +736,7 @@ This result means practitioners can **predict differentiation before training** 
   | BT temperature | $\beta = 0.5$ | $\beta \geq 0.5$ (decisive preferences) |
   | Content correlation $\rho(\text{pos}, \text{neg})$ | $\rho = 0.8$ | $\rho \leq 0.6$ (moderate OK) |
 
-  Key findings: (1) recovery is remarkably robust — tolerates 20% label noise and works with 250 pairs; (2) BT temperature is the strongest stressor; (3) moderate content correlation ($\rho = 0.3$) *improves* recovery; (4) Spearman degrades much slower than Pearson — rank ordering survives conditions that destroy linear fit. See `results/alpha_recovery.json`, `results/alpha_recovery_stress.json`, and `scripts/analyze_alpha_recovery.py`, `scripts/analyze_alpha_stress.py`.
+  Key findings: (1) recovery is remarkably robust — tolerates 20% label noise and works with 250 pairs; (2) BT temperature is the strongest stressor; (3) moderate content correlation ($\rho = 0.3$) *improves* recovery; (4) Spearman degrades much slower than Pearson — rank ordering survives conditions that destroy linear fit. See `results/alpha_recovery.json`, `results/alpha_recovery_stress.json`, and `scripts/analysis/analyze_alpha_recovery.py`, `scripts/analysis/analyze_alpha_stress.py`.
 
 - **Partial observation / missing stakeholders (Direction 3)**: If you optimize for observable stakeholders only, how much does the hidden stakeholder suffer? This is a Goodhart's Law experiment — platforms optimize what they can measure (engagement, retention) while societal impact (polarization, diversity) is hard to observe. We can measure the cost precisely because we know all three utility functions.
 
@@ -814,7 +814,7 @@ This result means practitioners can **predict differentiation before training** 
 
   **Literature connections**: The regret metric is the minimax regret criterion (Savage, 1951) applied to multi-stakeholder optimization. The partial observation experiment is a Value of Information analysis (Howard, 1966). The utility-space decomposition ($u_\text{hidden} = a \cdot u_\text{user} + b \cdot u_\text{platform} + u_\perp$) connects to subspace approximation bounds (Eckart-Young theorem) and the price of partial information in mechanism design (Bergemann & Välimäki, 2002).
 
-  See `results/partial_observation.json` and `scripts/analyze_partial_observation.py`.
+  See `results/partial_observation.json` and `scripts/analysis/analyze_partial_observation.py`.
 
 ### 9.3 External validation
 
@@ -865,7 +865,7 @@ The reversal at matched magnitude means individual weight magnitudes matter when
 
 **Practical answer**: Individual parameters are forgiving (rank stability 1.0). Correlated specification errors compound. Fix specification before collecting data — data cannot compensate for misspecified utilities.
 
-See `results/utility_sensitivity.json` and `scripts/analyze_utility_sensitivity.py`.
+See `results/utility_sensitivity.json` and `scripts/analysis/analyze_utility_sensitivity.py`.
 
 ### 10.3 Weight recovery
 
@@ -925,11 +925,11 @@ The 87 experiments exploring loss function variants were valuable — they produ
 | Behavioral tests | `enhancements/verification/behavioral_tests.py` | full file |
 | Action tests | `enhancements/verification/action_tests.py` | full file |
 | Counterfactual tests | `enhancements/verification/counterfactual_tests.py` | full file |
-| Pareto comparison script | `scripts/compare_pareto_frontiers.py` | 151-225 |
+| Pareto comparison script | `scripts/evaluation/compare_pareto_frontiers.py` | 151-225 |
 | BT results (user) | `results/loss_experiments/bradley_terry_user.json` | — |
 | BT results (platform) | `results/loss_experiments/bradley_terry_platform.json` | — |
 | BT results (society) | `results/loss_experiments/bradley_terry_society.json` | — |
 | Pareto frontier data | `results/pareto_comparison.json` | — |
-| Nonlinear robustness audit | `scripts/analyze_nonlinear_robustness.py` | full file |
+| Nonlinear robustness audit | `scripts/analysis/analyze_nonlinear_robustness.py` | full file |
 | Nonlinear robustness results | `results/nonlinear_robustness.json` | — |
 | Nonlinear robustness tests | `tests/test_analysis/test_nonlinear_robustness.py` | full file |

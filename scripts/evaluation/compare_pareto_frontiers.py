@@ -18,7 +18,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Module loading (same pattern as analyze_stakeholder_utilities.py)
 # ---------------------------------------------------------------------------
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 
@@ -65,7 +65,7 @@ compute_pareto_frontier = stakeholder_mod.compute_pareto_frontier
 # Reuse data generation from analyze_stakeholder_utilities
 analyze_mod = load_module_direct(
     "analyze_stakeholder_utilities",
-    os.path.join(project_root, "scripts/analyze_stakeholder_utilities.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_stakeholder_utilities.py"),
 )
 generate_synthetic_data = analyze_mod.generate_synthetic_data
 
