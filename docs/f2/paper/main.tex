@@ -221,12 +221,12 @@ synthetic Twitter environment. Code and data are available at
   label/.style={font=\footnotesize\itshape, text=gray!70!black},
 ]
 
-% 2023: Explicit weights
+% 2023: Explicit weights — spread boxes wider
 \node[box, fill=blue!8] (scorer2023) at (0, 0) {\textbf{Phoenix Heavy Ranker}\\[2pt]MaskNet neural network};
-\node[weight] (w1) at (-2.2, -1.8) {fav: 1.0};
-\node[weight] (w2) at (-0.7, -1.8) {repost: 0.8};
-\node[weight] (w3) at (0.8, -1.8) {block: $-$1.5};
-\node[weight] (w4) at (2.3, -1.8) {report: $-$3.0};
+\node[weight] (w1) at (-2.8, -1.8) {fav: 1.0};
+\node[weight] (w2) at (-0.9, -1.8) {repost: 0.8};
+\node[weight] (w3) at (0.9, -1.8) {block: $-$1.5};
+\node[weight] (w4) at (2.8, -1.8) {report: $-$3.0};
 
 \draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w1.north);
 \draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w2.north);
@@ -237,27 +237,27 @@ synthetic Twitter environment. Code and data are available at
 \node[font=\small\bfseries] at (0, 1.2) {March 2023};
 
 % Arrow between eras
-\draw[-{Stealth[length=8pt]}, ultra thick, gray!50] (4.5, 0) -- node[above, font=\small\itshape] {``eliminated all} node[below, font=\small\itshape] {hand-engineered features''} (7.5, 0);
+\draw[-{Stealth[length=8pt]}, ultra thick, gray!50] (5, 0) -- node[above, font=\small\itshape] {``eliminated all} node[below, font=\small\itshape] {hand-engineered features''} (8, 0);
 
-% 2026: Implicit weights
-\node[box, fill=red!8] (scorer2026) at (11, 0) {\textbf{Grok Transformer}\\[2pt]8B learned parameters};
-\node[opaque] (t1) at (8.8, -1.8) {P(fav)};
-\node[opaque] (t2) at (10.0, -1.8) {P(repost)};
-\node[opaque] (t3) at (11.2, -1.8) {P(block)};
-\node[opaque] (t4) at (12.5, -1.8) {P(report)};
-\node[font=\scriptsize, text=gray] at (13.5, -1.8) {$\cdots$};
+% 2026: Implicit weights — spread boxes wider
+\node[box, fill=red!8] (scorer2026) at (12, 0) {\textbf{Grok Transformer}\\[2pt]8B learned parameters};
+\node[opaque] (t1) at (9.2, -1.8) {P(fav)};
+\node[opaque] (t2) at (10.7, -1.8) {P(repost)};
+\node[opaque] (t3) at (12.2, -1.8) {P(block)};
+\node[opaque] (t4) at (13.7, -1.8) {P(report)};
+\node[font=\scriptsize, text=gray] at (14.8, -1.8) {$\cdots$};
 
 \draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t1.north);
 \draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t2.north);
 \draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t3.north);
 \draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t4.north);
 
-\node[label] at (11, -2.7) {Action \emph{types} visible, weights \textbf{opaque}};
-\node[font=\small\bfseries] at (11, 1.2) {January 2026};
+\node[label] at (12, -2.7) {Action \emph{types} visible, weights \textbf{opaque}};
+\node[font=\small\bfseries] at (12, 1.2) {January 2026};
 
 % Brace underneath
 \draw[decorate, decoration={brace, mirror, amplitude=6pt}, thick, red!60!black]
-  (-3, -3.2) -- (14, -3.2)
+  (-3.5, -3.2) -- (15.5, -3.2)
   node[midway, below=8pt, font=\small, text=red!60!black, align=center]
   {How precisely must utility weights be specified for meaningful\\multi-stakeholder audit?};
 
@@ -443,8 +443,8 @@ studied on the opaque production system.
 \draw[arrow] (bt) -- (weights);
 
 % Row 3: Evaluation
-\node[eval] (scorer) at (0, -2.2) {\textbf{Content Scorer}\\$s = \mathbf{w}^\top \mathbf{p}$\\+ diversity knob $\delta$};
-\node[eval] (frontier) at (0, -4.2) {\textbf{Pareto Frontier}\\[1pt]21 diversity weights\\3 utility dimensions};
+\node[eval, text width=3.4cm] (scorer) at (0, -2.2) {\textbf{Content Scorer}\\$s = \mathbf{w}^\top \mathbf{p}$\\+ diversity knob $\delta$};
+\node[eval, text width=3.4cm] (frontier) at (0, -4.2) {\textbf{Pareto Frontier}\\[1pt]21 diversity weights\\3 utility dims};
 
 \draw[arrow] (weights) -- (scorer);
 \draw[arrow] (scorer) -- (frontier);
