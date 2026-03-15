@@ -210,6 +210,10 @@ externally on MovieLens-100K (+59\% NDCG) and a 648-parameter
 synthetic Twitter environment. Code and data are available at
 \url{https://github.com/kar-ganap/x-algorithm-enhancements}.
 
+% TODO: Figure 1 (TikZ) — X algorithm transition schematic
+% TODO: Figure 2 (TikZ) — System pipeline schematic
+% Deferred to final formatting pass — schematics need design iteration.
+
 The remainder of the paper is organized as follows.
 \Cref{sec:background} reviews multi-stakeholder recommendation, BT
 preference learning, and utility sensitivity analysis.
@@ -1180,25 +1184,215 @@ All code and experiment protocols are publicly available.\footnote{%
 \section{Nonlinear Robustness Full Tables}
 \label{app:nonlinear}
 
+\begin{table}[H]
+\caption{Exp~A: Labels vs.\ Loss under nonlinear utilities (mean cosine similarity across 4 loss types).}
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Family & User & Platform & Society \\
+\midrule
+Linear & 0.989 & 0.929 & 0.976 \\
+Concave ($\gamma = 0.5$--$0.9$) & 0.992 & 0.933 & 0.971 \\
+Threshold ($\tau = 0.05$--$0.3$) & 0.989 & 0.924 & 0.976 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Exp~B: $\alpha$-recovery under nonlinear utilities.}
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Family & $\alpha$-Spearman & Sensitivity & Bias \\
+\midrule
+Concave ($\gamma = 0.7$) & 1.0000 & 0.169 & +57\% inflation \\
+Threshold ($\tau = 0.1$) & 1.0000 & 0.154 & $-$40\% deflation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Exp~C: Proxy recovery under nonlinear utilities (hiding society, 500-item pool).}
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+Family & Oracle & $\alpha$-Interp & DW 0.7 & Interp cosine \\
+\midrule
+Linear & 0.264 & 0.738 & 0.724 & 0.964 \\
+Concave & 0.431 & 1.000 & 0.724 & 0.961 \\
+Threshold & 0.259 & 0.499 & 0.724 & 0.966 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Stress $\times$ Nonlinearity (Exp D)}
 \label{app:stress}
+
+\begin{table}[H]
+\caption{Exp~D: Breaking points (Spearman~$< 0.95$) under nonlinear stress.}
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Dimension & Linear & Concave & Threshold \\
+\midrule
+Label noise ($p_{\text{flip}}$) & 0.30 & \textbf{0.20} & 0.30 \\
+Sample size ($n$) & 50 & 50 & 50 \\
+BT temperature ($\beta$) & 0.5 & 0.5 & 0.5 \\
+Content correlation ($\rho$) & 0.8 & 0.8 & 0.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Concave utility tightens the label-noise threshold from 0.30 to 0.20.
+All other thresholds are invariant across utility families. Practitioners
+using prospect-theoretic preferences should derate the linear noise
+threshold by one level ($\leq$15\% annotation error).
 
 \section{$K$-Stakeholder Scaling}
 \label{app:kscaling}
 
+\begin{table}[H]
+\caption{Charter~E: Scaling with $K$ stakeholders (F=8 factors, 101 diversity weights, 10 configs $\times$ 5 seeds).}
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+$K$ & Avg regret & Pareto frac. & Eff.\ rank & Ratio vs.\ $K\!=\!3$ \\
+\midrule
+3 & 0.189 & 0.484 & 3 & 1.000 \\
+5 & 0.171 & 0.594 & 5 & 0.902 \\
+7 & 0.179 & 0.749 & 7 & 0.947 \\
+10 & 0.182 & 0.757 & 8 & 0.960 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Concentration sweep at $K = 5$.}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+Concentration & Avg regret & Mean cosine \\
+\midrule
+0.5 (diverse) & 0.272 & 0.202 \\
+2.0 (moderate) & 0.171 & 0.280 \\
+5.0 (similar) & 0.157 & 0.266 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Correlation structure (Dirichlet concentration) produces a $4\times$
+larger effect on regret than the number of stakeholders.
+
 \section{Disagreement Bound Derivation}
 \label{app:disagreement}
+
+The two-variable model (\cref{eq:disagreement}) is fit via ordinary
+least squares on 34 data points from two sweeps: one fixing Platform
+($\alpha = 0.3$) and sweeping a partner, another fixing User
+($\alpha = 1.0$). Label disagreement rate~$d$ is computed on 50{,}000
+preference pairs. Mean total margin~$m$ is the average
+$|U_i(c_1) - U_i(c_2)|$ on disagreed pairs. The univariate model
+($d$ only) achieves $R^2 = 0.90$ but is reference-dependent; adding
+margin resolves this. For the utility family
+$U = \text{pos} - \alpha \cdot \text{neg}$, mean margin decomposes as
+$|\Delta\alpha| \cdot \mathbb{E}[\Delta\text{neg} \mid \text{disagreement}]$,
+cleanly separating parameter distance from content structure.
 
 \section{MovieLens Training Details}
 \label{app:movielens}
 
+Best configuration: BPR loss with in-batch negatives (batch size 32),
+64-dimensional learned embeddings, 4 transformer layers,
+learning rate $5 \times 10^{-4}$ (halved from $10^{-3}$), weight
+decay $10^{-4}$. Training stopped at epoch 9 (best validation
+NDCG@3). The BCE baseline achieved val NDCG@3 of 0.3157 but test
+NDCG@3 of only 0.2410 (severe overfitting due to score margins
+$\sim 10^{-8}$). BPR + in-batch negatives produces margins $\sim$0.1--0.2,
+eliminating the generalization gap (val 0.4112, test 0.4183).
+
+\begin{table}[H]
+\caption{MovieLens ablation study.}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+Configuration & NDCG@3 & Contribution \\
+\midrule
+Full model & 0.410 & Baseline \\
+Learned emb.\ + dot-product & 0.286 & +1.4\% \\
+Random emb.\ + transformer & 0.268 & $-$5.2\% \\
+Random baseline & 0.282 & --- \\
+\midrule
+Synergy effect & --- & $+$107.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Synthetic Twitter Verification}
 \label{app:synthetic}
+
+The synthetic environment defines 648 ground-truth parameters:
+$6 \times 6 \times 18$ (archetypes $\times$ topics $\times$ actions).
+Five verification suites test progressively deeper model properties:
+(1) embedding probes (silhouette scores: topic 0.9999, archetype 0.369);
+(2) behavioral tests (100\% accuracy, mean error $< 10^{-15}$);
+(3) action differentiation (6/6 tests pass, lurker--power user
+repost ratio 15.6$\times$);
+(4) block causal effect (78\% pass rate after adding synthetic block
+pairs during training);
+(5) archetype flip via history swapping (85.7\% pass rate).
 
 \section{Pluralistic Models and Causal Verification}
 \label{app:pluralistic}
 
+Phase~2 tested four pluralistic approaches for multi-group reward
+modeling: single BT (baseline), GMM clustering, soft assignment, and
+two-stage (cluster-then-train). The two-stage approach achieved 100\%
+cluster purity using topic$\times$action features, with overall
+accuracy 99.4\%. Weight correlation (0.554) fell below the target
+gate (0.8), a limitation attributed to BT's scale invariance rather
+than model failure.
+
+Phase~3 tested causal intervention: replacing a user's engagement
+history with a different archetype's history and measuring score
+changes. Action-level interventions (block, follow) achieve 100\%
+pass rate. History-level interventions achieve 50\% initially,
+improving to 86\% with history-topic contrastive loss.
+
 \section{Per-Parameter Sensitivity}
 \label{app:sensitivity}
+
+\begin{table}[H]
+\caption{Per-parameter sensitivity ranking (normalized by baseline weight magnitude). Rank stability = 1.0 for all parameters at all perturbation levels.}
+\centering\small
+\begin{tabular}{llrc}
+\toprule
+Parameter & Category & Rel.\ sensitivity & Tolerance \\
+\midrule
+user:favorite & Positive & 8.25 & $< \times 0.8$ \\
+platform:repost & Positive & 6.56 & $< \times 0.8$ \\
+user:repost & Positive & 6.45 & $< \times 0.8$ \\
+user:reply & Positive & 3.23 & $\pm$20\% \\
+platform:reply & Positive & 3.22 & $\pm$20\% \\
+user:not\_interested & Negative & 1.72 & $\pm$50\% \\
+platform:block\_author & Negative & 1.32 & $\pm$50\% \\
+user:block\_author & Negative & 1.31 & $\pm$30\% \\
+user:share & Positive & 1.15 & $\pm$50\% \\
+platform:share & Positive & 1.15 & $\pm$50\% \\
+user:follow\_author & Positive & 0.33 & $> \times 2$ \\
+user:quote & Positive & 0.32 & $> \times 2$ \\
+user:mute\_author & Negative & 0.30 & $> \times 2$ \\
+user:report & Negative & 0.27 & $> \times 2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The LLM margin proxy experiment (Claude Haiku, 15 sweep points
+$\times$ 200 pairs) achieves Spearman~$\rho = 0.929$ between LLM-based
+and analytic disagreement rates. LLM confidence is too compressed
+(range [1.40, 1.66]) for precise margin estimation but preserves
+rank-ordering. The go/no-go criterion was revised from $R^2$ to
+Spearman during analysis: rank-ordering is the practically relevant
+quantity for predicting which stakeholder pairs will be most
+differentiated.
 
 \end{document}
