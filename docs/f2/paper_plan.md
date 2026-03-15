@@ -1,4 +1,4 @@
-# F4 Preprint: Multi-Stakeholder Reward Modeling for Open-Source Recommendation Algorithms
+# F2 Preprint: Multi-Stakeholder Reward Modeling for Open-Source Recommendation Algorithms
 
 ## 1. Results Inventory (Aggregated)
 
@@ -112,8 +112,8 @@ We validate on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter 
 - §2.1 Multi-stakeholder recommender systems (Burke '17, Multi-FR '22, Eval '25, Lasser '25)
 - §2.2 Bradley-Terry preference learning and multi-attribute utility theory (Keeney & Raiffa '76)
 - §2.3 Reward misspecification and Goodhart's law (Skalse '24, Casper '23, Weng '24)
-- §2.4 Sensitivity analysis in multi-criteria decision analysis (MCDA review '23, weight stability '25)
-- §2.5 Platform transparency and algorithmic audit (EU DSA '24, Shaped.ai analysis '23)
+- §2.4 Sensitivity analysis in multi-criteria decision analysis (multi-criteria decision analysis (MCDA) review '23, weight stability '25)
+- §2.5 Platform transparency and algorithmic audit (EU Digital Services Act (DSA) '24, Shaped.ai analysis '23)
 - §2.6 X's algorithm: Phoenix heavy ranker architecture
 
 **§3 System, Data, and Methodology** (~2 pages)
@@ -306,7 +306,7 @@ The **pluralistic alignment** literature (Sorensen, Bakker, PAD) addresses diver
 | "14 parameters collapse to 3" | Directly refuted by test #3 | **Remove entirely.** |
 | LLM margin proxy (Spearman=0.929) | Tangential, go/no-go criterion changed | **Appendix only.** |
 | Phase 2 pluralistic models (100% purity) | Earlier phase, doesn't contribute to D1-D3 arc | **Appendix only.** |
-| Phase 3 causal verification (100% block, 50% history) | Important for F4 but not for this paper | **Appendix only.** |
+| Phase 3 causal verification (100% block, 50% history) | Important for F2 but not for this paper | **Appendix only.** |
 | MovieLens 107.5% synergy | Validates architecture, not multi-stakeholder analysis | **Brief mention in §8, details in appendix.** |
 
 ### Structural vulnerability: all results are on synthetic data

@@ -60,7 +60,7 @@ graph TB
     end
 
     subgraph enhancements["enhancements/ (Our Code)"]
-        subgraph f2["optimization/ (F2)"]
+        subgraph f2["optimization/ (F1)"]
             bench["benchmark.py"]
             kv["kv_cache.py"]
             attn["attention.py"]
@@ -68,14 +68,14 @@ graph TB
             optrunner["optimized_runner.py"]
         end
 
-        subgraph f4["reward_modeling/ (F4)"]
+        subgraph f4["reward_modeling/ (F2)"]
             reward["reward_model.py"]
             weights["weights.py"]
             train["training.py"]
             prefdata["preference_data.py"]
         end
 
-        subgraph f1["multimodal/ (F1)"]
+        subgraph f_unused["multimodal/ (planned, not built)"]
             clip["clip_encoder.py"]
             mmtower["candidate_tower.py"]
             mmretrieval["retrieval.py"]
@@ -101,17 +101,17 @@ graph LR
         C["Transformer"]
     end
 
-    subgraph F2["F2: Optimization"]
+    subgraph F2["F1: KV-Cache Optimization"]
         D["OptimizedPhoenixRunner"]
         E["wraps & accelerates"]
     end
 
-    subgraph F4["F4: Reward Modeling"]
+    subgraph F2["F2: Reward Modeling"]
         F["PhoenixRewardModel"]
         G["wraps & reframes"]
     end
 
-    subgraph F1["F1: Multimodal"]
+    subgraph F_unused["Multimodal (planned, not built)"]
         H["MultimodalRetriever"]
         I["extends & enhances"]
     end
@@ -123,7 +123,7 @@ graph LR
 
 ---
 
-## Feature 2 (F2): JAX Optimization
+## Feature 1 (F1): JAX Optimization
 
 ### Architecture
 
@@ -256,7 +256,7 @@ graph LR
 **Demo Output Example:**
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║                 F2: JAX OPTIMIZATION RESULTS                  ║
+║                 F1: KV-CACHE OPTIMIZATION RESULTS                  ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Metric              │ Baseline  │ Optimized │ Improvement   ║
 ╠══════════════════════════════════════════════════════════════╣
@@ -362,11 +362,11 @@ graph TB
 
 ---
 
-## Feature 4 (F4): RL Reward Modeling
+## Feature 2 (F2): RL Reward Modeling
 
 ### Vision: Beyond Simple Reward Weights
 
-F4 goes beyond basic RLHF reward learning to address fundamental limitations:
+F2 goes beyond basic reinforcement learning from human feedback (RLHF) reward learning to address fundamental limitations:
 
 1. **Pluralistic Values**: Different users have different reward functions (sports fans vs political users)
 2. **Causal Verification**: Rewards should capture causation, not just correlation
@@ -395,11 +395,11 @@ F4 goes beyond basic RLHF reward learning to address fundamental limitations:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### F2 → F4 Integration
+### F2 → F1 Integration
 
-F4 leverages the full power of F2:
+F2 leverages the full power of F1:
 
-| F2 Component | F4 Use |
+| F1 Component | F2 Use |
 |--------------|--------|
 | **Synthetic Twitter Data** | Ground truth archetypes = true pluralistic structure |
 | **Ground Truth Probabilities** | True reward weights per archetype for verification |
@@ -412,24 +412,24 @@ F4 leverages the full power of F2:
 
 ```mermaid
 graph TB
-    subgraph f2["F2: Foundation"]
+    subgraph f2["F1: KV-Cache"]
         phoenix["Phoenix Model<br/>(trained on synthetic)"]
         synthetic["Synthetic Data<br/>(6 archetypes, ground truth)"]
         optim["Optimized Runner<br/>(JIT + KV-Cache)"]
         verify["Verification Suite"]
     end
 
-    subgraph f4_foundation["F4: Foundation"]
+    subgraph f4_foundation["F2: Foundation"]
         reward_base["Basic Reward Model<br/>R = w · P(actions)"]
         context["Context-Dependent<br/>R = w[archetype] · P(actions)"]
     end
 
-    subgraph f4_core["F4: Core (Pluralistic + Causal)"]
+    subgraph f4_core["F2: Core (Pluralistic + Causal)"]
         plural["Pluralistic Rewards<br/>K value systems"]
         causal["Causal Verification<br/>Intervention tests"]
     end
 
-    subgraph f4_advanced["F4: Advanced (Multi-Stakeholder)"]
+    subgraph f4_advanced["F2: Advanced (Multi-Stakeholder)"]
         multi_obj["Multi-Objective<br/>Pareto frontier"]
         stakeholder["Stakeholder Utilities<br/>User/Platform/Society"]
         game["Game Theory<br/>(optional)"]
@@ -731,7 +731,7 @@ graph TB
 **Demo Output Example:**
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║              F4: LEARNED REWARD WEIGHTS                       ║
+║              F2: LEARNED REWARD WEIGHTS                       ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Action                │ Weight  │ Interpretation            ║
 ╠══════════════════════════════════════════════════════════════╣
@@ -754,7 +754,7 @@ graph TB
 
 ---
 
-## Feature 1 (F1): Multimodal Retrieval
+## Multimodal Retrieval (Originally F1, not implemented)
 
 ### Architecture
 
@@ -1073,7 +1073,7 @@ x-algorithm-enhancements/
 │   │   ├── quantization.py           # Int8 quantization
 │   │   └── optimized_runner.py       # Combined optimizations
 │   │
-│   ├── reward_modeling/              # F4
+│   ├── reward_modeling/              # F2
 │   │   ├── reward_model.py           # Phoenix wrapper
 │   │   ├── weights.py                # Learnable weights
 │   │   ├── preference_data.py        # Data handling
@@ -1121,10 +1121,10 @@ dependencies = [
     "dm-haiku>=0.0.13",
     "numpy>=1.26.4",
 
-    # F2: Optimization
+    # F1: Optimization
     # (no additional deps - pure JAX)
 
-    # F4: Reward Modeling
+    # F2: Reward Modeling
     "optax>=0.1.5",
 
     # F1: Multimodal

@@ -3,8 +3,8 @@
 This document captures the results, benchmarks, and learnings from implementing enhancements to the Phoenix recommendation system.
 
 **Features Covered:**
-- **F2: JAX Optimization** - JIT, KV-cache, quantization
-- **F4: Reward Modeling** - Bradley-Terry, pluralistic rewards, causal verification
+- **F1: JAX Optimization** - JIT, KV-cache, quantization
+- **F2: Reward Modeling** - Bradley-Terry, pluralistic rewards, causal verification
 
 ---
 
@@ -444,7 +444,7 @@ After training the Phoenix model on MovieLens-100K with BPR + in-batch negatives
 
 #### Training Context
 - **Model**: 64d embeddings, 4 transformer layers
-- **Best NDCG@3**: 0.4112 (epoch 9)
+- **Best Normalized Discounted Cumulative Gain (NDCG)@3**: 0.4112 (epoch 9)
 - **Training approach**: BPR loss with in-batch negatives (31 per positive)
 - **Ablation finding**: 107.5% synergy - transformer and embeddings only work together
 
@@ -1325,7 +1325,7 @@ uv run pytest tests/ -v
 
 ---
 
-# F4: Reward Modeling - Results & Learnings
+# F2: Reward Modeling - Results & Learnings
 
 **Summary**
 
@@ -1336,7 +1336,7 @@ uv run pytest tests/ -v
 | Phase 3 | ✅ Complete | Causal verification: **all 5 test suites pass** |
 | Phase 4 | ✅ Complete | Multi-stakeholder: **cosine sim 0.478** via label differentiation (was 1.0) |
 
-**Key F4 Finding**: Stakeholder model differentiation requires stakeholder-specific preference labels, not alternative loss functions. Standard BT with different utility functions per stakeholder achieves cosine similarity of 0.478 (target was < 0.95). The 87-experiment sweep confirmed no alternative loss improves on baseline BT.
+**Key F2 Finding**: Stakeholder model differentiation requires stakeholder-specific preference labels, not alternative loss functions. Standard BT with different utility functions per stakeholder achieves cosine similarity of 0.478 (target was < 0.95). The 87-experiment sweep confirmed no alternative loss improves on baseline BT.
 
 ---
 
@@ -1462,7 +1462,7 @@ scripts/
 ├── evaluate_reward_model.py # Comprehensive evaluation
 └── sensitivity_analysis.py  # Sensitivity study
 
-results/f4_phase1/
+results/f2_phase1/
 ├── baseline_weights.npy     # Trained weights
 ├── training_metrics.json    # Training history
 ├── comprehensive_evaluation.json
@@ -1799,11 +1799,11 @@ scripts/
 ├── test_gmm_rich_features.py          # GMM comparison
 ├── test_learned_embeddings.py         # Fix 2 experiments
 
-results/f4_phase2_two_stage/
+results/f2_phase2_two_stage/
 ├── two_stage_summary.json
 ├── two_stage_comparison.json
 
-results/f4_phase2_gmm/
+results/f2_phase2_gmm/
 ├── gmm_comparison.json
 ```
 
@@ -1827,7 +1827,7 @@ uv run python scripts/test_gmm_rich_features.py
 ### Objective
 Implement intervention tests to verify that reward models capture **causal relationships**, not just correlations.
 
-From the design doc (F4 Tier 1B):
+From the design doc (F2 Tier 1B):
 > "Rewards should capture causation, not just correlation"
 
 ### Two Key Interventions
@@ -1946,7 +1946,7 @@ scripts/
 ├── test_causal_verification.py  # Basic causal tests
 ├── stress_test_causal.py        # 7 stress tests for causal understanding
 
-results/f4_phase3_causal/
+results/f2_phase3_causal/
 ├── causal_verification_results.json
 ├── stress_test_results.json
 ```
@@ -2226,7 +2226,7 @@ Key findings: (1) **Diversity knob is invariant to utility family** (0.724 every
 
 Summary: The frontier is robust to individual parameter perturbation (rank stability=1.0) but vulnerable to simultaneous perturbation of multiple parameters (matched-magnitude test). Engagement weights drive scale sensitivity; negative weights drive shape sensitivity through the α channel. See `results/utility_sensitivity.json`.
 
-**Linearity assumption**: Our utility family U = pos − α·neg is a special case of additive multi-attribute utility theory (MAUT; Keeney & Raiffa, 1976). MAUT decomposes a complex preference into a weighted sum of single-attribute utilities — exactly what Phoenix's dot product score = w·p assumes. The nonlinear audit tests the gap between MAUT's additive assumption and two plausible departures (diminishing returns, dead zones). The results show this gap is small: all core insights survive, with degradation only in the most parametric proxy method (α-interpolation under threshold). This also covers the LLM-as-annotator case: any LLM's implicit utility is a nonlinear function of positive and negative engagement features. If the concave and threshold families — which capture the most common departures from linearity (prospect theory, salience thresholds) — don't break F4's claims, then LLM-generated preference labels are compatible with the framework.
+**Linearity assumption**: Our utility family U = pos − α·neg is a special case of additive multi-attribute utility theory (MAUT; Keeney & Raiffa, 1976). MAUT decomposes a complex preference into a weighted sum of single-attribute utilities — exactly what Phoenix's dot product score = w·p assumes. The nonlinear audit tests the gap between MAUT's additive assumption and two plausible departures (diminishing returns, dead zones). The results show this gap is small: all core insights survive, with degradation only in the most parametric proxy method (α-interpolation under threshold). This also covers the LLM-as-annotator case: any LLM's implicit utility is a nonlinear function of positive and negative engagement features. If the concave and threshold families — which capture the most common departures from linearity (prospect theory, salience thresholds) — don't break F2's claims, then LLM-generated preference labels are compatible with the framework.
 
 Weight vectors show clear stakeholder patterns:
 

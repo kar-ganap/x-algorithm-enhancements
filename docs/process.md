@@ -56,7 +56,7 @@ Also:
 
 ## Branch Conventions
 
-- Phase branches: `fN-phaseM-description` (e.g., `f4-phase3-causal-verification`)
+- Phase branches: `fN-phaseM-description` (e.g., `f2-phase3-causal-verification`)
 - Branch off main, merge via PR
 - No force pushes to main
 

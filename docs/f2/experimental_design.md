@@ -1,8 +1,8 @@
-# F4 Experimental Design: Multi-Stakeholder Reward Modeling
+# F2 Experimental Design: Multi-Stakeholder Reward Modeling
 
 ## Abstract
 
-This report documents the experimental design behind F4, a multi-stakeholder reward modeling system built on xAI's Phoenix recommendation ranker. The core problem: a social media platform serves multiple stakeholders — users, the platform itself, and society — whose objectives often conflict. A post that maximizes engagement (platform's goal) might increase political polarization (society's concern) or surface content the user would rather not see (user's concern). We ask: given distinct definitions of what each stakeholder values, can we train meaningfully different reward models from the same underlying action probabilities?
+This report documents the experimental design behind F2, a multi-stakeholder reward modeling system built on xAI's Phoenix recommendation ranker. The core problem: a social media platform serves multiple stakeholders — users, the platform itself, and society — whose objectives often conflict. A post that maximizes engagement (platform's goal) might increase political polarization (society's concern) or surface content the user would rather not see (user's concern). We ask: given distinct definitions of what each stakeholder values, can we train meaningfully different reward models from the same underlying action probabilities?
 
 The answer is yes — but the mechanism is not what we initially expected. Across 87 experiments with 4 different loss functions, we discovered that stakeholder differentiation comes entirely from the training labels (which content pairs each stakeholder prefers), not from the loss function used to train the model. This report details the full experimental setup: how we generate synthetic data with 648 explicit behavioral parameters, how we define stakeholder utility functions, how preference pairs are constructed, and the mathematical formulation of each loss function we tested.
 
@@ -272,7 +272,7 @@ These parameters are hand-specified based on action semantics, not empirically v
 
 ## 4. Preference Pair Generation
 
-This section describes the mechanism that turned out to be the critical lever for stakeholder differentiation. The entire F4 investigation ultimately comes down to how preference pairs are constructed.
+This section describes the mechanism that turned out to be the critical lever for stakeholder differentiation. The entire F2 investigation ultimately comes down to how preference pairs are constructed.
 
 ### 4.1 The algorithm
 
@@ -306,7 +306,7 @@ The highest disagreement is between Platform and Society (35%). This makes intui
 
 ### 4.3 Why preference pairs are THE lever
 
-This is the central finding of the entire F4 project, established through 87 experiments:
+This is the central finding of the entire F2 project, established through 87 experiments:
 
 **When all stakeholders train on identical preference pairs, they learn identical weight vectors regardless of loss function.**
 
@@ -750,7 +750,7 @@ This result means practitioners can **predict differentiation before training** 
   | Platform | 0.369 ± 0.042 | 0.308 ± 0.014 | U-P cosine = 0.830, disagreement = 23% |
   | User | 0.111 ± 0.029 | 0.141 ± 0.025 | U-S cosine = 0.884, disagreement = 12% |
 
-  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) HV ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection.
+  Key findings: (1) society is the most dangerous stakeholder to miss — 10× more regret than user, 3× more than platform; (2) Exp 1 and Exp 2 produce consistent degradation rankings, validating the geometric analysis; (3) Hypervolume (HV) ratio = 1.0 everywhere — the cost is entirely in the hidden dimension, not the observed utilities; (4) training-based LOSO shows slightly more dominated points (14.4% vs 6.4% when hiding user) because learned scorers introduce additional misalignment beyond geometric projection.
 
 - **Aggregation proxy (Exp 3)**: Tested 6 proxy methods for recovering the hidden stakeholder's utility. Hiding society (primary case):
 
@@ -828,7 +828,7 @@ This result means practitioners can **predict differentiation before training** 
 
 ### 10.1 The synthetic data caveat
 
-All F4 results except MovieLens are on synthetic data designed to be learnable. Ground truth archetypes have clean separation; engagement patterns are noise-free before we add noise ourselves. Real engagement data has overlapping user behaviors, noisy signals, temporal drift, and ambiguous preferences. The reported numbers (99.3% accuracy, 100% purity, 0.478 cosine sim) are upper bounds on real-world performance.
+All F2 results except MovieLens are on synthetic data designed to be learnable. Ground truth archetypes have clean separation; engagement patterns are noise-free before we add noise ourselves. Real engagement data has overlapping user behaviors, noisy signals, temporal drift, and ambiguous preferences. The reported numbers (99.3% accuracy, 100% purity, 0.478 cosine sim) are upper bounds on real-world performance.
 
 ### 10.2 Utility function sensitivity *(resolved)*
 
@@ -887,7 +887,7 @@ The model achieves 86% archetype flip rate — meaning 14% of the time, swapping
 
 ### 10.5 No production path
 
-F4 produces 18-dimensional weight vectors stored in JSON files. There is no system that combines them with F2's optimized inference pipeline (JIT, KV-cache, quantization) into a serving-time recommendation pipeline. No A/B testing framework, no real-data ingestion, no monitoring. The entire F4 body of work is a research prototype with rigorous internal validation but zero production readiness.
+F2 produces 18-dimensional weight vectors stored in JSON files. There is no system that combines them with F1's optimized inference pipeline (JIT, KV-cache, quantization) into a serving-time recommendation pipeline. No A/B testing framework, no real-data ingestion, no monitoring. The entire F2 body of work is a research prototype with rigorous internal validation but zero production readiness.
 
 ### 10.6 The lamppost
 
