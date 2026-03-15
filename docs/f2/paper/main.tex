@@ -239,7 +239,7 @@ propose a four-stage evaluation methodology (stakeholder identification,
 value articulation, metric selection, aggregate evaluation).
 Lasser et al.~\cite{lasser2025designing} argue for designing
 recommendation algorithms through the lens of healthy civic discourse,
-foregrounding societal welfare as a first-class stakeholder objective.
+foregrounding societal welfare as a first-class stakeholder objective. Stray et al.~\cite{stray2024building} provide an interdisciplinary synthesis of how to embed human values in recommender systems.
 
 A parallel line of work on \emph{pluralistic alignment} addresses
 diverse preferences within reinforcement learning from human feedback
@@ -249,7 +249,7 @@ reward models~\cite{pad2025personalized} to federated
 aggregation. These approaches assume preferences can be captured in a
 single (possibly personalized) model. Our work takes a different
 stance: stakeholders have fundamentally different objective functions
-that must be traded off on a frontier, and the critical question is
+that must be traded off on a frontier, Agarwal et al.~\cite{agarwal2024system2} formalize the utility-engagement distinction via temporal point processes. Our work asks the complementary question:
 what happens when one stakeholder's objective is absent entirely.
 
 \subsection{Bradley-Terry Preference Learning}
@@ -287,7 +287,7 @@ Casper et al.~\cite{casper2023open} catalog open problems in RLHF,
 arguing that condensing diverse human preferences into a single reward
 model is ``fundamentally misspecified.'' This concern applies
 \emph{a fortiori} to multi-stakeholder systems, where each
-stakeholder's utility may be independently misspecified.
+stakeholder's utility may be independently misspecified. Hadfield-Menell and Hadfield~\cite{hadfield2019incomplete} draw an analogy to incomplete contracting: reward functions inevitably fail to specify all contingencies.
 
 The Goodhart taxonomy distinguishes regressional, extremal, causal,
 and adversarial failure modes~\cite{skalse2024goodhart}. Our
@@ -304,7 +304,7 @@ weights~\cite{mcda2023sensitivity}. Classical MAUT sensitivity
 analysis~\cite{farmer1987testing} computes ``weight stability
 intervals''---the range within which each weight can vary without
 changing the top-ranked alternative~\cite{weightstability2025}.
-Iancu and Trichakis~\cite{iancu2014pareto} extend this to
+A recent survey~\cite{robust2025survey} catalogs robustness approaches for recommender systems. Iancu and Trichakis~\cite{iancu2014pareto} extend this to
 multi-objective optimization, defining \emph{robust Pareto
 optimality}: solutions that remain Pareto-optimal under worst-case
 parameter uncertainty.
@@ -422,7 +422,7 @@ three stakeholders differ primarily in $\alpha$:
     engagement and discomfort avoidance.
   \item \textbf{Platform} ($\alpha = 0.3$): Tolerant of negative
     signals; all engagement has value.
-  \item \textbf{Society} ($\alpha = 4.0$): Heavily penalizes
+  \item \textbf{Society} ($\alpha = 4.0$): Heavily penalizes (motivated by evidence that algorithmic exposure affects polarization~\cite{bail2018exposure})
     block/report/mute signals as proxies for polarization and harm.
 \end{itemize}
 
@@ -520,7 +520,7 @@ fixed). Among the converged experiments, the key finding is that
 \emph{all four loss types produce near-identical weight vectors when
 trained on the same preference data}. Pairwise cosine similarity
 between weight vectors trained with different losses on the same
-stakeholder exceeds $\costhresh$ in every case. The differentiation
+stakeholder exceeds $\costhresh$ in every case (\cref{tab:cosine}). The differentiation
 that appears in the final models---cosine similarity of 0.478 between
 platform and society, 0.830 between user and platform, 0.884 between
 user and society---arises entirely from \emph{different training
@@ -566,7 +566,7 @@ invest in stakeholder-specific labeling, not loss engineering.
 
 Given that labels determine differentiation, we ask: what structural
 properties of the underlying utility function are recoverable from
-the learned weight vector? For the structural family
+the learned weight vector? For the structural family (\cref{eq:utility})
 $U = \text{pos} - \alpha \cdot \text{neg}$, we test whether the
 negativity-aversion parameter~$\alpha$ can be extracted from trained
 BT weights via the ratio
@@ -574,7 +574,7 @@ $\hat\alpha = -\bar{w}_{\text{neg}} / \bar{w}_{\text{pos}}$.
 
 We sweep $\alpha \in \{0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 2.0,
 3.0, 4.0, 5.0, 7.0, 8.0\}$ (13 values, 5 seeds each). The
-recovered $\hat\alpha$ values preserve perfect monotonic ordering:
+recovered $\hat\alpha$ values (\cref{fig:alpha}) preserve perfect monotonic ordering:
 Spearman~$\rho = \alphaspearman$ across all methods tested (ratio,
 sum-ratio, regression). The relationship is affine:
 $\hat\alpha \approx -0.06 + 1.32 \cdot \alpha_{\text{true}}$
@@ -588,7 +588,7 @@ recovered.
 \subsection{Stress Testing}
 \label{sec:stress}
 
-We stress-test $\alpha$-recovery across four dimensions (1{,}300
+We stress-test $\alpha$-recovery across four dimensions (\cref{tab:stress}) (1{,}300
 total training runs, 5 seeds $\times$ 13 $\alpha$ values per
 condition):
 
@@ -684,14 +684,14 @@ The degradation ranking matches the pairwise correlation structure:
 society has the lowest cosine similarity (0.478) with the observed
 pair. Geometric and training-based LOSO produce consistent
 rankings, validating the geometric analysis. The 2D Pareto frontiers
-are rarely dominated in 3D (0\% for society)---the cost of partial
+are rarely dominated in 3D (0\% for society)---The regret metric follows the minimax criterion of Savage~\cite{savage1951theory}: the cost of partial
 observation is entirely in the hidden dimension.
 
 \subsection{Proxy Methods}
 
 Can we recover the hidden stakeholder's utility using proxies
 constructed from the observed stakeholders' weight vectors? We test
-six methods, focusing on hiding society (the highest-stakes case):
+six methods, focusing on hiding society (the highest-stakes case) (\cref{tab:proxy}):
 
 \begin{table}[t]
   \caption{Proxy recovery rates for hidden society utility (5 seeds,
@@ -755,7 +755,7 @@ Can we predict LOSO degradation from observable correlation features
 $\alpha_{\text{hidden}} \in [0.1, 10.0]$ (13 synthetic hidden
 stakeholders, 5 seeds each) and fit predictive models in log space.
 
-The \emph{oracle} feature---standard deviation of the residual from
+The oracle feature (\cref{fig:degradation})---standard deviation of the residual from
 regressing structural $u_{\text{hidden}}$ on \emph{actual}
 $u_{\text{user}}$ and $u_{\text{platform}}$---achieves near-perfect
 prediction: $\text{regret} \approx 35 \times
@@ -892,7 +892,7 @@ noise on all weights, \emph{not} preserving $\alpha$):
     reduce $\sigma$ from 0.5 to 0.0. Hausdorff decreases
     monotonically, as expected.
   \item \textbf{More data} (fixed $\sigma = 0.3$): increase $N$ from
-    25 to 2{,}000. Hausdorff \emph{increases} after $N = 100$---from
+    25 to 2{,}000. Hausdorff \emph{increases} after $N = 100$ (\cref{fig:goodhart})---from
     2.27 at $N = 100$ to 6.82 at $N = 500$.
 \end{itemize}
 
@@ -924,7 +924,7 @@ specification first, then collect data.
 
 \subsection{The Pareto Robustness Buffer}
 
-Synthesizing across all Direction~2 experiments:
+Synthesizing across all Direction~2 experiments (\cref{tab:sensitivity}):
 
 \begin{table}[t]
   \caption{Utility sensitivity summary: the Pareto frontier's response
