@@ -1268,13 +1268,13 @@ scripts/
 
 ```bash
 # Generate synthetic data
-uv run python scripts/train_synthetic.py --generate
+uv run python scripts/training/train_synthetic.py --generate
 
 # Train model
-uv run python scripts/train_synthetic.py --epochs 10
+uv run python scripts/training/train_synthetic.py --epochs 10
 
 # Run verification suite
-uv run python scripts/verify_synthetic.py
+uv run python scripts/evaluation/verify_synthetic.py
 ```
 
 ---
@@ -1475,7 +1475,7 @@ results/f4_phase1/
 
 ```bash
 # Train baseline model
-uv run python scripts/train_reward_model.py
+uv run python scripts/training/train_reward_model.py
 
 # Run comprehensive evaluation
 uv run python scripts/evaluate_reward_model.py
@@ -1988,7 +1988,7 @@ uv run python scripts/run_phase3b_analysis.py
 uv run python scripts/analyze_learned_model.py --num-samples 200
 
 # Phase 4 Multi-Stakeholder analysis
-uv run python scripts/analyze_stakeholder_utilities.py        # Pareto frontier analysis
+uv run python scripts/analysis/analyze_stakeholder_utilities.py        # Pareto frontier analysis
 uv run python scripts/train_and_compare_stakeholder_models.py # Per-stakeholder model comparison
 ```
 
@@ -2359,8 +2359,8 @@ results/loss_experiments/
 
 ```bash
 # Run full experiment suite
-PYTHONUNBUFFERED=1 uv run python scripts/run_loss_experiments.py --all
+PYTHONUNBUFFERED=1 uv run python scripts/experiments/run_loss_experiments.py --all
 
 # Quick sanity test (4 experiments, 10 epochs)
-uv run python scripts/run_loss_experiments.py --quick-test
+uv run python scripts/experiments/run_loss_experiments.py --quick-test
 ```

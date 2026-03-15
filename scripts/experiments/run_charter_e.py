@@ -22,7 +22,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 # Module loading
 # ---------------------------------------------------------------------------
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
 
@@ -89,13 +89,13 @@ compute_regret_on_dim = frontier_mod.compute_regret_on_dim
 
 partial_obs_mod = load_module_direct(
     "analyze_partial_observation",
-    os.path.join(project_root, "scripts/analyze_partial_observation.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_partial_observation.py"),
 )
 build_base_action_probs = partial_obs_mod.build_base_action_probs
 
 analyze_mod = load_module_direct(
     "analyze_stakeholder_utilities",
-    os.path.join(project_root, "scripts/analyze_stakeholder_utilities.py"),
+    os.path.join(project_root, "scripts/analysis/analyze_stakeholder_utilities.py"),
 )
 generate_synthetic_data = analyze_mod.generate_synthetic_data
 

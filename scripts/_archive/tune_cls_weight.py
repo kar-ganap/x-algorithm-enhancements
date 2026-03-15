@@ -20,7 +20,7 @@ def run_training(cls_weight: float, epochs: int = 10, patience: int = 5) -> str:
     model_path = f"models/synthetic_twitter/model_cls{cls_weight}.pkl"
 
     cmd = [
-        "uv", "run", "python", "scripts/train_synthetic.py",
+        "uv", "run", "python", "scripts/training/train_synthetic.py",
         "--epochs", str(epochs),
         "--patience", str(patience),
         "--cls-weight", str(cls_weight),
@@ -43,7 +43,7 @@ def run_training(cls_weight: float, epochs: int = 10, patience: int = 5) -> str:
 def run_verification(model_path: str) -> dict:
     """Run verification and return results."""
     cmd = [
-        "uv", "run", "python", "scripts/verify_synthetic.py",
+        "uv", "run", "python", "scripts/evaluation/verify_synthetic.py",
         "--model", model_path,
         "--output", "/dev/null",
     ]

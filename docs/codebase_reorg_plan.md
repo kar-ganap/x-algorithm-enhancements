@@ -12,19 +12,19 @@ Modified (8):
   docs/f4/retro.md
   docs/results.md
   enhancements/reward_modeling/alternative_losses.py
-  scripts/analyze_partial_observation.py
-  scripts/analyze_nonlinear_robustness.py
+  scripts/analysis/analyze_partial_observation.py
+  scripts/analysis/analyze_nonlinear_robustness.py
   tasks/lessons.md
 
 Untracked (12):
   docs/f4/paper_plan.md
   enhancements/reward_modeling/factor_stakeholders.py
   enhancements/reward_modeling/k_stakeholder_frontier.py
-  scripts/analyze_utility_sensitivity.py
-  scripts/compute_exp4_frontiers.py
+  scripts/analysis/analyze_utility_sensitivity.py
+  scripts/experiments/compute_exp4_frontiers.py
   scripts/exp4_diagnostic.py
-  scripts/run_charter_e.py
-  scripts/visualize_exp4.py
+  scripts/experiments/run_charter_e.py
+  scripts/visualization/visualize_exp4.py
   tests/test_analysis/test_nonlinear_robustness.py
   tests/test_analysis/test_utility_sensitivity.py
   tests/test_reward_modeling/test_factor_stakeholders.py
@@ -76,28 +76,28 @@ These are the critical cross-references that must be updated during restructure:
 
 ```
 analyze_partial_observation.py loads:
-  - scripts/run_loss_experiments.py (generate_content_pool)
-  - scripts/analyze_stakeholder_utilities.py (generate_synthetic_data)
+  - scripts/experiments/run_loss_experiments.py (generate_content_pool)
+  - scripts/analysis/analyze_stakeholder_utilities.py (generate_synthetic_data)
 
 analyze_nonlinear_robustness.py loads:
-  - scripts/run_loss_experiments.py
-  - scripts/analyze_partial_observation.py
-  - scripts/analyze_stakeholder_utilities.py
-  - scripts/analyze_alpha_stress.py
+  - scripts/experiments/run_loss_experiments.py
+  - scripts/analysis/analyze_partial_observation.py
+  - scripts/analysis/analyze_stakeholder_utilities.py
+  - scripts/analysis/analyze_alpha_stress.py
 
 analyze_utility_sensitivity.py loads:
-  - scripts/run_loss_experiments.py
-  - scripts/analyze_partial_observation.py
-  - scripts/analyze_stakeholder_utilities.py
+  - scripts/experiments/run_loss_experiments.py
+  - scripts/analysis/analyze_partial_observation.py
+  - scripts/analysis/analyze_stakeholder_utilities.py
 
 run_charter_e.py loads:
-  - scripts/analyze_partial_observation.py
-  - scripts/analyze_stakeholder_utilities.py
+  - scripts/analysis/analyze_partial_observation.py
+  - scripts/analysis/analyze_stakeholder_utilities.py
 
 compute_exp4_frontiers.py loads:
-  - scripts/run_loss_experiments.py
-  - scripts/analyze_partial_observation.py
-  - scripts/analyze_stakeholder_utilities.py
+  - scripts/experiments/run_loss_experiments.py
+  - scripts/analysis/analyze_partial_observation.py
+  - scripts/analysis/analyze_stakeholder_utilities.py
 
 visualize_exp4.py loads: (none — reads from JSON)
 
@@ -105,21 +105,21 @@ run_loss_experiments.py loads:
   - (enhancements only, no cross-script deps)
 
 analyze_alpha_stress.py loads:
-  - scripts/run_loss_experiments.py
+  - scripts/experiments/run_loss_experiments.py
 
 analyze_disagreement_bound.py loads:
-  - scripts/run_loss_experiments.py
-  - scripts/analyze_stakeholder_utilities.py
+  - scripts/experiments/run_loss_experiments.py
+  - scripts/analysis/analyze_stakeholder_utilities.py
 
 analyze_alpha_recovery.py loads:
-  - scripts/run_loss_experiments.py
+  - scripts/experiments/run_loss_experiments.py
 
 analyze_rank_recovery.py loads:
-  - scripts/run_loss_experiments.py
+  - scripts/experiments/run_loss_experiments.py
 
 analyze_archetype_pareto.py loads:
-  - scripts/run_loss_experiments.py
-  - scripts/analyze_stakeholder_utilities.py
+  - scripts/experiments/run_loss_experiments.py
+  - scripts/analysis/analyze_stakeholder_utilities.py
 ```
 
 ### Target scripts/ layout (post-reorg)

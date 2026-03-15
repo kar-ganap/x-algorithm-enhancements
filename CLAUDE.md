@@ -73,7 +73,15 @@ enhancements/reward_modeling/   # F4 core: reward model, training, utilities
   alternative_losses.py         # Phase 4: margin-BT, calibrated-BT, etc.
   weights.py                    # ACTION_INDICES, NUM_ACTIONS (18)
 
-scripts/                        # Training, evaluation, analysis scripts
+scripts/                        # Organized into subdirectories:
+  training/                     # train_reward_model, train_synthetic, train_movielens
+  analysis/                     # analyze_partial_observation, analyze_nonlinear_robustness, etc.
+  experiments/                  # run_loss_experiments, run_charter_e, compute_exp4_frontiers
+  visualization/                # visualize_exp4 (reads JSON, instant)
+  evaluation/                   # evaluate_reward_model, verify_synthetic, compare_pareto
+  data/                         # generate_synthetic, download_movielens
+  _archive/                     # one-off diagnostics (exp4_diagnostic, ablation_study, etc.)
+
 tests/                          # pytest suite
 tasks/lessons.md                # Self-improvement log (review at session start)
 docs/results.md                 # Full results narrative (all phases)

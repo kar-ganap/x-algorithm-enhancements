@@ -175,7 +175,7 @@ Source: `docs/results.md:1388-1401`. Best strategy: add feature noise, keep labe
 
 ### "Diversity knob coefficients are justified"
 
-The serving-time scoring formula `favorite + 0.8*repost + 0.5*follow_author` has no empirical basis. No experiment determined that reposts should be weighted 0.8 or follows 0.5. The Pareto frontier analysis in `scripts/compare_pareto_frontiers.py` showed the learned BT scorer (18D weight vector per stakeholder) produces a shifted frontier — user-trained scorer achieves user_utility 1.149 at diversity_weight=0.1, vs hardcoded max of 1.087 at diversity_weight=0.3. The knob's *mechanism* (greedy diversity-aware selection) is valuable; its *scoring* is the weak link.
+The serving-time scoring formula `favorite + 0.8*repost + 0.5*follow_author` has no empirical basis. No experiment determined that reposts should be weighted 0.8 or follows 0.5. The Pareto frontier analysis in `scripts/evaluation/compare_pareto_frontiers.py` showed the learned BT scorer (18D weight vector per stakeholder) produces a shifted frontier — user-trained scorer achieves user_utility 1.149 at diversity_weight=0.1, vs hardcoded max of 1.087 at diversity_weight=0.3. The knob's *mechanism* (greedy diversity-aware selection) is valuable; its *scoring* is the weak link.
 
 Source: `results/pareto_comparison.json` — hardcoded max user_utility 1.087 vs learned user scorer max 1.149.
 
@@ -222,7 +222,7 @@ Connects to: Skalse et al. (2025) on partial identifiability in reward learning;
 
 **Practical answer**: Individual parameters are forgiving (rank stability=1.0). But correlated specification errors compound — simultaneous misspecification of multiple weights changes the frontier shape. Practitioners should prioritize engagement weights (favorite, repost) for calibration, not negative weights (block, report).
 
-**Infrastructure**: `scripts/analyze_utility_sensitivity.py`, `results/utility_sensitivity.json`.
+**Infrastructure**: `scripts/analysis/analyze_utility_sensitivity.py`, `results/utility_sensitivity.json`.
 
 ### Direction 3: Partial observation (missing stakeholders)
 
@@ -268,7 +268,7 @@ In practice, societal impact is the hardest stakeholder to observe — there's n
 
 Connects to: Goodhart's Law in reinforcement learning (ICLR 2024); Pareto-optimal learning with hidden context (arXiv 2406.15599); multistakeholder evaluation (arXiv 2501.05170); minimax regret (Savage 1951); value of information (Howard 1966).
 
-**Infrastructure**: `scripts/analyze_partial_observation.py`, `results/partial_observation.json`.
+**Infrastructure**: `scripts/analysis/analyze_partial_observation.py`, `results/partial_observation.json`.
 
 ### Nonlinear robustness audit
 
@@ -280,7 +280,7 @@ All results above assume linear utility (U = pos − α·neg). We tested whether
 
 **Methodological correction**: The original Exp 3 claim of interp=100% was an artifact of a 100-item evaluation pool. With 500 items, linear interp is 73.8%. The corrected Direction 3 finding: α-interpolation recovers ~74% (not 100%) of society's utility under linear assumptions, degrading to ~50% under threshold nonlinearity. The diversity knob remains the most robust practical proxy.
 
-**Infrastructure**: `scripts/analyze_nonlinear_robustness.py`, `results/nonlinear_robustness.json`.
+**Infrastructure**: `scripts/analysis/analyze_nonlinear_robustness.py`, `results/nonlinear_robustness.json`.
 
 ### How these connect
 
@@ -372,7 +372,7 @@ The harder, unanswered question: how do you *design* stakeholder-specific utilit
 
 ### 3. Analysis scripts have no tests
 
-The scripts that produce the key results cited throughout this retro — `scripts/compare_pareto_frontiers.py`, `scripts/analyze_stakeholder_utilities.py`, `scripts/run_loss_experiments.py` — have zero test coverage. They are the source of truth for claims like "user scorer shifts frontier rightward" and "87 experiments show standard BT is best." If these scripts had bugs in their utility calculations or Pareto computations, we wouldn't know from the test suite.
+The scripts that produce the key results cited throughout this retro — `scripts/evaluation/compare_pareto_frontiers.py`, `scripts/analysis/analyze_stakeholder_utilities.py`, `scripts/experiments/run_loss_experiments.py` — have zero test coverage. They are the source of truth for claims like "user scorer shifts frontier rightward" and "87 experiments show standard BT is best." If these scripts had bugs in their utility calculations or Pareto computations, we wouldn't know from the test suite.
 
 ### 4. Weight correlation gate was relaxed, not passed
 
