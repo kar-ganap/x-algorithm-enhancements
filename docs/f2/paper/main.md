@@ -10,7 +10,7 @@ Recommendation systems serve multiple stakeholders with conflicting objectives. 
 
 These questions are newly urgent. In January 2026, X (formerly Twitter) open-sourced a complete rewrite of its recommendation algorithm [@xalgorithm2026], replacing the hand-engineered Phoenix heavy ranker [@xalgorithm2023] with a Grok-based transformer that "eliminated every single hand-engineered feature and most heuristics." The 2023 release exposed *explicit* utility weights---per-action multipliers for favorites, reposts, blocks, and 15 other engagement signals. The 2026 release exposes *structure without weights*: the prediction targets (action types) are visible, but the actual utility weighting is implicit in 8B learned parameters. This transition ([1]) from explicit to implicit specification raises a concrete audit question: can regulators assess multi-stakeholder welfare from released code when the weights are opaque? [@shaped2023secrets]
 
-We study all three questions on a realistic synthetic benchmark built on X's 18-action engagement space, using BT preference learning to train separate reward models for three stakeholders (user, platform, society). Our principal findings:
+We cannot study these questions directly on the production Grok model: the trained parameters and user data are proprietary, and our methodology requires known ground-truth utilities to measure regret and recovery. Instead, we build a controlled synthetic benchmark on X's 18-action engagement space, using BT preference learning to train separate reward models for three stakeholders (user, platform, society). The benchmark shares the production action space but uses synthetic utilities with known ground truth---the only setting where questions about *how much* is lost can be answered precisely. Our principal findings:
 
 - **Labels, not loss, determine differentiation.** Across 87 training experiments (79 converged) with four BT loss variants, stakeholder weight vectors converge to cosine similarity $>0.92$ when trained on identical preference labels, regardless of loss function. Differentiation arises entirely from stakeholder-specific training data. The negativity-aversion parameter $\alpha$ is recoverable from learned weights with Spearman $\rho = 1.0$, robust to $\leq$`<!-- -->`{=html}20% label noise and $\geq$`<!-- -->`{=html}250 preference pairs ([4]).
 
@@ -414,13 +414,15 @@ For practitioners deploying multi-stakeholder recommendation systems, our result
 
 ## Implications for Platform Transparency
 
-X's January 2026 algorithm release provides prediction targets (action types) but not learned parameters---*structure without weights*. Our analysis suggests this is *partially* sufficient for multi-stakeholder audit: the ranking of which stakeholder is most dangerous to miss is predictable from action-type classification and pairwise disagreement rates (Spearman $= 0.96$). However, magnitude prediction requires approximate weight disclosure, and the Goodhart result shows that audits based on misspecified proxy utilities can be worse than no audit at all if the proxies systematically amplify specification errors.
+X's January 2026 algorithm release provides prediction targets (action types) but not learned parameters---*structure without weights*. In our synthetic benchmark, this is *partially* sufficient for multi-stakeholder audit: the ranking of which stakeholder is most dangerous to miss is predictable from action-type classification and pairwise disagreement rates (Spearman $= 0.96$). However, magnitude prediction requires approximate weight disclosure, and the Goodhart result shows that audits based on misspecified proxy utilities can be worse than no audit at all if the proxies systematically amplify specification errors.
 
-For regulators implementing the EU Digital Services Act [@lasser2025designing], the practical recommendation is: require platforms to disclose at minimum (1) the action space (positive/negative classification), (2) approximate negativity-aversion ratios per stakeholder, and (3) the engagement weights for the top-3 most sensitive actions. This would enable meaningful third-party LOSO analysis at modest transparency cost.
+These findings are established on an 18-parameter linear model, not on a production-scale transformer. Whether the same degradation bounds hold when utility is distributed across 8B learned parameters is an open question. Nevertheless, the *structural* results---the ordering of stakeholder sensitivity, the diminishing returns of data collection, and the Goodhart mechanism---depend on properties of the multi-stakeholder optimization problem (Pareto geometry, BT convergence) rather than model scale, and we conjecture they generalize.
+
+If these results transfer, they suggest that regulators implementing the EU Digital Services Act [@lasser2025designing] should require platforms to disclose at minimum (1) the action space (positive/negative classification), (2) approximate negativity-aversion ratios per stakeholder, and (3) the engagement weights for the top-3 most sensitive actions. This would enable meaningful third-party LOSO analysis at modest transparency cost.
 
 ## Limitations
 
-**Synthetic data.** All multi-stakeholder findings depend on synthetic data with known ground truth (600 users, 100 content items, 648-parameter Twitter simulation). MovieLens validates the BT architecture on real data but not the stakeholder analysis. The methodology (LOSO, $\alpha$-recovery, sensitivity analysis) generalizes; the specific numbers are benchmark-specific.
+**Synthetic data and scale gap.** All multi-stakeholder findings depend on synthetic data with known ground truth (600 users, 100 content items, 648-parameter Twitter simulation). MovieLens validates the BT architecture on real data but not the stakeholder analysis. The methodology (LOSO, $\alpha$-recovery, sensitivity analysis) generalizes; the specific numbers are benchmark-specific. Critically, our benchmark uses 18-dimensional linear weight vectors, while the production system distributes utility across 8B transformer parameters. The production model's trained weights and user data are not publicly available, and ground-truth stakeholder utilities do not exist for real platforms---both prerequisites for our regret-based evaluation. Whether the degradation bounds and sensitivity thresholds established here transfer to production-scale models remains an open empirical question.
 
 **Three stakeholders.** The $K$-stakeholder scaling analysis ([13]) tests $K > 3$ but with synthetic factor-based stakeholders. Real stakeholder populations may not follow Dirichlet factor loadings.
 
@@ -443,6 +445,7 @@ All code and experiment protocols are publicly available.[^2]
 
 # Nonlinear Robustness Full Tables {#app:nonlinear}
 
+::: {#tab:nonlinear-labels}
   Family                              User    Platform   Society
   ---------------------------------- ------- ---------- ---------
   Linear                              0.989    0.929      0.976
@@ -450,14 +453,18 @@ All code and experiment protocols are publicly available.[^2]
   Threshold ($\tau = 0.05$--$0.3$)    0.989    0.924      0.976
 
   : Labels vs. Loss under nonlinear utilities (mean cosine similarity across 4 loss types).
+:::
 
+::: {#tab:nonlinear-alpha}
   Family                      $\alpha$-Spearman   Sensitivity                 Bias
   -------------------------- ------------------- ------------- -----------------------------------
   Concave ($\gamma = 0.7$)           1.0             0.169               +57% inflation
   Threshold ($\tau = 0.1$)           1.0             0.154      $-$`<!-- -->`{=html}40% deflation
 
   : $\alpha$-recovery under nonlinear utilities.
+:::
 
+::: {#tab:nonlinear-proxy}
   Family       Oracle   $\alpha$-Interp   DW 0.7   Interp cosine
   ----------- -------- ----------------- -------- ---------------
   Linear       0.264         0.738        0.724        0.964
@@ -465,9 +472,11 @@ All code and experiment protocols are publicly available.[^2]
   Threshold    0.259         0.499        0.724        0.966
 
   : Proxy recovery under nonlinear utilities (hiding society, 500-item pool).
+:::
 
 # Stress $\times$ Nonlinearity {#app:stress}
 
+::: {#tab:stress-nonlinear}
   Dimension                          Linear   Concave    Threshold
   --------------------------------- -------- ---------- -----------
   Label noise ($p_{\text{flip}}$)     0.30    **0.20**     0.30
@@ -476,11 +485,13 @@ All code and experiment protocols are publicly available.[^2]
   Content correlation ($\rho$)        0.8       0.8         0.8
 
   : Breaking points (Spearman $< 0.95$) under nonlinear stress.
+:::
 
 Concave utility tightens the label-noise threshold from 0.30 to 0.20. All other thresholds are invariant across utility families. Practitioners using prospect-theoretic preferences should derate the linear noise threshold by one level ($\leq$`<!-- -->`{=html}15% annotation error).
 
 # $K$-Stakeholder Scaling {#app:kscaling}
 
+::: {#tab:kscaling}
   $K$    Avg regret   Pareto frac.   Eff. rank   Ratio vs. $K\!=\!3$
   ----- ------------ -------------- ----------- ---------------------
   3        0.189         0.484           3              1.000
@@ -489,7 +500,9 @@ Concave utility tightens the label-noise threshold from 0.30 to 0.20. All other 
   10       0.182         0.757           8              0.960
 
   : Scaling with $K$ stakeholders (8 factors, 101 diversity weights, 10 configs $\times$ 5 seeds).
+:::
 
+::: {#tab:concentration}
   Concentration     Avg regret   Mean cosine
   ---------------- ------------ -------------
   0.5 (diverse)       0.272         0.202
@@ -497,6 +510,7 @@ Concave utility tightens the label-noise threshold from 0.30 to 0.20. All other 
   5.0 (similar)       0.157         0.266
 
   : Concentration sweep at $K = 5$.
+:::
 
 Correlation structure (Dirichlet concentration) produces a $4\times$ larger effect on regret than the number of stakeholders.
 
@@ -508,6 +522,7 @@ The two-variable model ([\[eq:disagreement\]][24]) is fit via ordinary least squ
 
 Best configuration: BPR loss with in-batch negatives (batch size 32), 64-dimensional learned embeddings, 4 transformer layers, learning rate $5 \times 10^{-4}$ (halved from $10^{-3}$), weight decay $10^{-4}$. Training stopped at epoch 9 (best validation NDCG@3). The BCE baseline achieved val NDCG@3 of 0.316 but test NDCG@3 of only 0.241 (severe overfitting due to score margins $\sim 10^{-8}$). BPR + in-batch negatives produces margins $\sim$`<!-- -->`{=html}0.1--0.2, eliminating the generalization gap (val 0.411, test 0.418).
 
+::: {#tab:movielens-ablation}
   Configuration                 NDCG@3          Contribution
   ---------------------------- -------- ----------------------------
   Full model                    0.410             Baseline
@@ -517,6 +532,7 @@ Best configuration: BPR loss with in-batch negatives (batch size 32), 64-dimensi
   Synergy effect                 ---     $+$`<!-- -->`{=html}107.5%
 
   : MovieLens ablation study.
+:::
 
 # Synthetic Twitter Verification {#app:synthetic}
 
@@ -530,6 +546,7 @@ Causal verification tested intervention: replacing a user's engagement history w
 
 # Per-Parameter Sensitivity {#app:sensitivity}
 
+::: {#tab:per-param}
   Parameter               Category     Rel. sensitivity          Tolerance
   ----------------------- ---------- ------------------ ---------------------------
   user:favorite           Positive                 8.25       $< \times 0.8$
@@ -548,6 +565,7 @@ Causal verification tested intervention: replacing a user's engagement history w
   user:report             Negative                 0.27        $> \times 2$
 
   : Per-parameter sensitivity ranking (normalized by baseline weight magnitude). Rank stability = 1.0 for all parameters at all perturbation levels.
+:::
 
 The LLM margin proxy experiment (Claude Haiku, 15 sweep points $\times$ 200 pairs) achieves Spearman $\rho = 0.929$ between LLM-based and analytic disagreement rates. LLM confidence is too compressed (range \[1.40, 1.66\]) for precise margin estimation but preserves rank-ordering. The go/no-go criterion was revised from $R^2$ to Spearman during analysis: rank-ordering is the practically relevant quantity for predicting which stakeholder pairs will be most differentiated.
 

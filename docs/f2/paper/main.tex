@@ -89,11 +89,14 @@
 Multi-stakeholder recommendation systems balance user engagement,
 platform retention, and societal welfare, but the utility functions
 defining these objectives are hand-specified, partially observable, and
-potentially misspecified. We present a systematic empirical study of
-these three challenges on X's open-source recommendation algorithm
-(Phoenix, 18 engagement actions, 3 stakeholders), motivated by the
-platform's transition from explicit utility weights (2023) to an
-implicit Grok-based transformer (2026).
+potentially misspecified. We develop methodology for studying
+these three challenges on a synthetic benchmark built on X's
+18-action engagement space, motivated by the platform's transition
+from explicit utility weights (2023) to an implicit Grok-based
+transformer (2026). Because the production model's trained parameters
+and user data are not publicly available, we use a controlled
+environment with known ground-truth utilities---a prerequisite for
+measuring regret, recovery, and sensitivity.
 
 \textbf{Identifiability.} Across 87 training experiments with four
 Bradley-Terry loss variants, stakeholder differentiation is determined
@@ -165,10 +168,16 @@ specification raises a concrete audit question: can regulators assess
 multi-stakeholder welfare from released code when the weights are
 opaque?~\cite{shaped2023secrets}
 
-We study all three questions on a realistic synthetic benchmark built
-on X's 18-action engagement space, using BT preference learning to
+We cannot study these questions directly on the production Grok model:
+the trained parameters and user data are proprietary, and our
+methodology requires known ground-truth utilities to measure regret
+and recovery. Instead, we build a controlled synthetic benchmark on
+X's 18-action engagement space, using BT preference learning to
 train separate reward models for three stakeholders (user, platform,
-society). Our principal findings:
+society). The benchmark shares the production action space but uses
+synthetic utilities with known ground truth---the only setting where
+questions about \emph{how much} is lost can be answered precisely.
+Our principal findings:
 
 \begin{itemize}
   \item \textbf{Labels, not loss, determine differentiation.} Across
@@ -212,6 +221,7 @@ synthetic Twitter environment. Code and data are available at
 % ── Figure 1: X algorithm transition ──────────────────────────────
 \begin{figure*}[t]
 \centering
+\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
   box/.style={draw, rounded corners=3pt, minimum height=1.4cm, text width=3.8cm, align=center, font=\small},
   weight/.style={draw, rounded corners=2pt, minimum height=0.6cm, font=\scriptsize\ttfamily, fill=blue!5},
@@ -260,7 +270,8 @@ synthetic Twitter environment. Code and data are available at
   node[midway, below=8pt, font=\small, text=red!60!black, align=center]
   {How precisely must utility weights be specified for meaningful\\multi-stakeholder audit?};
 
-\end{tikzpicture}
+\end{tikzpicture}%
+}% end resizebox
 \caption{X's algorithm transition. The 2023 Phoenix release exposed
   explicit per-action weights (left). The 2026 Grok release exposes
   prediction targets but not weights (right). Our study tests how much
@@ -1222,7 +1233,7 @@ our results suggest a sequential approach:
 
 X's January 2026 algorithm release provides prediction targets (action
 types) but not learned parameters---\emph{structure without weights}.
-Our analysis suggests this is \emph{partially} sufficient for
+In our synthetic benchmark, this is \emph{partially} sufficient for
 multi-stakeholder audit: the ranking of which stakeholder is most
 dangerous to miss is predictable from action-type classification and
 pairwise disagreement rates (Spearman~$= 0.96$). However, magnitude
@@ -1231,9 +1242,19 @@ result shows that audits based on misspecified proxy utilities can be
 worse than no audit at all if the proxies systematically amplify
 specification errors.
 
-For regulators implementing the EU Digital Services
-Act~\cite{lasser2025designing}, the practical recommendation is:
-require platforms to disclose at minimum (1) the action space
+These findings are established on an 18-parameter linear model, not
+on a production-scale transformer. Whether the same degradation
+bounds hold when utility is distributed across 8B learned parameters
+is an open question. Nevertheless, the \emph{structural} results---the
+ordering of stakeholder sensitivity, the diminishing returns of data
+collection, and the Goodhart mechanism---depend on properties of the
+multi-stakeholder optimization problem (Pareto geometry, BT
+convergence) rather than model scale, and we conjecture they
+generalize.
+
+If these results transfer, they suggest that regulators implementing
+the EU Digital Services Act~\cite{lasser2025designing} should require
+platforms to disclose at minimum (1) the action space
 (positive/negative classification), (2) approximate negativity-aversion
 ratios per stakeholder, and (3) the engagement weights for the top-3
 most sensitive actions. This would enable meaningful third-party LOSO
@@ -1241,12 +1262,20 @@ analysis at modest transparency cost.
 
 \subsection{Limitations}
 
-\textbf{Synthetic data.} All multi-stakeholder findings depend on
-synthetic data with known ground truth (600 users, 100 content items,
-648-parameter Twitter simulation). MovieLens validates the BT
-architecture on real data but not the stakeholder analysis. The
-methodology (LOSO, $\alpha$-recovery, sensitivity analysis)
-generalizes; the specific numbers are benchmark-specific.
+\textbf{Synthetic data and scale gap.} All multi-stakeholder findings
+depend on synthetic data with known ground truth (600 users, 100
+content items, 648-parameter Twitter simulation). MovieLens validates
+the BT architecture on real data but not the stakeholder analysis.
+The methodology (LOSO, $\alpha$-recovery, sensitivity analysis)
+generalizes; the specific numbers are benchmark-specific. Critically,
+our benchmark uses 18-dimensional linear weight vectors, while the
+production system distributes utility across 8B transformer parameters.
+The production model's trained weights and user data are not publicly
+available, and ground-truth stakeholder utilities do not exist for
+real platforms---both prerequisites for our regret-based evaluation.
+Whether the degradation bounds and sensitivity thresholds established
+here transfer to production-scale models remains an open empirical
+question.
 
 \textbf{Three stakeholders.} The $K$-stakeholder scaling analysis (\cref{app:kscaling}) tests $K > 3$ but with
 synthetic factor-based stakeholders. Real stakeholder populations may
