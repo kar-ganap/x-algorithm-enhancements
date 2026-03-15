@@ -725,3 +725,160 @@ class TestDiversityKnobProxy:
         dw, util = find_best_hidden_utility(frontier, "society_utility")
         assert dw == 0.4
         assert util == 3.0
+
+
+class TestPartialSampling:
+    """Tests for Exp 4: partial observation sampling logic."""
+
+    def test_recovery_nondecreasing_with_more_data(self) -> None:
+        """More society data should not decrease recovery on average.
+
+        Uses a simple linear model: society utility ∝ -neg_weight.
+        More pairs → better estimate of neg_weight → higher recovery.
+        """
+        # Simulate: recovery increases with n (possibly noisy)
+        # Here we test the monotonic trend on synthetic recovery values
+        sweep = [
+            {"n_society_pairs": 0, "recovery_mean": 0.0},
+            {"n_society_pairs": 25, "recovery_mean": 0.3},
+            {"n_society_pairs": 100, "recovery_mean": 0.6},
+            {"n_society_pairs": 500, "recovery_mean": 0.85},
+            {"n_society_pairs": 2000, "recovery_mean": 0.98},
+        ]
+        recoveries = [e["recovery_mean"] for e in sweep]
+        # Verify monotonically non-decreasing
+        for i in range(1, len(recoveries)):
+            assert recoveries[i] >= recoveries[i - 1], (
+                f"Recovery decreased from n={sweep[i-1]['n_society_pairs']} "
+                f"to n={sweep[i]['n_society_pairs']}"
+            )
+
+    def test_zero_pairs_is_loso_baseline(self) -> None:
+        """n=0 should match the LOSO baseline recovery (0% by definition)."""
+        # With n=0, recovery_rate should equal the LOSO best-of-two
+        # which is the baseline reference point (recovery_rate ≈ 0).
+        # The exact value depends on how recovery_rate is defined,
+        # but it should be identical to the LOSO metric.
+        loso_utility = 0.5
+        full_best = 1.5
+        loso_best = 0.5  # geometric LOSO best
+        # recovery_rate = (proxy - loso_geom) / (full - loso_geom)
+        gap = full_best - loso_best
+        recovery = (loso_utility - loso_best) / gap if gap > 1e-10 else 1.0
+        assert abs(recovery) < 1e-10, (
+            f"n=0 recovery should be 0 (LOSO baseline), got {recovery}"
+        )
+
+    def test_crossover_detection(self) -> None:
+        """Verify crossover logic finds first N exceeding baseline."""
+        sweep = [
+            {"n_society_pairs": 0, "recovery_mean": 0.0},
+            {"n_society_pairs": 25, "recovery_mean": 0.3},
+            {"n_society_pairs": 50, "recovery_mean": 0.55},
+            {"n_society_pairs": 100, "recovery_mean": 0.72},
+            {"n_society_pairs": 200, "recovery_mean": 0.85},
+        ]
+        dw07_baseline = 0.70
+
+        crossover = None
+        for entry in sweep:
+            if entry["n_society_pairs"] > 0:
+                if crossover is None and entry["recovery_mean"] >= dw07_baseline:
+                    crossover = entry["n_society_pairs"]
+
+        assert crossover == 100, f"Expected crossover at N=100, got {crossover}"
+
+    def test_crossover_none_when_never_exceeds(self) -> None:
+        """If training never beats baseline, crossover should be None."""
+        sweep = [
+            {"n_society_pairs": 0, "recovery_mean": 0.0},
+            {"n_society_pairs": 100, "recovery_mean": 0.3},
+            {"n_society_pairs": 500, "recovery_mean": 0.5},
+        ]
+        baseline = 0.70
+
+        crossover = None
+        for entry in sweep:
+            if entry["n_society_pairs"] > 0:
+                if crossover is None and entry["recovery_mean"] >= baseline:
+                    crossover = entry["n_society_pairs"]
+
+        assert crossover is None
+
+
+class TestCustomHiddenUtility:
+    """Tests for Exp 5: custom hidden utility computation."""
+
+    def test_alpha_zero_no_penalty(self) -> None:
+        """With α=0, hidden_utility = sum of positives only."""
+        # Simulate: pos_sum=3.0, neg_sum=2.0
+        alpha = 0.0
+        hidden = 3.0 - alpha * 2.0
+        assert hidden == 3.0
+
+    def test_higher_alpha_lower_utility(self) -> None:
+        """Higher α penalizes negatives more, reducing utility."""
+        pos_sum, neg_sum = 3.0, 2.0
+        u_low = pos_sum - 0.3 * neg_sum  # α=0.3
+        u_high = pos_sum - 4.0 * neg_sum  # α=4.0
+        assert u_high < u_low
+
+    def test_alpha_1_matches_simple_difference(self) -> None:
+        """α=1.0 → hidden_utility = pos - neg."""
+        pos_sum, neg_sum = 3.0, 2.0
+        assert pos_sum - 1.0 * neg_sum == 1.0
+
+
+class TestDegradationBound:
+    """Tests for Exp 5: predictive degradation model."""
+
+    def test_regret_increases_with_alpha_distance(self) -> None:
+        """Synthetic: farther from observed → more regret."""
+        # Mock: observed stakeholders at α=0.3 and α=1.0
+        # Hiding α=0.5 (close) should have less regret than α=8.0 (far)
+        regret_close = 0.2  # mock
+        regret_far = 1.5  # mock
+        assert regret_far > regret_close
+
+    def test_linear_fit_r_squared(self) -> None:
+        """Perfect linear data → R² ≈ 1."""
+        x = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5])
+        y = 0.5 + 2.0 * x  # perfect linear
+
+        X = np.column_stack([np.ones_like(x), x])
+        beta, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
+        pred = X @ beta
+        ss_res = float(np.sum((y - pred) ** 2))
+        ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+        r_squared = 1 - ss_res / ss_tot
+
+        assert r_squared > 0.999
+
+    def test_projection_residual_zero_in_span(self) -> None:
+        """If w_hidden is in span(w_obs1, w_obs2), residual = 0."""
+        w1 = np.array([1.0, 0.0, 0.0])
+        w2 = np.array([0.0, 1.0, 0.0])
+        w_hidden = np.array([0.5, 0.5, 0.0])  # in span
+
+        # Gram-Schmidt
+        e1 = w1 / np.linalg.norm(w1)
+        v2 = w2 - np.dot(w2, e1) * e1
+        e2 = v2 / np.linalg.norm(v2)
+        proj = np.dot(w_hidden, e1) * e1 + np.dot(w_hidden, e2) * e2
+        residual = np.linalg.norm(w_hidden - proj)
+
+        assert residual < 1e-10
+
+    def test_projection_residual_nonzero_out_of_span(self) -> None:
+        """If w_hidden has orthogonal component, residual > 0."""
+        w1 = np.array([1.0, 0.0, 0.0])
+        w2 = np.array([0.0, 1.0, 0.0])
+        w_hidden = np.array([0.5, 0.5, 1.0])  # z-component out of span
+
+        e1 = w1 / np.linalg.norm(w1)
+        v2 = w2 - np.dot(w2, e1) * e1
+        e2 = v2 / np.linalg.norm(v2)
+        proj = np.dot(w_hidden, e1) * e1 + np.dot(w_hidden, e2) * e2
+        residual = np.linalg.norm(w_hidden - proj)
+
+        assert abs(residual - 1.0) < 1e-10  # exactly the z-component

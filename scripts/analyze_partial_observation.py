@@ -16,8 +16,13 @@ Experiment 3 — Aggregation Proxy:
   Oracle linear proxy (ceiling), diversity knob (practical), and
   α-extrapolation (structural).
 
+Experiment 4 — Partial Observation Sampling:
+  How much society preference data is enough? Sweep from 0 to 2000
+  pairs, measuring recovery vs LOSO baseline and zero-data proxies.
+
 Usage:
     uv run python scripts/analyze_partial_observation.py
+    uv run python scripts/analyze_partial_observation.py --exp 4
 """
 
 import importlib.util
@@ -122,6 +127,15 @@ N_PAIRS = 2000
 NUM_EPOCHS = 50
 LEARNING_RATE = 0.01
 
+# For Exp 4
+EXP4_N_SEEDS = 20
+EXP4_SOCIETY_N_PAIRS = [0, 25, 50, 100, 200, 500, 1000, 2000]
+
+# For Exp 5
+EXP5_ALPHA_SWEEP = [
+    0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0,
+]
+
 STAKEHOLDERS = ["user", "platform", "society"]
 UTILITY_DIMS = ["user_utility", "platform_utility", "society_utility"]
 
@@ -145,6 +159,8 @@ def flush_print(*args: Any, **kwargs: Any) -> None:
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, o: Any) -> Any:
+        if isinstance(o, np.bool_):
+            return bool(o)
         if isinstance(o, np.floating):
             return float(o)
         if isinstance(o, np.integer):
@@ -370,6 +386,91 @@ def compute_full_frontier(
         }
         for p in raw
     ]
+
+
+def compute_frontier_with_custom_hidden(
+    base_action_probs: np.ndarray,
+    user_archetypes: np.ndarray,
+    content_topics: np.ndarray,
+    alpha_hidden: float,
+    diversity_weights: list[float] | None = None,
+    top_k: int = TOP_K,
+) -> list[UtilityPoint]:
+    """Compute frontier with a synthetic hidden stakeholder.
+
+    Same scoring/selection as compute_pareto_frontier but replaces
+    society_utility with hidden_utility = pos - alpha_hidden * neg.
+    """
+    if diversity_weights is None:
+        diversity_weights = DIVERSITY_WEIGHTS
+    n_users, n_content, _ = base_action_probs.shape
+    num_topics = len(np.unique(content_topics))
+    points: list[UtilityPoint] = []
+
+    for dw in diversity_weights:
+        recommendations = []
+
+        for user_idx in range(n_users):
+            probs = base_action_probs[user_idx]
+            # Engagement scores (matching stakeholder_utilities.py:399-403)
+            engagement_scores = (
+                probs[:, ACTION_INDICES["favorite"]]
+                + probs[:, ACTION_INDICES["repost"]] * 0.8
+                + probs[:, ACTION_INDICES["follow_author"]] * 0.5
+            )
+
+            if dw > 0:
+                selected: list[int] = []
+                remaining = list(range(n_content))
+                topic_counts = np.zeros(num_topics)
+                for _ in range(top_k):
+                    if not remaining:
+                        break
+                    adjusted = []
+                    for idx in remaining:
+                        topic = content_topics[idx]
+                        div_bonus = 1.0 / (topic_counts[topic] + 1)
+                        score = (
+                            (1 - dw) * engagement_scores[idx]
+                            + dw * div_bonus
+                        )
+                        adjusted.append((idx, score))
+                    best_idx = max(adjusted, key=lambda x: x[1])[0]
+                    selected.append(best_idx)
+                    remaining.remove(best_idx)
+                    topic_counts[content_topics[best_idx]] += 1
+                recommendations.append(selected)
+            else:
+                top_indices = np.argsort(engagement_scores)[-top_k:][::-1]
+                recommendations.append(top_indices.tolist())
+
+        recs = np.array(recommendations)
+
+        # User + platform utilities (hardcoded)
+        user_utils = []
+        platform_utils = []
+        hidden_utils = []
+        for user_idx in range(n_users):
+            rec_probs = base_action_probs[user_idx, recs[user_idx]]
+            user_utils.append(
+                compute_user_utility(rec_probs).total_utility
+            )
+            platform_utils.append(
+                compute_platform_utility(rec_probs).total_utility
+            )
+            # Hidden utility: pos - alpha * neg
+            pos_sum = float(np.sum(rec_probs[:, POSITIVE_INDICES]))
+            neg_sum = float(np.sum(rec_probs[:, NEGATIVE_INDICES]))
+            hidden_utils.append(pos_sum - alpha_hidden * neg_sum)
+
+        points.append({
+            "diversity_weight": dw,
+            "user_utility": float(np.mean(user_utils)),
+            "platform_utility": float(np.mean(platform_utils)),
+            "hidden_utility": float(np.mean(hidden_utils)),
+        })
+
+    return points
 
 
 def compute_all_metrics(
@@ -1071,6 +1172,694 @@ def run_exp3_proxy(
 
 
 # ---------------------------------------------------------------------------
+# Exp 4: Partial Observation Sampling
+# ---------------------------------------------------------------------------
+
+
+def run_exp4_partial_sampling(seeds: list[int] | None = None) -> dict[str, Any]:
+    """Exp 4: How much society data is enough?
+
+    Sweep the number of society preference pairs from 0 to 2000,
+    measuring recovery rate vs LOSO baseline and zero-data proxies.
+    Uses EXP4_N_SEEDS (20) for higher statistical power.
+    """
+    # Use own seed set for higher power (20 seeds vs 5)
+    if seeds is None:
+        seeds = [BASE_SEED + i * 100 for i in range(EXP4_N_SEEDS)]
+    flush_print("\n" + "=" * 60)
+    flush_print("EXPERIMENT 4: PARTIAL OBSERVATION SAMPLING")
+    flush_print("=" * 60)
+    flush_print(f"  Seeds: {len(seeds)}")
+    flush_print(f"  Society n_pairs sweep: {EXP4_SOCIETY_N_PAIRS}")
+
+    hidden_dim = "society_utility"
+    observed_dims = ["user_utility", "platform_utility"]
+
+    convergence_warnings: list[str] = []
+    sweep_results: dict[int, list[dict[str, Any]]] = {
+        n: [] for n in EXP4_SOCIETY_N_PAIRS
+    }
+    baseline_results: list[dict[str, Any]] = []
+
+    for seed_idx, seed in enumerate(seeds):
+        # --- Shared setup (once per seed) ---
+        content_probs, _ = generate_content_pool(n_content=500, seed=seed)
+        data = generate_synthetic_data(
+            num_users=NUM_USERS, num_content=NUM_CONTENT,
+            num_topics=NUM_TOPICS, seed=seed,
+        )
+        base_probs = build_base_action_probs(data)
+        archetypes = data["user_archetypes"]
+        topics = data["content_topics"]
+
+        # Full 3-stakeholder frontier (gold standard)
+        full_frontier = compute_full_frontier(base_probs, archetypes, topics)
+        full_pareto = [
+            p for p in full_frontier
+            if not is_dominated(p, full_frontier, UTILITY_DIMS)
+        ]
+        full_best_society = max(p[hidden_dim] for p in full_pareto)
+
+        # LOSO frontier (2D projection)
+        loso_frontier = extract_pareto_front_2d(
+            full_frontier, observed_dims[0], observed_dims[1],
+        )
+        _, loso_best_society = find_best_hidden_utility(
+            loso_frontier, hidden_dim,
+        )
+
+        # --- Train user + platform with full data ---
+        learned_weights: dict[str, np.ndarray] = {}
+        for s in ["user", "platform"]:
+            probs_pref, probs_rej = generate_stakeholder_preferences(
+                content_probs, s, N_PAIRS,
+                seed=seed + hash(s) % 10000,
+            )
+            bt_config = LossConfig(
+                loss_type=LossType.BRADLEY_TERRY,
+                stakeholder=STAKEHOLDER_TYPE_MAP[s],
+                num_epochs=NUM_EPOCHS,
+                learning_rate=LEARNING_RATE,
+            )
+            model = train_with_loss(
+                bt_config, probs_pref, probs_rej, verbose=False,
+            )
+            learned_weights[s] = np.array(model.weights)
+
+        # --- Compute comparison baselines ---
+        # 1. LOSO best-of-two (Exp 2 style)
+        obs_frontiers = {}
+        for s in ["user", "platform"]:
+            obs_frontiers[s] = compute_learned_frontier(
+                learned_weights[s], base_probs, DIVERSITY_WEIGHTS,
+                archetypes, topics,
+            )
+        combined: list[UtilityPoint] = []
+        for dw in DIVERSITY_WEIGHTS:
+            pts_at_dw = []
+            for s in ["user", "platform"]:
+                for p in obs_frontiers[s]:
+                    if abs(p["diversity_weight"] - dw) < 0.001:
+                        pts_at_dw.append(p)
+            if pts_at_dw:
+                combined.append(
+                    max(pts_at_dw, key=lambda p: p[hidden_dim])
+                )
+        combined_loso = extract_pareto_front_2d(
+            combined, observed_dims[0], observed_dims[1],
+        )
+        _, loso_trained_best = find_best_hidden_utility(
+            combined_loso, hidden_dim,
+        )
+        loso_recovery = compute_recovery_rate(
+            loso_trained_best, loso_best_society, full_best_society,
+        )
+        loso_regret = compute_regret(combined_loso, full_pareto, hidden_dim)
+
+        # 2. Diversity knob at dw=0.7
+        closest_07 = min(
+            full_frontier,
+            key=lambda p: abs(p["diversity_weight"] - 0.7),
+        )
+        dw07_recovery = compute_recovery_rate(
+            closest_07[hidden_dim], loso_best_society, full_best_society,
+        )
+
+        # 3. α-interpolation blind
+        alpha_obs = {
+            s: recover_alpha_from_weights(learned_weights[s], calibrate=True)
+            for s in ["user", "platform"]
+        }
+        alpha_blind = 2.0 * max(alpha_obs.values())
+        interp_blind_weights = synthesize_weights_interpolation(
+            learned_weights["user"], alpha_obs["user"],
+            learned_weights["platform"], alpha_obs["platform"],
+            alpha_blind,
+        )
+        interp_eval = _evaluate_proxy_on_seed(
+            interp_blind_weights, base_probs, archetypes, topics,
+            full_pareto, loso_frontier, hidden_dim, observed_dims,
+        )
+
+        baseline_results.append({
+            "loso_trained_best_of_two": {
+                "society_utility": loso_trained_best,
+                "recovery_rate": loso_recovery,
+            },
+            "diversity_knob_0.7": {
+                "society_utility": closest_07[hidden_dim],
+                "recovery_rate": dw07_recovery,
+            },
+            "interp_blind_alpha": {
+                "society_utility": interp_eval["proxy_best_hidden"],
+                "recovery_rate": interp_eval["recovery_rate"],
+            },
+            "full_best_society": full_best_society,
+            "loso_best_society": loso_best_society,
+        })
+
+        # --- Sweep over society n_pairs ---
+        for n in EXP4_SOCIETY_N_PAIRS:
+            if n == 0:
+                sweep_results[0].append({
+                    "society_utility": loso_trained_best,
+                    "recovery_rate": loso_recovery,
+                    "avg_regret": loso_regret["avg_regret"],
+                    "max_regret": loso_regret["max_regret"],
+                    "converged": True,
+                })
+            else:
+                probs_pref, probs_rej = generate_stakeholder_preferences(
+                    content_probs, "society", n,
+                    seed=seed + hash("society") % 10000,
+                )
+                bt_config = LossConfig(
+                    loss_type=LossType.BRADLEY_TERRY,
+                    stakeholder=STAKEHOLDER_TYPE_MAP["society"],
+                    num_epochs=NUM_EPOCHS,
+                    learning_rate=LEARNING_RATE,
+                )
+                model = train_with_loss(
+                    bt_config, probs_pref, probs_rej, verbose=False,
+                )
+                society_weights = np.array(model.weights)
+
+                converged = check_convergence(model.loss_history)
+                if not converged:
+                    msg = (
+                        f"  WARNING: society n={n} (seed={seed}) "
+                        "may not have converged"
+                    )
+                    flush_print(msg)
+                    convergence_warnings.append(msg)
+
+                # Evaluate directly: best society utility across all
+                # diversity weights (no 2D Pareto projection — we HAVE
+                # society data, so we'd use it to pick the operating
+                # point, not constrain to user×platform Pareto).
+                proxy_frontier = compute_learned_frontier(
+                    society_weights, base_probs, DIVERSITY_WEIGHTS,
+                    archetypes, topics,
+                )
+                best_soc = max(
+                    p[hidden_dim] for p in proxy_frontier
+                )
+                recovery = compute_recovery_rate(
+                    best_soc, loso_best_society, full_best_society,
+                )
+                # Regret across all frontier points
+                regret = compute_regret(
+                    proxy_frontier, full_pareto, hidden_dim,
+                )
+                sweep_results[n].append({
+                    "society_utility": best_soc,
+                    "recovery_rate": recovery,
+                    "avg_regret": regret["avg_regret"],
+                    "max_regret": regret["max_regret"],
+                    "converged": converged,
+                })
+
+        flush_print(f"    seed {seed_idx + 1}/{len(seeds)} done")
+
+    # --- Aggregate ---
+    sweep_agg: list[dict[str, Any]] = []
+    for n in EXP4_SOCIETY_N_PAIRS:
+        seed_data = sweep_results[n]
+        recovery_vals = [s["recovery_rate"] for s in seed_data]
+        regret_vals = [s["avg_regret"] for s in seed_data]
+        sweep_agg.append({
+            "n_society_pairs": n,
+            "recovery_mean": float(np.mean(recovery_vals)),
+            "recovery_std": float(np.std(recovery_vals)),
+            "avg_regret_mean": float(np.mean(regret_vals)),
+            "avg_regret_std": float(np.std(regret_vals)),
+            "per_seed": seed_data,
+        })
+
+    baselines_agg: dict[str, Any] = {}
+    for key in [
+        "loso_trained_best_of_two", "diversity_knob_0.7",
+        "interp_blind_alpha",
+    ]:
+        rec_vals = [b[key]["recovery_rate"] for b in baseline_results]
+        baselines_agg[key] = {
+            "recovery_mean": float(np.mean(rec_vals)),
+            "recovery_std": float(np.std(rec_vals)),
+        }
+
+    # Crossover detection
+    dw07_mean = baselines_agg["diversity_knob_0.7"]["recovery_mean"]
+    interp_mean = baselines_agg["interp_blind_alpha"]["recovery_mean"]
+    crossover_dw07 = None
+    crossover_interp = None
+    for entry in sweep_agg:
+        if entry["n_society_pairs"] > 0:
+            if crossover_dw07 is None and entry["recovery_mean"] >= dw07_mean:
+                crossover_dw07 = entry["n_society_pairs"]
+            if (
+                crossover_interp is None
+                and entry["recovery_mean"] >= interp_mean
+            ):
+                crossover_interp = entry["n_society_pairs"]
+
+    # Print summary
+    flush_print("\n  Partial sampling sweep (society):")
+    flush_print(f"  {'N':>6} {'Recovery':>14} {'Avg Regret':>14}")
+    flush_print("  " + "-" * 36)
+    for entry in sweep_agg:
+        flush_print(
+            f"  {entry['n_society_pairs']:>6} "
+            f"{entry['recovery_mean']:>8.3f}"
+            f"±{entry['recovery_std']:.3f} "
+            f"{entry['avg_regret_mean']:>8.3f}"
+            f"±{entry['avg_regret_std']:.3f}"
+        )
+    flush_print(
+        f"\n  Baselines: DW0.7={dw07_mean:.3f}"
+        f"  Interp_blind={interp_mean:.3f}"
+    )
+    if crossover_dw07 is not None:
+        flush_print(
+            f"  Crossover (beats DW0.7): N={crossover_dw07}"
+        )
+    if crossover_interp is not None:
+        flush_print(
+            f"  Crossover (beats interp_blind): N={crossover_interp}"
+        )
+
+    return {
+        "config": {
+            "n_pairs_sweep": EXP4_SOCIETY_N_PAIRS,
+            "user_n_pairs": N_PAIRS,
+            "platform_n_pairs": N_PAIRS,
+            "num_epochs": NUM_EPOCHS,
+            "n_seeds": len(seeds),
+        },
+        "sweep": sweep_agg,
+        "baselines": baselines_agg,
+        "crossover": {
+            "beats_diversity_knob_0.7": crossover_dw07,
+            "beats_interp_blind_alpha": crossover_interp,
+        },
+        "convergence_warnings": convergence_warnings,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Exp 5: Information-Theoretic Degradation Bound
+# ---------------------------------------------------------------------------
+
+
+def _compute_disagreement_rate(
+    content_probs: np.ndarray,
+    alpha_a: float,
+    alpha_b: float,
+    n_pairs: int,
+    seed: int,
+) -> float:
+    """Compute label disagreement rate between two α-stakeholders."""
+    rng = np.random.default_rng(seed)
+    n_content = len(content_probs)
+
+    pos = np.array([
+        np.sum(content_probs[c, POSITIVE_INDICES]) for c in range(n_content)
+    ])
+    neg = np.array([
+        np.sum(content_probs[c, NEGATIVE_INDICES]) for c in range(n_content)
+    ])
+    util_a = pos - alpha_a * neg
+    util_b = pos - alpha_b * neg
+
+    disagree = 0
+    for _ in range(n_pairs):
+        c1, c2 = rng.choice(n_content, size=2, replace=False)
+        noise = rng.normal(0, 0.05)
+        label_a = (util_a[c1] - util_a[c2] + noise) > 0
+        label_b = (util_b[c1] - util_b[c2] + noise) > 0
+        if label_a != label_b:
+            disagree += 1
+    return disagree / n_pairs
+
+
+def _project_onto_span(
+    w_hidden: np.ndarray,
+    w_obs1: np.ndarray,
+    w_obs2: np.ndarray,
+) -> float:
+    """Projection residual: ||w_hidden - proj(w_hidden, span(w_obs1, w_obs2))||."""
+    # Build basis from w_obs1, w_obs2 via Gram-Schmidt
+    e1 = w_obs1 / (np.linalg.norm(w_obs1) + 1e-12)
+    v2 = w_obs2 - np.dot(w_obs2, e1) * e1
+    e2 = v2 / (np.linalg.norm(v2) + 1e-12)
+
+    proj = np.dot(w_hidden, e1) * e1 + np.dot(w_hidden, e2) * e2
+    residual = w_hidden - proj
+    return float(np.linalg.norm(residual))
+
+
+def run_exp5_degradation_bound(seeds: list[int]) -> dict[str, Any]:
+    """Exp 5: Predict frontier degradation from correlation structure.
+
+    Sweeps α_hidden to generate synthetic hidden stakeholders,
+    measures degradation and correlation features, fits a predictive
+    model, and validates on the 3 real stakeholders.
+    """
+    flush_print("\n" + "=" * 60)
+    flush_print("EXPERIMENT 5: DEGRADATION BOUND")
+    flush_print("=" * 60)
+    flush_print(f"  α sweep: {EXP5_ALPHA_SWEEP}")
+    flush_print(f"  Seeds: {len(seeds)}")
+
+    observed_dims = ["user_utility", "platform_utility"]
+    hidden_dim = "hidden_utility"
+
+    # Collect per-alpha results
+    alpha_results: dict[float, list[dict[str, Any]]] = {
+        a: [] for a in EXP5_ALPHA_SWEEP
+    }
+
+    for seed_idx, seed in enumerate(seeds):
+        # --- Shared setup (once per seed) ---
+        data = generate_synthetic_data(
+            num_users=NUM_USERS, num_content=NUM_CONTENT,
+            num_topics=NUM_TOPICS, seed=seed,
+        )
+        base_probs = build_base_action_probs(data)
+        archetypes = data["user_archetypes"]
+        topics = data["content_topics"]
+        content_probs, _ = generate_content_pool(n_content=500, seed=seed)
+
+        # Train user + platform BT models (cached per seed)
+        obs_weights: dict[str, np.ndarray] = {}
+        for s in ["user", "platform"]:
+            probs_pref, probs_rej = generate_stakeholder_preferences(
+                content_probs, s, N_PAIRS,
+                seed=seed + hash(s) % 10000,
+            )
+            bt_config = LossConfig(
+                loss_type=LossType.BRADLEY_TERRY,
+                stakeholder=STAKEHOLDER_TYPE_MAP[s],
+                num_epochs=NUM_EPOCHS,
+                learning_rate=LEARNING_RATE,
+            )
+            model = train_with_loss(
+                bt_config, probs_pref, probs_rej, verbose=False,
+            )
+            obs_weights[s] = np.array(model.weights)
+
+        # --- Per α_hidden ---
+        for alpha in EXP5_ALPHA_SWEEP:
+            # A. Degradation (geometric)
+            frontier = compute_frontier_with_custom_hidden(
+                base_probs, archetypes, topics, alpha,
+            )
+            full_best = max(p[hidden_dim] for p in frontier)
+            loso = extract_pareto_front_2d(
+                frontier, observed_dims[0], observed_dims[1],
+            )
+            regret = compute_regret(loso, frontier, hidden_dim)
+
+            # B. Correlation features (BT training)
+            # Generate preferences for alpha_hidden
+            rng = np.random.default_rng(seed + hash("hidden") % 10000)
+            n_content = len(content_probs)
+            pos_scores = np.array([
+                np.sum(content_probs[c, POSITIVE_INDICES])
+                for c in range(n_content)
+            ])
+            neg_scores = np.array([
+                np.sum(content_probs[c, NEGATIVE_INDICES])
+                for c in range(n_content)
+            ])
+            utility = pos_scores - alpha * neg_scores
+
+            probs_pref = np.zeros((N_PAIRS, NUM_ACTIONS), dtype=np.float32)
+            probs_rej = np.zeros((N_PAIRS, NUM_ACTIONS), dtype=np.float32)
+            for i in range(N_PAIRS):
+                c1, c2 = rng.choice(n_content, size=2, replace=False)
+                noise = rng.normal(0, 0.05)
+                if (utility[c1] - utility[c2] + noise) > 0:
+                    probs_pref[i] = content_probs[c1]
+                    probs_rej[i] = content_probs[c2]
+                else:
+                    probs_pref[i] = content_probs[c2]
+                    probs_rej[i] = content_probs[c1]
+
+            bt_config = LossConfig(
+                loss_type=LossType.BRADLEY_TERRY,
+                stakeholder=StakeholderType.USER,
+                num_epochs=NUM_EPOCHS,
+                learning_rate=LEARNING_RATE,
+            )
+            model = train_with_loss(
+                bt_config, probs_pref, probs_rej, verbose=False,
+            )
+            w_hidden = np.array(model.weights)
+
+            # Cosine similarities
+            cos_user = float(
+                np.dot(w_hidden, obs_weights["user"])
+                / (np.linalg.norm(w_hidden) * np.linalg.norm(obs_weights["user"]) + 1e-12)
+            )
+            cos_platform = float(
+                np.dot(w_hidden, obs_weights["platform"])
+                / (np.linalg.norm(w_hidden) * np.linalg.norm(obs_weights["platform"]) + 1e-12)
+            )
+
+            # Disagreement rates
+            disagree_user = _compute_disagreement_rate(
+                content_probs, alpha, 1.0, 5000, seed,
+            )
+            disagree_platform = _compute_disagreement_rate(
+                content_probs, alpha, 0.3, 5000, seed,
+            )
+
+            # Projection residual
+            residual = _project_onto_span(
+                w_hidden, obs_weights["user"], obs_weights["platform"],
+            )
+
+            alpha_results[alpha].append({
+                "avg_regret": regret["avg_regret"],
+                "max_regret": regret["max_regret"],
+                "full_best_hidden": full_best,
+                "cos_sim_user": cos_user,
+                "cos_sim_platform": cos_platform,
+                "cos_sim_nearest": max(cos_user, cos_platform),
+                "disagreement_user": disagree_user,
+                "disagreement_platform": disagree_platform,
+                "disagreement_max": max(disagree_user, disagree_platform),
+                "projection_residual": residual,
+            })
+
+        flush_print(f"    seed {seed_idx + 1}/{len(seeds)} done")
+
+    # --- Aggregate ---
+    sweep_agg: list[dict[str, Any]] = []
+    for alpha in EXP5_ALPHA_SWEEP:
+        seed_data = alpha_results[alpha]
+        agg: dict[str, Any] = {"alpha": alpha}
+        for key in [
+            "avg_regret", "max_regret", "cos_sim_user",
+            "cos_sim_platform", "cos_sim_nearest",
+            "disagreement_user", "disagreement_platform",
+            "disagreement_max", "projection_residual",
+        ]:
+            vals = [s[key] for s in seed_data]
+            agg[f"{key}_mean"] = float(np.mean(vals))
+            agg[f"{key}_std"] = float(np.std(vals))
+        agg["per_seed"] = seed_data
+        sweep_agg.append(agg)
+
+    # Print sweep
+    flush_print("\n  α sweep results:")
+    flush_print(
+        f"  {'α':>6} {'regret':>8} {'cos_near':>10} "
+        f"{'disagree':>10} {'residual':>10}"
+    )
+    flush_print("  " + "-" * 46)
+    for entry in sweep_agg:
+        flush_print(
+            f"  {entry['alpha']:>6.1f} "
+            f"{entry['avg_regret_mean']:>8.3f} "
+            f"{entry['cos_sim_nearest_mean']:>10.4f} "
+            f"{entry['disagreement_max_mean']:>10.3f} "
+            f"{entry['projection_residual_mean']:>10.3f}"
+        )
+
+    # --- Fit models ---
+    from scipy.stats import spearmanr as sp_spearmanr
+
+    y = np.array([e["avg_regret_mean"] for e in sweep_agg])
+    models: dict[str, dict[str, Any]] = {}
+
+    # Model 1: regret = a + b * (1 - cos_nearest)
+    x_cos = np.array([1 - e["cos_sim_nearest_mean"] for e in sweep_agg])
+    X1 = np.column_stack([np.ones_like(x_cos), x_cos])
+    beta1, _, _, _ = np.linalg.lstsq(X1, y, rcond=None)
+    pred1 = X1 @ beta1
+    ss_res = float(np.sum((y - pred1) ** 2))
+    ss_tot = float(np.sum((y - np.mean(y)) ** 2))
+    r2_1 = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
+    sp_1 = float(sp_spearmanr(x_cos, y)[0])
+    mae_1 = float(np.mean(np.abs(y - pred1)))
+    models["cos_nearest_linear"] = {
+        "formula": f"regret = {beta1[0]:.4f} + {beta1[1]:.4f} * (1 - cos_nearest)",
+        "coefficients": {"a": float(beta1[0]), "b": float(beta1[1])},
+        "r_squared": r2_1,
+        "spearman": sp_1,
+        "mae": mae_1,
+    }
+
+    # Model 2: regret = a + b * disagree_max
+    x_dis = np.array([e["disagreement_max_mean"] for e in sweep_agg])
+    X2 = np.column_stack([np.ones_like(x_dis), x_dis])
+    beta2, _, _, _ = np.linalg.lstsq(X2, y, rcond=None)
+    pred2 = X2 @ beta2
+    ss_res2 = float(np.sum((y - pred2) ** 2))
+    r2_2 = 1 - ss_res2 / ss_tot if ss_tot > 0 else 0.0
+    sp_2 = float(sp_spearmanr(x_dis, y)[0])
+    mae_2 = float(np.mean(np.abs(y - pred2)))
+    models["disagreement_linear"] = {
+        "formula": f"regret = {beta2[0]:.4f} + {beta2[1]:.4f} * disagree_max",
+        "coefficients": {"a": float(beta2[0]), "b": float(beta2[1])},
+        "r_squared": r2_2,
+        "spearman": sp_2,
+        "mae": mae_2,
+    }
+
+    # Model 3: regret = a + b * (1 - cos) + c * residual
+    x_res = np.array([e["projection_residual_mean"] for e in sweep_agg])
+    X3 = np.column_stack([np.ones_like(x_cos), x_cos, x_res])
+    beta3, _, _, _ = np.linalg.lstsq(X3, y, rcond=None)
+    pred3 = X3 @ beta3
+    ss_res3 = float(np.sum((y - pred3) ** 2))
+    r2_3 = 1 - ss_res3 / ss_tot if ss_tot > 0 else 0.0
+    mae_3 = float(np.mean(np.abs(y - pred3)))
+    models["cos_plus_residual"] = {
+        "formula": (
+            f"regret = {beta3[0]:.4f} + {beta3[1]:.4f} * (1 - cos_nearest)"
+            f" + {beta3[2]:.4f} * residual"
+        ),
+        "coefficients": {
+            "a": float(beta3[0]),
+            "b": float(beta3[1]),
+            "c": float(beta3[2]),
+        },
+        "r_squared": r2_3,
+        "spearman": sp_1,  # same ranking as cos-only
+        "mae": mae_3,
+    }
+
+    # Model 4: log model
+    x_log = np.log(x_cos + 1e-6)
+    X4 = np.column_stack([np.ones_like(x_log), x_log])
+    beta4, _, _, _ = np.linalg.lstsq(X4, y, rcond=None)
+    pred4 = X4 @ beta4
+    ss_res4 = float(np.sum((y - pred4) ** 2))
+    r2_4 = 1 - ss_res4 / ss_tot if ss_tot > 0 else 0.0
+    mae_4 = float(np.mean(np.abs(y - pred4)))
+    models["cos_log"] = {
+        "formula": f"regret = {beta4[0]:.4f} + {beta4[1]:.4f} * log(1 - cos_nearest)",
+        "coefficients": {"a": float(beta4[0]), "b": float(beta4[1])},
+        "r_squared": r2_4,
+        "spearman": sp_1,
+        "mae": mae_4,
+    }
+
+    # Select best by R²
+    best_model = max(models, key=lambda k: models[k]["r_squared"])
+
+    flush_print("\n  Fitted models:")
+    for name, m in models.items():
+        marker = " ← best" if name == best_model else ""
+        flush_print(
+            f"    {name}: R²={m['r_squared']:.4f} "
+            f"Spearman={m['spearman']:.4f} "
+            f"MAE={m['mae']:.4f}{marker}"
+        )
+
+    # --- Validation against Exp 1 actuals ---
+    exp1_actuals = {
+        "society": 1.082,
+        "platform": 0.369,
+        "user": 0.111,
+    }
+    alpha_to_stakeholder = {4.0: "society", 0.3: "platform", 1.0: "user"}
+    validation: dict[str, dict[str, float]] = {}
+
+    for alpha, name in alpha_to_stakeholder.items():
+        # Find sweep entry for this alpha
+        entry = next(e for e in sweep_agg if e["alpha"] == alpha)
+        structural_regret = entry["avg_regret_mean"]
+        actual_regret = exp1_actuals[name]
+
+        # Predict from best model
+        best_coeff = models[best_model]["coefficients"]
+        cos_val = 1 - entry["cos_sim_nearest_mean"]
+        if best_model == "cos_nearest_linear":
+            predicted = best_coeff["a"] + best_coeff["b"] * cos_val
+        elif best_model == "disagreement_linear":
+            predicted = (
+                best_coeff["a"]
+                + best_coeff["b"] * entry["disagreement_max_mean"]
+            )
+        elif best_model == "cos_plus_residual":
+            predicted = (
+                best_coeff["a"]
+                + best_coeff["b"] * cos_val
+                + best_coeff["c"] * entry["projection_residual_mean"]
+            )
+        else:  # cos_log
+            predicted = (
+                best_coeff["a"]
+                + best_coeff["b"] * np.log(cos_val + 1e-6)
+            )
+
+        validation[name] = {
+            "alpha": alpha,
+            "structural_regret": structural_regret,
+            "predicted": float(predicted),
+            "actual_exp1": actual_regret,
+            "error_structural_vs_actual": abs(
+                structural_regret - actual_regret
+            ),
+            "error_predicted_vs_actual": abs(predicted - actual_regret),
+        }
+
+    flush_print("\n  Validation (structural vs Exp 1 actual):")
+    for name, v in validation.items():
+        flush_print(
+            f"    {name}: structural={v['structural_regret']:.3f} "
+            f"actual={v['actual_exp1']:.3f} "
+            f"error={v['error_structural_vs_actual']:.3f}"
+        )
+
+    # --- End-to-end formula ---
+    best_m = models[best_model]
+    end_to_end = (
+        f"Link1: cos_sim = 1.098 - 1.127*d - 0.088*m | "
+        f"Link2: {best_m['formula']} | "
+        f"R²={best_m['r_squared']:.3f}"
+    )
+    flush_print(f"\n  End-to-end: {end_to_end}")
+
+    return {
+        "config": {
+            "alpha_sweep": EXP5_ALPHA_SWEEP,
+            "n_seeds": len(seeds),
+            "n_pairs": N_PAIRS,
+            "num_epochs": NUM_EPOCHS,
+        },
+        "sweep": sweep_agg,
+        "models": models,
+        "best_model": best_model,
+        "validation": validation,
+        "end_to_end_formula": end_to_end,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1104,7 +1893,7 @@ def parse_experiments(args: list[str]) -> set[int]:
     for i, arg in enumerate(args):
         if arg == "--exp" and i + 1 < len(args):
             return {int(x) for x in args[i + 1].split(",")}
-    return {1, 2, 3}
+    return {1, 2, 3, 4, 5}
 
 
 def main() -> None:
@@ -1149,6 +1938,30 @@ def main() -> None:
         flush_print("  Exp 3: loaded from cache")
     else:
         exp3_results = {}
+
+    # Exp 4
+    if 4 in requested:
+        exp4_results = run_exp4_partial_sampling()
+    elif "exp4_partial_sampling" in cached:
+        exp4_results = cached["exp4_partial_sampling"]
+        flush_print("  Exp 4: loaded from cache")
+    else:
+        flush_print(
+            "  WARNING: Exp 4 not cached and not requested, skipping"
+        )
+        exp4_results = {}
+
+    # Exp 5
+    if 5 in requested:
+        exp5_results = run_exp5_degradation_bound(seeds)
+    elif "exp5_degradation_bound" in cached:
+        exp5_results = cached["exp5_degradation_bound"]
+        flush_print("  Exp 5: loaded from cache")
+    else:
+        flush_print(
+            "  WARNING: Exp 5 not cached and not requested, skipping"
+        )
+        exp5_results = {}
 
     # Summary
     flush_print("\n" + "=" * 60)
@@ -1202,6 +2015,59 @@ def main() -> None:
                 f"{agg['interp_blind_alpha']['recovery_rate_mean']:>10.3f}"
             )
 
+    if exp4_results:
+        flush_print("\nExp 4 — Partial Sampling (society):")
+        flush_print(
+            f"  {'N pairs':>8} {'Recovery':>12} {'Avg Regret':>12}"
+        )
+        flush_print("  " + "-" * 34)
+        for entry in exp4_results.get("sweep", []):
+            flush_print(
+                f"  {entry['n_society_pairs']:>8} "
+                f"{entry['recovery_mean']:>10.3f}  "
+                f"{entry['avg_regret_mean']:>10.3f}"
+            )
+        baselines = exp4_results.get("baselines", {})
+        crossover = exp4_results.get("crossover", {})
+        dw07 = baselines.get(
+            "diversity_knob_0.7", {},
+        ).get("recovery_mean", 0)
+        interp = baselines.get(
+            "interp_blind_alpha", {},
+        ).get("recovery_mean", 0)
+        flush_print(
+            f"  Baselines: DW0.7={dw07:.3f}"
+            f"  Interp_blind={interp:.3f}"
+        )
+        if crossover.get("beats_diversity_knob_0.7"):
+            flush_print(
+                f"  Crossover vs DW0.7: "
+                f"N={crossover['beats_diversity_knob_0.7']}"
+            )
+        if crossover.get("beats_interp_blind_alpha"):
+            flush_print(
+                f"  Crossover vs interp_blind: "
+                f"N={crossover['beats_interp_blind_alpha']}"
+            )
+
+    if exp5_results:
+        flush_print("\nExp 5 — Degradation Bound:")
+        best = exp5_results.get("best_model", "?")
+        best_m = exp5_results.get("models", {}).get(best, {})
+        flush_print(
+            f"  Best model: {best} "
+            f"(R²={best_m.get('r_squared', 0):.3f})"
+        )
+        flush_print(f"  Formula: {best_m.get('formula', '?')}")
+        val = exp5_results.get("validation", {})
+        for name in ["society", "platform", "user"]:
+            v = val.get(name, {})
+            flush_print(
+                f"    {name}: structural={v.get('structural_regret', 0):.3f}"
+                f"  actual={v.get('actual_exp1', 0):.3f}"
+                f"  error={v.get('error_structural_vs_actual', 0):.3f}"
+            )
+
     if exp1_results:
         exp1_ranking = sorted(
             LOSO_CONFIGS,
@@ -1235,6 +2101,10 @@ def main() -> None:
         output["exp2_training_loso"] = exp2_results
     if exp3_results:
         output["exp3_aggregation_proxy"] = exp3_results
+    if exp4_results:
+        output["exp4_partial_sampling"] = exp4_results
+    if exp5_results:
+        output["exp5_degradation_bound"] = exp5_results
 
     save_results(output)
 
