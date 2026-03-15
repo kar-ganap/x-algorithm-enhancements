@@ -11,19 +11,19 @@ Inference optimization for the Phoenix transformer, targeting latency and memory
 - **10.3x JIT speedup** (103.8 ms → 10.0 ms per forward pass)
 - **9.6x KV-cache speedup** with full key-value tensor caching
 - **58% memory reduction** via INT8 quantization (~90% top-3 score agreement)
-- See [`enhancements/optimization/`](enhancements/optimization/) and [`docs/f2/`](docs/f2/)
+- See [`enhancements/optimization/`](enhancements/optimization/) and [`docs/f1/`](docs/f1/)
 
 ### F2: Multi-Stakeholder Reward Modeling (Complete)
 
 Bradley-Terry (BT) preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare:
 
 - **Core finding:** Stakeholder differentiation comes from training *labels*, not the loss function. 79 of 87 experiments across 4 BT loss variants converge to near-identical weights (cosine similarity >0.92) when trained on identical preference pairs.
-- **Three research directions:**
-  - **Direction 1 (Identifiability):** The negativity-aversion parameter α is recoverable from learned weights (Spearman=1.0), robust to ≤20% label noise and ≥250 preference pairs
-  - **Direction 2 (Utility Sensitivity):** The Pareto frontier is robust to weight permutation and selection-level perturbation, but individual weight magnitudes matter at matched perturbation budgets
-  - **Direction 3 (Partial Observation):** Hiding society costs 10x more regret than hiding user; even 25 preference pairs from the hidden stakeholder cuts regret by 42%
+- **Research results:**
+  - **Identifiability:** The negativity-aversion parameter α is recoverable from learned weights (Spearman=1.0), robust to ≤20% label noise and ≥250 preference pairs
+  - **Utility sensitivity:** The Pareto frontier is robust to weight permutation and selection-level perturbation, but individual weight magnitudes matter at matched perturbation budgets
+  - **Partial observation:** Hiding society costs 10x more regret than hiding user; even 25 preference pairs from the hidden stakeholder cuts regret by 42%
 - Validated on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter environment
-- See [`enhancements/reward_modeling/`](enhancements/reward_modeling/) and [`docs/f4/`](docs/f4/)
+- See [`enhancements/reward_modeling/`](enhancements/reward_modeling/) and [`docs/f2/`](docs/f2/)
 
 ## Architecture
 

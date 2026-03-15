@@ -76,9 +76,8 @@
 \newcommand{\alphaspearman}{1.0}
 
 % ══════════════════════════════════════════════════════════════════
-\title{\textbf{Labels Not Loss: Multi-Stakeholder Differentiation,\\[2pt]
-  Partial Observation, and Utility Sensitivity\\[2pt]
-  in Recommendation Systems}}
+\title{\textbf{Multi-Stakeholder Reward Modeling\\[2pt]
+  in Open Recommendation Algorithms}}
 \author{Kartik G Bhat\thanks{Independent Researcher. Contact: \texttt{gkartik@gmail.com}}}
 \date{}
 
@@ -204,7 +203,7 @@ society). Our principal findings:
     effect~\cite{skalse2024goodhart}~(\cref{sec:sensitivity}).
 \end{itemize}
 
-All three directions are validated under nonlinear utility
+All results are validated under nonlinear utility
 families~(prospect-theoretic concave and threshold utilities) and
 externally on MovieLens-100K (+59\% NDCG) and a 648-parameter
 synthetic Twitter environment. Code and data are available at
@@ -275,7 +274,8 @@ The remainder of the paper is organized as follows.
 preference learning, and utility sensitivity analysis.
 \Cref{sec:system} describes the synthetic benchmark and evaluation
 framework. \Cref{sec:identifiability,sec:partial,sec:sensitivity}
-present the three research directions. \Cref{sec:nonlinear} tests
+present results on identifiability, partial observation, and
+sensitivity. \Cref{sec:nonlinear} tests
 robustness under nonlinear utilities. \Cref{sec:validation} provides
 external validation. \Cref{sec:discussion} synthesizes practical
 guidance and discusses limitations.
@@ -351,7 +351,7 @@ stakeholder's utility may be independently misspecified. Hadfield-Menell and Had
 
 The Goodhart taxonomy distinguishes regressional, extremal, causal,
 and adversarial failure modes~\cite{skalse2024goodhart}. Our
-Direction~2 (\cref{sec:sensitivity}) tests the \emph{misweighting}
+Our sensitivity analysis (\cref{sec:sensitivity}) tests the \emph{misweighting}
 variant---same goals, different priorities---and finds a novel
 interaction: additional training data amplifies misspecified utilities
 rather than correcting them.
@@ -463,19 +463,19 @@ studied on the opaque production system.
 \draw[arrow] (frontier) -- (rankstab);
 \draw[arrow] (frontier) -- (hausdorff);
 
-% Direction labels on right
+% Research question labels on right
 \draw[dotted, gray] (4, 0.5) -- (4, -8.5);
-\node[dirlabel] at (5.2, -1.3) {Direction 1:\\What does BT\\recover?};
-\node[dirlabel] at (5.2, -4.6) {Direction 3:\\What's lost\\when hidden?};
-\node[dirlabel] at (5.2, -7.2) {Direction 2:\\How precise\\must spec be?};
+\node[dirlabel] at (5.2, -1.3) {Identifiability:\\What does BT\\recover?};
+\node[dirlabel] at (5.2, -4.6) {Partial observation:\\What's lost\\when hidden?};
+\node[dirlabel] at (5.2, -7.2) {Sensitivity:\\How precise\\must spec be?};
 
-% Bracket for D1 scope
+% Bracket for identifiability scope
 \draw[decorate, decoration={brace, amplitude=4pt}, gray]
   (3.8, -0.7) -- (3.8, -3.3);
-% Bracket for D3 scope
+% Bracket for partial observation scope
 \draw[decorate, decoration={brace, amplitude=4pt}, gray]
   (3.8, -3.5) -- (3.8, -5.8);
-% Bracket for D2 scope
+% Bracket for sensitivity scope
 \draw[decorate, decoration={brace, amplitude=4pt}, gray]
   (3.8, -6.0) -- (3.8, -8.3);
 
@@ -483,7 +483,7 @@ studied on the opaque production system.
 \caption{System pipeline. Each step flows strictly downward: data
   generation, utility specification, preference pair construction,
   BT training, and Pareto frontier evaluation. Braces indicate the
-  scope of each research direction.}
+  scope of each research question.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -564,8 +564,8 @@ three stakeholders differ primarily in $\alpha$:
 This family is a special case of additive MAUT~\cite{keeney1976decisions},
 where the full 18-parameter weight vector is summarized by a single
 ratio. Whether $\alpha$ alone is sufficient or individual action
-weights matter independently is tested in Direction~2
-(\cref{sec:sensitivity}).
+weights matter independently is tested in
+\cref{sec:sensitivity}.
 
 \subsection{Synthetic Data Generation}
 
@@ -602,7 +602,7 @@ $\mathbf{w} \in \mathbb{R}^{18}$ by minimizing the standard BT loss:
 We test four loss variants: standard BT, Margin-BT (adds a fixed
 margin to the preference gap), Calibrated-BT (regresses on engagement
 magnitude), and Constrained-BT (adds a diversity regularizer). The
-central Direction~1 result is that these variants produce nearly
+central identifiability result is that these variants produce nearly
 identical weight vectors when trained on identical preference data.
 
 \subsection{Evaluation Framework}
@@ -636,7 +636,7 @@ All experiments use 5 seeds unless otherwise noted; Experiment~4
 (partial sampling) uses 20 seeds for tighter confidence intervals.
 
 %═══════════════════════════════════════════════════════════════════
-\section{Direction 1: Identifiability}
+\section{What Drives Stakeholder Differentiation?}
 \label{sec:identifiability}
 %═══════════════════════════════════════════════════════════════════
 
@@ -785,7 +785,7 @@ proxy, but rank-ordering---the practically relevant quantity---is
 preserved. Details in \cref{app:sensitivity}.
 
 %═══════════════════════════════════════════════════════════════════
-\section{Direction 3: Partial Observation}
+\section{How Much Stakeholder Data Is Needed?}
 \label{sec:partial}
 %═══════════════════════════════════════════════════════════════════
 
@@ -808,9 +808,9 @@ scorers).
     \toprule
     \textbf{Hidden} & \textbf{Geom.\ regret} & \textbf{Training regret} & \textbf{Dom.\ frac.} & \textbf{$\alpha$} \\
     \midrule
-    Society  & $\mathbf{1.082 \pm 0.041}$ & $1.100 \pm 0.046$ & 0.0\% & 4.0 \\
-    Platform & $0.369 \pm 0.062$ & $0.308 \pm 0.014$ & 0--8.5\% & 0.3 \\
-    User     & $0.111 \pm 0.013$ & $0.141 \pm 0.025$ & 6.4--14.4\% & 1.0 \\
+    Society  & $\mathbf{1.08 \pm 0.04}$ & $1.10 \pm 0.05$ & 0.0\% & 4.0 \\
+    Platform & $0.37 \pm 0.06$ & $0.31 \pm 0.01$ & 0--8.5\% & 0.3 \\
+    User     & $0.11 \pm 0.01$ & $0.14 \pm 0.03$ & 6.4--14.4\% & 1.0 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -864,8 +864,8 @@ the full 2{,}000), how much regret is recovered? We sweep $N \in
 measuring average regret across all 21 diversity-weight operating
 points on the frontier scored by the trained society model.
 
-Even 25 preference pairs reduce regret from 1.111 (LOSO baseline) to
-0.644---a 42\% improvement (\cref{fig:exp4}). The marginal value of additional pairs
+Even 25 preference pairs reduce regret from 1.11 (LOSO baseline) to
+0.64---a 42\% improvement (\cref{fig:exp4}). The marginal value of additional pairs
 diminishes rapidly: the regret plateau at $\sim$0.55 is statistically
 indistinguishable across $N = 200$--$2{,}000$ (overlapping 95\%
 bootstrap confidence intervals). This is a Value of Information
@@ -906,7 +906,7 @@ $u_{\text{hidden}}$ on structural $u_{\text{user}}$ and
 $u_{\text{platform}}$ yields $R^2 = 1.0$ for \emph{every} $\alpha$.
 This is inevitable---three linear functions of two variables span a
 2D space. The theoretical bound predicts zero regret, yet actual
-regret ranges from 0.036 to 4.675. The gap arises from the
+regret ranges from 0.04 to 4.7. The gap arises from the
 discrepancy between structural utilities and actual utility functions
 (\texttt{compute\_user\_utility}, etc.), which include engagement
 weighting and retention proxies beyond the simple pos/neg model.
@@ -944,19 +944,19 @@ quality) over the 18-action space, with Dirichlet-sampled factor
 loadings. Each configuration is evaluated with 10 random stakeholder
 sets~$\times$ 5 data seeds, using 101 diversity weights.
 
-Average regret is roughly invariant with $K$ (0.189 at $K=3$, 0.171
-at $K=5$, 0.182 at $K=10$)---a modest 10\% improvement at $K=5$
+Average regret is roughly invariant with $K$ (0.19 at $K=3$, 0.17
+at $K=5$, 0.18 at $K=10$)---a modest 10\% improvement at $K=5$
 that plateaus. The Pareto fraction (fraction of frontier points that
 are Pareto-optimal) increases from 0.48 ($K=3$) to 0.76 ($K=10$),
 confirming the dimensionality effect: higher-dimensional objectives
 make dominance harder, preserving more operating points. A secondary
 sweep over Dirichlet concentration shows that the correlation
 structure between stakeholders matters $4\times$ more than $K$
-itself: regret drops from 0.272 (diverse, concentration~$= 0.5$) to
-0.157 (similar, concentration~$= 5.0$) at fixed $K=5$.
+itself: regret drops from 0.27 (diverse, concentration~$= 0.5$) to
+0.16 (similar, concentration~$= 5.0$) at fixed $K=5$.
 
 %═══════════════════════════════════════════════════════════════════
-\section{Direction 2: Utility Sensitivity}
+\section{How Sensitive Is the Frontier to Specification?}
 \label{sec:sensitivity}
 %═══════════════════════════════════════════════════════════════════
 
@@ -1054,13 +1054,13 @@ misspecification.
 This finding creates a productive tension with
 \cref{sec:databudget}'s result that 25 pairs cuts regret by 42\%.
 The resolution: data is powerful when the specification is correct
-(Direction~3), but \emph{amplifies errors} when specification is
-wrong (Direction~2). The practical prescription is sequential: fix the
+(\cref{sec:partial}), but \emph{amplifies errors} when specification is
+wrong (\cref{sec:sensitivity}). The practical prescription is sequential: fix the
 specification first, then collect data.
 
 \subsection{The Pareto Robustness Buffer}
 
-Synthesizing across all Direction~2 experiments (\cref{tab:sensitivity}):
+Synthesizing across all sensitivity experiments (\cref{tab:sensitivity}):
 
 \begin{table}[t]
   \caption{Utility sensitivity summary: the Pareto frontier's response
@@ -1109,22 +1109,22 @@ test two nonlinear departures:
 Four experiments across three utility families (linear, concave,
 threshold):
 
-\textbf{Exp~A (Labels vs.\ Loss):} All mean cosine similarities
+\textbf{Labels vs.\ Loss:} All mean cosine similarities
 exceed 0.92 across families---the labels-not-loss claim generalizes
 to nonlinear utilities.
 
-\textbf{Exp~B ($\alpha$-Recovery):} Both families preserve
+\textbf{$\alpha$-Recovery:} Both families preserve
 Spearman~$= 1.0$ for $\alpha$ rank-ordering. Nonlinear parameters
 bias absolute $\hat\alpha$ (concave inflates up to 57\%, threshold
 deflates up to 40\%) but never disrupt the ranking.
 
-\textbf{Exp~C (Proxy Recovery):} The diversity knob is invariant
+\textbf{Proxy Recovery:} The diversity knob is invariant
 (0.724 recovery across all families). $\alpha$-interpolation degrades
 under threshold utility ($0.738 \to 0.499$) because the dead zone
 creates preferences that the linear proxy cannot reproduce, but holds
 or improves under concave.
 
-\textbf{Exp~D (Stress $\times$ Nonlinearity):} The same 4D stress
+\textbf{Stress $\times$ Nonlinearity:} The same 4D stress
 sweep from \cref{sec:stress} under all three families. Concave
 tightens the label-noise breaking point from $p = 0.30$ to $p = 0.20$
 (practitioners using prospect-theoretic utilities should allow
@@ -1143,7 +1143,7 @@ To validate the BT training architecture on real preference data, we
 train on MovieLens-100K movie ratings. The best configuration (BPR
 loss with in-batch negatives, 64-dim embeddings, 4 transformer
 layers) achieves Normalized Discounted Cumulative Gain (NDCG)@3 of
-0.4112, a 59\% improvement over the untrained baseline (0.2585). An
+0.411, a 59\% improvement over the untrained baseline (0.259). An
 ablation study reveals a 107.5\% synergy effect: neither learned
 embeddings nor the transformer improves performance alone; all gain
 comes from their interaction. Details in \cref{app:movielens}.
@@ -1167,32 +1167,33 @@ training procedure. Details in \cref{app:synthetic}.
 
 \subsection{Synthesis}
 
-The three research directions form a progressive arc:
+The three research questions form a progressive arc:
 
-\textbf{Direction~1 (Identifiability)} establishes what BT training
+\textbf{Identifiability} (\cref{sec:identifiability}) establishes what BT training
 \emph{can} recover: the preference ordering encoded in training labels,
 the negativity-aversion parameter~$\alpha$ (Spearman~$= 1.0$), and a
 disagreement-to-differentiation bound ($R^2 = 0.977$). Sun
 et al.'s~\cite{sun2025rethinking} theoretical order-consistency result
-predicts our Direction~1 findings; our contribution extends the
+predicts these findings; our contribution extends the
 analysis to the multi-stakeholder setting and provides empirical stress
 bounds.
 
-\textbf{Direction~3 (Partial Observation)} quantifies what is
+\textbf{Partial observation} (\cref{sec:partial}) quantifies what is
 \emph{lost} when a stakeholder is hidden. Society is $10\times$
 costlier to miss than user, but even 25 preference pairs recover 42\%
 of the lost utility---a VoI finding with immediate practical
 implications.
 
-\textbf{Direction~2 (Sensitivity)} reveals how \emph{precisely} the
+\textbf{Sensitivity} (\cref{sec:sensitivity}) reveals how \emph{precisely} the
 non-hidden stakeholders' utilities must be specified. The answer is
 nuanced: individual parameters are forgiving (rank stability~$= 1.0$),
 but correlated specification errors compound, and more training data
 amplifies misspecification rather than correcting it. This Goodhart
 result~\cite{skalse2024goodhart} is the paper's deepest finding: it
-resolves an apparent contradiction between ``data helps'' (Direction~3)
-and ``data hurts'' (Direction~2) by showing that data is only as good
-as the utility specification it learns from.
+resolves an apparent contradiction between ``data helps''
+(\cref{sec:partial}) and ``data hurts'' (\cref{sec:sensitivity}) by
+showing that data is only as good as the utility specification it
+learns from.
 
 \subsection{Practical Guidance}
 
@@ -1247,7 +1248,7 @@ architecture on real data but not the stakeholder analysis. The
 methodology (LOSO, $\alpha$-recovery, sensitivity analysis)
 generalizes; the specific numbers are benchmark-specific.
 
-\textbf{Three stakeholders.} Charter~E tests $K > 3$ but with
+\textbf{Three stakeholders.} The $K$-stakeholder scaling analysis (\cref{app:kscaling}) tests $K > 3$ but with
 synthetic factor-based stakeholders. Real stakeholder populations may
 not follow Dirichlet factor loadings.
 
@@ -1255,14 +1256,14 @@ not follow Dirichlet factor loadings.
 as $\text{pos} - 4 \cdot \text{neg}$, a structural proxy for
 diversity minus polarization. The actual \texttt{compute\_society\_utility}
 function measures topic diversity and cross-partisan exposure, which is
-structurally different (set-level, not per-item). The Exp~5 $R^2 = 1.0$
+structurally different (set-level, not per-item). The structural $R^2 = 1.0$
 collapse explicitly reveals this gap.
 
 \textbf{Fixed engagement scorer.} Content selection uses a fixed
 engagement formula ($\text{fav} + 0.8 \times \text{repost} + 0.5
 \times \text{follow}$), not the stakeholder-specific weight vectors.
 In production, the scorer co-evolves with the utility specification.
-Our Direction~2 selection-level test partially addresses this
+Our selection-level sensitivity test partially addresses this
 ($\alpha$-dominance holds at $0.062$), but a full co-evolution study
 remains future work.
 
@@ -1317,7 +1318,7 @@ All code and experiment protocols are publicly available.\footnote{%
 \label{app:nonlinear}
 
 \begin{table}[H]
-\caption{Exp~A: Labels vs.\ Loss under nonlinear utilities (mean cosine similarity across 4 loss types).}
+\caption{Labels vs.\ Loss under nonlinear utilities (mean cosine similarity across 4 loss types).}
 \centering\small
 \begin{tabular}{lccc}
 \toprule
@@ -1331,20 +1332,20 @@ Threshold ($\tau = 0.05$--$0.3$) & 0.989 & 0.924 & 0.976 \\
 \end{table}
 
 \begin{table}[H]
-\caption{Exp~B: $\alpha$-recovery under nonlinear utilities.}
+\caption{$\alpha$-recovery under nonlinear utilities.}
 \centering\small
 \begin{tabular}{lccc}
 \toprule
 Family & $\alpha$-Spearman & Sensitivity & Bias \\
 \midrule
-Concave ($\gamma = 0.7$) & 1.0000 & 0.169 & +57\% inflation \\
-Threshold ($\tau = 0.1$) & 1.0000 & 0.154 & $-$40\% deflation \\
+Concave ($\gamma = 0.7$) & 1.0 & 0.169 & +57\% inflation \\
+Threshold ($\tau = 0.1$) & 1.0 & 0.154 & $-$40\% deflation \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[H]
-\caption{Exp~C: Proxy recovery under nonlinear utilities (hiding society, 500-item pool).}
+\caption{Proxy recovery under nonlinear utilities (hiding society, 500-item pool).}
 \centering\small
 \begin{tabular}{lcccc}
 \toprule
@@ -1357,11 +1358,11 @@ Threshold & 0.259 & 0.499 & 0.724 & 0.966 \\
 \end{tabular}
 \end{table}
 
-\section{Stress $\times$ Nonlinearity (Exp D)}
+\section{Stress $\times$ Nonlinearity}
 \label{app:stress}
 
 \begin{table}[H]
-\caption{Exp~D: Breaking points (Spearman~$< 0.95$) under nonlinear stress.}
+\caption{Breaking points (Spearman~$< 0.95$) under nonlinear stress.}
 \centering\small
 \begin{tabular}{lccc}
 \toprule
@@ -1384,7 +1385,7 @@ threshold by one level ($\leq$15\% annotation error).
 \label{app:kscaling}
 
 \begin{table}[H]
-\caption{Charter~E: Scaling with $K$ stakeholders (F=8 factors, 101 diversity weights, 10 configs $\times$ 5 seeds).}
+\caption{Scaling with $K$ stakeholders (8 factors, 101 diversity weights, 10 configs $\times$ 5 seeds).}
 \centering\small
 \begin{tabular}{lcccc}
 \toprule
@@ -1437,10 +1438,10 @@ Best configuration: BPR loss with in-batch negatives (batch size 32),
 64-dimensional learned embeddings, 4 transformer layers,
 learning rate $5 \times 10^{-4}$ (halved from $10^{-3}$), weight
 decay $10^{-4}$. Training stopped at epoch 9 (best validation
-NDCG@3). The BCE baseline achieved val NDCG@3 of 0.3157 but test
-NDCG@3 of only 0.2410 (severe overfitting due to score margins
+NDCG@3). The BCE baseline achieved val NDCG@3 of 0.316 but test
+NDCG@3 of only 0.241 (severe overfitting due to score margins
 $\sim 10^{-8}$). BPR + in-batch negatives produces margins $\sim$0.1--0.2,
-eliminating the generalization gap (val 0.4112, test 0.4183).
+eliminating the generalization gap (val 0.411, test 0.418).
 
 \begin{table}[H]
 \caption{MovieLens ablation study.}
@@ -1465,7 +1466,7 @@ Synergy effect & --- & $+$107.5\% \\
 The synthetic environment defines 648 ground-truth parameters:
 $6 \times 6 \times 18$ (archetypes $\times$ topics $\times$ actions).
 Five verification suites test progressively deeper model properties:
-(1) embedding probes (silhouette scores: topic 0.9999, archetype 0.369);
+(1) embedding probes (silhouette scores: topic 1.00, archetype 0.369);
 (2) behavioral tests (100\% accuracy, mean error $< 10^{-15}$);
 (3) action differentiation (6/6 tests pass, lurker--power user
 repost ratio 15.6$\times$);
@@ -1476,7 +1477,7 @@ pairs during training);
 \section{Pluralistic Models and Causal Verification}
 \label{app:pluralistic}
 
-Phase~2 tested four pluralistic approaches for multi-group reward
+We tested four pluralistic approaches for multi-group reward
 modeling: single BT (baseline), GMM clustering, soft assignment, and
 two-stage (cluster-then-train). The two-stage approach achieved 100\%
 cluster purity using topic$\times$action features, with overall
@@ -1484,7 +1485,7 @@ accuracy 99.4\%. Weight correlation (0.554) fell below the target
 gate (0.8), a limitation attributed to BT's scale invariance rather
 than model failure.
 
-Phase~3 tested causal intervention: replacing a user's engagement
+Causal verification tested intervention: replacing a user's engagement
 history with a different archetype's history and measuring score
 changes. Action-level interventions (block, follow) achieve 100\%
 pass rate. History-level interventions achieve 50\% initially,

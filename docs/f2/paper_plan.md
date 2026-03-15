@@ -327,7 +327,7 @@ The **pluralistic alignment** literature (Sorensen, Bakker, PAD) addresses diver
 ## 8. Prioritized Next Steps
 
 1. **Wait for in-flight results** (D2 A+C: ~1 hour; Exp D: overnight)
-2. **Create paper directory**: `docs/f4/paper/` with `main.tex`, `references.bib`, `figures/`
+2. **Create paper directory**: `docs/f2/paper/` with `main.tex`, `references.bib`, `figures/`
 3. **Write §1-3 first** (intro, background, system) — these don't depend on in-flight results
 4. **Write §4** (labels not loss) — all data ready
 5. **Write §5** (partial observation) — all data ready
