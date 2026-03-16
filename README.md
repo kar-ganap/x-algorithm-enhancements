@@ -4,7 +4,7 @@ Research enhancements to xAI's open-sourced recommendation algorithm. This fork 
 
 ## Enhancements
 
-### F1: KV-Cache Optimization (Complete)
+### KV-Cache Optimization
 
 Inference optimization for the Phoenix transformer, targeting latency and memory:
 
@@ -13,16 +13,15 @@ Inference optimization for the Phoenix transformer, targeting latency and memory
 - **58% memory reduction** via INT8 quantization (~90% top-3 score agreement)
 - See [`enhancements/optimization/`](enhancements/optimization/) and [`docs/f1/`](docs/f1/)
 
-### F2: Multi-Stakeholder Reward Modeling (Complete)
+### Multi-Stakeholder Reward Modeling
 
-Bradley-Terry (BT) preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare:
+Bradley-Terry preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare. Studied on a synthetic benchmark built on X's 18-action engagement space (preprint: [`docs/f2/paper/`](docs/f2/paper/)).
 
 - **Core finding:** Stakeholder differentiation comes from training *labels*, not the loss function. 79 of 87 experiments across 4 BT loss variants converge to near-identical weights (cosine similarity >0.92) when trained on identical preference pairs.
-- **Research results:**
-  - **Identifiability:** The negativity-aversion parameter α is recoverable from learned weights (Spearman=1.0), robust to ≤20% label noise and ≥250 preference pairs
-  - **Utility sensitivity:** The Pareto frontier is robust to weight permutation and selection-level perturbation, but individual weight magnitudes matter at matched perturbation budgets
-  - **Partial observation:** Hiding society costs 10x more regret than hiding user; even 25 preference pairs from the hidden stakeholder cuts regret by 42%
-- Validated on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter environment
+- **Identifiability:** The negativity-aversion parameter α is recoverable from learned weights (Spearman=1.0), robust to ≤20% label noise and ≥250 preference pairs.
+- **Partial observation:** Hiding society costs 10x more regret than hiding user; even 25 preference pairs from the hidden stakeholder cuts regret by 42%.
+- **Utility sensitivity:** The Pareto frontier absorbs individual weight perturbation (rank stability = 1.0) but not simultaneous misspecification. More data amplifies misspecified utilities after N > 100 pairs — a Goodhart effect.
+- Validated on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter environment.
 - See [`enhancements/reward_modeling/`](enhancements/reward_modeling/) and [`docs/f2/`](docs/f2/)
 
 ## Architecture
@@ -35,10 +34,10 @@ See [`docs/architecture.md`](docs/architecture.md) for system diagrams (Mermaid)
 # Install dependencies
 uv sync
 
-# Run F2 tests (reward modeling + analysis)
+# Run reward modeling tests
 make test
 
-# Run all tests (includes F1 optimization)
+# Run all tests (includes optimization)
 make test-all
 
 # Quality gates
@@ -58,8 +57,8 @@ uv run python scripts/analysis/analyze_partial_observation.py --exp 4
 
 ```
 enhancements/               # Enhancement code
-├── optimization/           # F1: KV-cache, JIT, INT8 quantization
-├── reward_modeling/        # F2: BT training, stakeholder utilities, Pareto analysis
+├── optimization/           # KV-cache, JIT, INT8 quantization
+├── reward_modeling/        # BT training, stakeholder utilities, Pareto analysis
 ├── data/                   # Data adapters (synthetic, MovieLens)
 ├── analysis/               # Trajectory & sensitivity analysis
 ├── verification/           # Test suites for synthetic verification
