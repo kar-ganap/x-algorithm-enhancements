@@ -8,12 +8,15 @@ Requires:
     results/partial_observation.json  (from analyze_partial_observation.py --exp 4)
 
 Usage:
-    uv run python scripts/visualize_exp4.py
+    uv run python scripts/visualization/visualize_exp4.py
 """
 import json
 import os
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -42,7 +45,7 @@ def main() -> None:
     frontiers_path = os.path.join(project_root, "results/exp4_frontiers.json")
     if not os.path.exists(frontiers_path):
         print(f"Missing {frontiers_path}")
-        print("Run: uv run python scripts/compute_exp4_frontiers.py")
+        print("Run: uv run python scripts/experiments/compute_exp4_frontiers.py")
         return
 
     with open(frontiers_path) as f:
@@ -100,7 +103,7 @@ def main() -> None:
         "full": "#2171b5",
     }
 
-    # --- Plot 1: Frontier curves with CI bands ---
+    # --- Plot 1 (a): Frontier curves with CI bands ---
     for key in keys_to_plot:
         if key not in frontier_stats:
             continue
@@ -118,52 +121,98 @@ def main() -> None:
     ax1.set_xlabel("Diversity Weight", fontsize=12)
     ax1.set_ylabel("Society Utility", fontsize=12)
     ax1.set_title(
-        f"Society Frontier vs Data Budget\n"
+        f"(a) Society Frontier vs Data Budget\n"
         f"(mean + 95% bootstrap CI, {n_seeds_frontier} seeds)",
         fontsize=12,
     )
     ax1.legend(loc="lower right", fontsize=9, ncol=2)
     ax1.grid(True, alpha=0.3)
+    # Match vertical minor gridlines from panel (b)
+    for xv in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+        ax1.axvline(xv, color="#888888", linewidth=0.7, linestyle="--", zorder=0)
     ax1.axhline(y=0, color="black", linewidth=0.5, alpha=0.3)
 
-    # --- Plot 2: Regret with bootstrap CIs ---
+    # --- Plot 2 (b): Regret with bootstrap CIs ---
     if regret_ns:
-        yerr_lo = [m - l for m, l in zip(regret_means, regret_los)]
-        yerr_hi = [h - m for m, h in zip(regret_means, regret_his)]
+        # Separate N=0 (LOSO baseline) from actual data points
+        has_baseline = regret_ns[0] == 0
+        if has_baseline:
+            baseline_mean = regret_means[0]
+            baseline_lo = regret_los[0]
+            baseline_hi = regret_his[0]
+            plot_ns = regret_ns[1:]
+            plot_means = regret_means[1:]
+            plot_los = regret_los[1:]
+            plot_his = regret_his[1:]
+        else:
+            baseline_mean = None
+            plot_ns = regret_ns
+            plot_means = regret_means
+            plot_los = regret_los
+            plot_his = regret_his
+
+        yerr_lo = [m - l for m, l in zip(plot_means, plot_los)]
+        yerr_hi = [h - m for m, h in zip(plot_means, plot_his)]
 
         ax2.errorbar(
-            regret_ns, regret_means, yerr=[yerr_lo, yerr_hi],
+            plot_ns, plot_means, yerr=[yerr_lo, yerr_hi],
             marker="o", linewidth=2, capsize=4, capthick=1.5,
             color="#d62728", label="Society scorer",
             markersize=6, zorder=5,
         )
 
-        # LOSO baseline band
-        if regret_ns[0] == 0:
-            ax2.axhspan(regret_los[0], regret_his[0], color="#cccccc", alpha=0.3)
+        # N=0 LOSO baseline as horizontal line (not a data point on log axis)
+        if baseline_mean is not None:
+            ax2.axhspan(baseline_lo, baseline_hi, color="#cccccc", alpha=0.3)
             ax2.axhline(
-                y=regret_means[0], color="#999999", linewidth=1.5,
+                y=baseline_mean, color="#999999", linewidth=1.5,
                 linestyle="--",
-                label=f"LOSO baseline ({regret_means[0]:.3f})",
+                label=f"LOSO baseline ({baseline_mean:.2f})",
             )
+
+        # Sparing annotations for key data points only
+        annotate_ns = {25: (0, 16), 200: (0, -18), 2000: (0, 16)}
+        for n, m in zip(plot_ns, plot_means):
+            if n in annotate_ns:
+                ox, oy = annotate_ns[n]
+                ax2.annotate(
+                    f"N={n}", (n, m),
+                    textcoords="offset points", xytext=(ox, oy),
+                    ha="center", fontsize=9, fontweight="bold",
+                )
+
+        # Simple log scale with readable tick labels
+        ax2.set_xscale("log")
+        ax2.set_xlim(15, 3000)
+        ax2.xaxis.set_major_formatter(ticker.ScalarFormatter())
+        ax2.ticklabel_format(axis="x", style="plain")  # "100" not "10^2"
+        # Major gridlines
+        ax2.grid(True, which="major", alpha=0.3)
+        # Vertical minor gridlines drawn explicitly
+        for xv in [20, 30, 40, 50, 60, 70, 80, 90,
+                    200, 300, 400, 500, 600, 700, 800, 900, 2000]:
+            ax2.axvline(xv, color="#888888", linewidth=0.7, linestyle="--", zorder=0)
 
         ax2.set_xlabel("Society Preference Pairs (N)", fontsize=12)
         ax2.set_ylabel("Avg Regret (lower is better)", fontsize=12)
         ax2.set_title(
-            f"Frontier Quality vs Data Budget\n"
+            f"(b) Frontier Quality vs Data Budget\n"
             f"(mean + 95% bootstrap CI, {n_seeds_regret} seeds)",
             fontsize=12,
         )
-        ax2.set_xscale("symlog", linthresh=10)
-        ax2.set_xticks(regret_ns)
-        ax2.set_xticklabels([str(n) for n in regret_ns], fontsize=9)
-        ax2.legend(fontsize=9)
-        ax2.grid(True, alpha=0.3)
+        ax2.legend(fontsize=10)
 
     plt.tight_layout()
-    out_path = os.path.join(project_root, "results/exp4_partial_sampling.png")
-    plt.savefig(out_path, dpi=150, bbox_inches="tight")
-    print(f"Saved: {out_path}")
+
+    # Save both PDF (for paper) and PNG (for quick preview)
+    pdf_path = os.path.join(
+        project_root, "docs/f2/paper/figures/fig4_partial_sampling.pdf",
+    )
+    png_path = os.path.join(project_root, "results/exp4_partial_sampling.png")
+    plt.savefig(pdf_path, dpi=300, bbox_inches="tight")
+    plt.savefig(png_path, dpi=150, bbox_inches="tight")
+    print(f"Saved: {pdf_path}")
+    print(f"Saved: {png_path}")
     plt.close()
 
 
