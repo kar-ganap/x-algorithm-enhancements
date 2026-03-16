@@ -1,6 +1,6 @@
 # Architecture
 
-System diagrams for the x-algorithm-enhancements project. Two enhancement features (F1, F2) built on top of xAI's vendored recommendation system.
+System diagrams for the x-algorithm-enhancements project. Two enhancements built on top of xAI's vendored recommendation system.
 
 ## System Overview
 
@@ -13,13 +13,13 @@ graph TB
         CP["Candidate Pipeline<br/><i>Framework</i>"]
     end
 
-    subgraph f1 ["F1: KV-Cache Optimization"]
+    subgraph opt ["KV-Cache Optimization"]
         JIT["JIT Compilation<br/><i>10.3x speedup</i>"]
         KV["KV-Cache<br/><i>9.6x inference</i>"]
         Q["INT8 Quantization<br/><i>58% memory reduction</i>"]
     end
 
-    subgraph f2 ["F2: Multi-Stakeholder Reward Modeling"]
+    subgraph reward ["Multi-Stakeholder Reward Modeling"]
         BT["Bradley-Terry<br/>Training"]
         SU["Stakeholder<br/>Utilities"]
         PF["Pareto Frontier<br/>Analysis"]
@@ -31,20 +31,20 @@ graph TB
     PF --> LOSO
 ```
 
-## F2: Research Pipeline
+## Research Pipeline
 
-Three research directions, each building on the previous:
+Three research questions, each building on the previous:
 
 ```mermaid
 graph LR
-    subgraph d1 ["Direction 1: Identifiability"]
+    subgraph ident ["Identifiability"]
         Labels["Preference<br/>Labels"] --> Train["BT Training<br/><i>4 loss variants</i>"]
         Train --> Weights["18-dim Weight<br/>Vectors"]
         Weights --> Alpha["α-Recovery<br/><i>Spearman=1.0</i>"]
         Alpha --> Stress["Stress Testing<br/><i>1300 runs</i>"]
     end
 
-    subgraph d3 ["Direction 3: Partial Observation"]
+    subgraph partial ["Partial Observation"]
         Weights2["Weight<br/>Vectors"] --> LOSO2["LOSO Analysis<br/><i>Hide 1 of K</i>"]
         LOSO2 --> Proxy["Proxy Methods<br/><i>6 tested</i>"]
         Proxy --> VoI["Data Budget<br/><i>25 pairs = -42% regret</i>"]
@@ -52,17 +52,17 @@ graph LR
         Bound --> Scale["K-Scaling<br/><i>F=8, K=3-10</i>"]
     end
 
-    subgraph d2 ["Direction 2: Sensitivity"]
+    subgraph sensitivity ["Sensitivity"]
         Weights3["Weight<br/>Vectors"] --> AlphaD["α-Dominance<br/><i>Permutation vs magnitude</i>"]
         AlphaD --> Sweep["Parameter<br/>Sweep"]
         Sweep --> SvD["Spec vs Data<br/><i>Crossover point</i>"]
     end
 
-    d1 --> d3
-    d1 --> d2
+    ident --> partial
+    ident --> sensitivity
 ```
 
-## F2: Data Flow
+## Data Flow
 
 From synthetic data through BT training to Pareto frontier evaluation:
 
@@ -96,7 +96,7 @@ graph TD
     end
 ```
 
-## F2: Stakeholder Utility Model
+## Stakeholder Utility Model
 
 ```mermaid
 graph LR
@@ -116,7 +116,7 @@ graph LR
     Neg --> U & Pl & S
 ```
 
-## F1: Optimization Pipeline
+## Optimization Pipeline
 
 ```mermaid
 graph LR
@@ -126,5 +126,3 @@ graph LR
     Cache --> Quant["INT8<br/>Quantization<br/><i>58% memory</i>"]
     Quant --> Output["Output<br/>Predictions"]
 ```
-
-*Detailed directory map will be added after the scripts/ restructure.*

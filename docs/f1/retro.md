@@ -57,7 +57,7 @@ tests/test_optimization/
 
 ## Known Issues
 
-- **9 test failures in `test_optimization/`**: These are from the F2 test suite and are not blocking F2 development. The failures are likely due to environment differences (JAX version, CPU-only vs GPU). Tracked but not actively maintained.
+- **9 test failures in `test_optimization/`**: These are environment-related (JAX version, CPU-only vs GPU). Not blocking reward modeling development. Tracked but not actively maintained.
 
 ## Results
 

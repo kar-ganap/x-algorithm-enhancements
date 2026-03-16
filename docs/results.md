@@ -2,9 +2,9 @@
 
 This document captures the results, benchmarks, and learnings from implementing enhancements to the Phoenix recommendation system.
 
-**Features Covered:**
-- **F1: JAX Optimization** - JIT, KV-cache, quantization
-- **F2: Reward Modeling** - Bradley-Terry, pluralistic rewards, causal verification
+**Areas Covered:**
+- **KV-Cache Optimization** — JIT, KV-cache, quantization
+- **Reward Modeling** — Bradley-Terry, pluralistic rewards, causal verification, multi-stakeholder analysis
 
 ---
 
