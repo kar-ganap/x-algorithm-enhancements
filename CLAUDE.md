@@ -10,7 +10,7 @@ Enhancements to xAI's open-sourced recommendation algorithm (Phoenix/Grok). Two 
 
 | Phase | What | Key Result |
 |-------|------|------------|
-| Phase 1 | Bradley-Terry (BT) preference learning | 99.3% accuracy; label quality > feature noise |
+| Phase 1 | Bradley-Terry (BT) preference learning | 99.3% validation accuracy; label quality > feature noise |
 | Phase 2 | Pluralistic reward models | 100% cluster purity with two-stage approach |
 | Phase 3 | Causal verification | 5/5 test suites pass (action-level); 50% history-level |
 | Phase 4 | Multi-stakeholder differentiation | Cosine sim 0.478 with standard BT |

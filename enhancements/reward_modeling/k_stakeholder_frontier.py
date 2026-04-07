@@ -12,7 +12,17 @@ from typing import Any
 
 import numpy as np
 
-from enhancements.reward_modeling.weights import ACTION_INDICES
+# Lazy import to avoid __init__.py chain pulling in Phoenix/grok.
+# ACTION_INDICES only needed for legacy Phoenix scorer (when scorer_weights is None).
+ACTION_INDICES: dict[str, int] | None = None
+
+
+def _get_action_indices() -> dict[str, int]:
+    global ACTION_INDICES
+    if ACTION_INDICES is None:
+        from enhancements.reward_modeling.weights import ACTION_INDICES as _AI
+        ACTION_INDICES = _AI
+    return ACTION_INDICES
 
 UtilityPoint = dict[str, float]
 
@@ -23,26 +33,28 @@ def compute_k_frontier(
     stakeholder_weights: dict[str, np.ndarray],
     diversity_weights: list[float],
     top_k: int = 10,
+    scorer_weights: np.ndarray | None = None,
 ) -> list[UtilityPoint]:
     """Compute frontier with K stakeholder utilities.
 
-    Uses the same engagement scorer + diversity bonus as
-    compute_pareto_frontier (stakeholder_utilities.py:399-434).
-    Evaluates each stakeholder's utility as w_k @ action_probs.
+    Uses engagement scorer + diversity bonus for content selection,
+    then evaluates each stakeholder's utility as w_k @ action_probs.
 
     Args:
-        base_action_probs: [N_users, N_content, 18] tensor.
+        base_action_probs: [N_users, N_content, D] tensor.
         content_topics: [N_content] topic assignments.
-        stakeholder_weights: Map of name -> 18-dim weight vector.
+        stakeholder_weights: Map of name -> D-dim weight vector.
         diversity_weights: List of dw values to sweep (e.g., 0.0 to 1.0).
         top_k: Number of recommendations per user.
+        scorer_weights: [D] custom engagement scorer. If None, uses the
+            hardcoded Phoenix formula (fav + 0.8*repost + 0.5*follow).
 
     Returns:
         List of UtilityPoint dicts with "diversity_weight" and one
         "{name}_utility" key per stakeholder.
     """
     n_users, n_content, _ = base_action_probs.shape
-    num_topics = len(np.unique(content_topics))
+    num_topics = int(np.max(content_topics)) + 1
     stakeholder_names = sorted(stakeholder_weights.keys())
     points: list[UtilityPoint] = []
 
@@ -51,12 +63,16 @@ def compute_k_frontier(
 
         for user_idx in range(n_users):
             probs = base_action_probs[user_idx]
-            # Engagement scores (matching stakeholder_utilities.py:399-403)
-            engagement_scores = (
-                probs[:, ACTION_INDICES["favorite"]]
-                + probs[:, ACTION_INDICES["repost"]] * 0.8
-                + probs[:, ACTION_INDICES["follow_author"]] * 0.5
-            )
+            if scorer_weights is not None:
+                engagement_scores = probs @ scorer_weights
+            else:
+                # Legacy Phoenix formula
+                ai = _get_action_indices()
+                engagement_scores = (
+                    probs[:, ai["favorite"]]
+                    + probs[:, ai["repost"]] * 0.8
+                    + probs[:, ai["follow_author"]] * 0.5
+                )
 
             if dw > 0:
                 selected: list[int] = []
@@ -114,7 +130,7 @@ def compute_scorer_eval_frontier(
     then evaluates with eval_weights for utility measurement.
     """
     n_users, n_content, _ = base_action_probs.shape
-    num_topics = len(np.unique(content_topics))
+    num_topics = int(np.max(content_topics)) + 1
     stakeholder_names = sorted(eval_weights.keys())
     scorer = np.asarray(scorer_weights, dtype=np.float64)
     points: list[UtilityPoint] = []

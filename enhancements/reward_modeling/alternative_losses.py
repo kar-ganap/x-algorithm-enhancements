@@ -90,8 +90,9 @@ class TrainedModel(NamedTuple):
     stakeholder: StakeholderType
     weights: np.ndarray
     loss_history: list[float]
-    accuracy: float
+    accuracy: float  # Training accuracy (on training pairs)
     config: LossConfig
+    eval_accuracy: float | None = None  # Held-out accuracy (if eval pairs provided)
 
 
 # =============================================================================
@@ -459,6 +460,8 @@ def train_with_loss(
     target_engagement_rej: np.ndarray | None = None,
     initial_weights: np.ndarray | None = None,
     verbose: bool = True,
+    eval_probs_preferred: np.ndarray | None = None,
+    eval_probs_rejected: np.ndarray | None = None,
 ) -> TrainedModel:
     """Train a model with the specified loss function.
 
@@ -470,25 +473,43 @@ def train_with_loss(
         target_engagement_rej: [N] ground truth engagement for rejected (calibrated BT)
         initial_weights: Starting weights (default: ones for positive, minus ones for negative)
         verbose: Print progress
+        eval_probs_preferred: [N_eval, D] held-out preferred features (optional)
+        eval_probs_rejected: [N_eval, D] held-out rejected features (optional)
 
     Returns:
-        TrainedModel with weights and metrics
+        TrainedModel with weights and metrics. If eval pairs provided,
+        eval_accuracy is populated with held-out accuracy.
     """
     if verbose:
         print(f"Training {config.loss_type.value} for {config.stakeholder.value}")
         print(f"  Epochs: {config.num_epochs}, LR: {config.learning_rate}")
 
     # Initialize weights
+    feature_dim = probs_preferred.shape[1]
     if initial_weights is None:
-        weights = np.zeros(NUM_ACTIONS, dtype=np.float32)
-        for idx in POSITIVE_INDICES:
-            weights[idx] = 1.0
-        for idx in NEGATIVE_INDICES:
-            weights[idx] = -1.0
+        if feature_dim == NUM_ACTIONS:
+            # Original 18-action initialization
+            weights = np.zeros(NUM_ACTIONS, dtype=np.float32)
+            for idx in POSITIVE_INDICES:
+                weights[idx] = 1.0
+            for idx in NEGATIVE_INDICES:
+                weights[idx] = -1.0
+        else:
+            # Generic initialization for arbitrary feature dimension
+            weights = np.zeros(feature_dim, dtype=np.float32)
+            weights[:] = 0.1  # small positive default
     else:
         weights = initial_weights.copy()
 
     w = jnp.array(weights)
+
+    # Constrained-BT uses Phoenix-specific positive/negative indices
+    if config.loss_type == LossType.CONSTRAINED_BT and feature_dim != NUM_ACTIONS:
+        raise ValueError(
+            f"Constrained-BT requires {NUM_ACTIONS}-dim features "
+            f"(got {feature_dim}). Use standard BT, margin-BT, or "
+            f"calibrated-BT for non-Phoenix feature spaces."
+        )
 
     # Create loss function
     loss_fn = create_loss_fn(
@@ -552,8 +573,18 @@ def train_with_loss(
     r_rej = probs_rejected @ final_weights
     accuracy = float(np.mean(r_pref > r_rej))
 
+    # Compute held-out accuracy if eval pairs provided
+    eval_accuracy = None
+    if eval_probs_preferred is not None and eval_probs_rejected is not None:
+        r_eval_pref = eval_probs_preferred @ final_weights
+        r_eval_rej = eval_probs_rejected @ final_weights
+        eval_accuracy = float(np.mean(r_eval_pref > r_eval_rej))
+
     if verbose:
-        print(f"  Final accuracy: {accuracy:.1%}")
+        acc_str = f"  Final accuracy: {accuracy:.1%} (train)"
+        if eval_accuracy is not None:
+            acc_str += f", {eval_accuracy:.1%} (held-out)"
+        print(acc_str)
 
     return TrainedModel(
         loss_type=config.loss_type,
@@ -562,6 +593,7 @@ def train_with_loss(
         loss_history=loss_history,
         accuracy=accuracy,
         config=config,
+        eval_accuracy=eval_accuracy,
     )
 
 
