@@ -1,0 +1,175 @@
+{
+  "config": {
+    "n_movies": 1305,
+    "feature_dim": 19,
+    "top_k": 10,
+    "diversity_weights": [
+      0.0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95,
+      1.0
+    ],
+    "n_seeds": 5,
+    "scorer": "platform_weights"
+  },
+  "loso_regret": {
+    "hide_user": {
+      "avg_regret": 3.5326,
+      "max_regret": 13.4947,
+      "min_regret": 0.0,
+      "pareto_2d_size": 11
+    },
+    "hide_platform": {
+      "avg_regret": 5.1078,
+      "max_regret": 19.6968,
+      "min_regret": 0.0,
+      "pareto_2d_size": 11
+    },
+    "hide_diversity": {
+      "avg_regret": 5.4693,
+      "max_regret": 5.4693,
+      "min_regret": 5.4693,
+      "pareto_2d_size": 1
+    }
+  },
+  "data_budget": {
+    "loso_baseline_regret": 3.2574,
+    "sweep": [
+      {
+        "n_pairs": 0,
+        "avg_regret_mean": 3.2574,
+        "avg_regret_std": 0.0,
+        "per_seed_regret": [
+          3.2574,
+          3.2574,
+          3.2574,
+          3.2574,
+          3.2574
+        ],
+        "weight_spearman_mean": null
+      },
+      {
+        "n_pairs": 25,
+        "avg_regret_mean": 1.5352,
+        "avg_regret_std": 0.7019,
+        "per_seed_regret": [
+          2.2625,
+          0.9419,
+          1.2132,
+          0.7745,
+          2.4838
+        ],
+        "weight_spearman_mean": 0.4705
+      },
+      {
+        "n_pairs": 50,
+        "avg_regret_mean": 1.1808,
+        "avg_regret_std": 0.3984,
+        "per_seed_regret": [
+          0.7811,
+          1.204,
+          1.6773,
+          0.6851,
+          1.5566
+        ],
+        "weight_spearman_mean": 0.5653
+      },
+      {
+        "n_pairs": 100,
+        "avg_regret_mean": 0.6208,
+        "avg_regret_std": 0.2204,
+        "per_seed_regret": [
+          0.329,
+          0.5534,
+          0.5096,
+          0.9789,
+          0.7333
+        ],
+        "weight_spearman_mean": 0.6225
+      },
+      {
+        "n_pairs": 200,
+        "avg_regret_mean": -0.4365,
+        "avg_regret_std": 0.7608,
+        "per_seed_regret": [
+          -1.9464,
+          -0.0638,
+          0.0208,
+          -0.2289,
+          0.0358
+        ],
+        "weight_spearman_mean": 0.6888
+      },
+      {
+        "n_pairs": 500,
+        "avg_regret_mean": -3.7013,
+        "avg_regret_std": 0.3212,
+        "per_seed_regret": [
+          -3.6649,
+          -3.6459,
+          -3.2167,
+          -4.2245,
+          -3.7547
+        ],
+        "weight_spearman_mean": 0.7256
+      },
+      {
+        "n_pairs": 1000,
+        "avg_regret_mean": -5.1459,
+        "avg_regret_std": 0.2555,
+        "per_seed_regret": [
+          -4.8555,
+          -5.2161,
+          -5.5811,
+          -5.1492,
+          -4.9274
+        ],
+        "weight_spearman_mean": 0.7628
+      },
+      {
+        "n_pairs": 2000,
+        "avg_regret_mean": -6.1812,
+        "avg_regret_std": 0.1571,
+        "per_seed_regret": [
+          -5.972,
+          -6.223,
+          -6.0409,
+          -6.4088,
+          -6.2614
+        ],
+        "weight_spearman_mean": 0.7604
+      }
+    ],
+    "recovery_at_25": 0.5287
+  },
+  "comparison_with_synthetic": {
+    "synthetic_loso": {
+      "hide_society": 1.0819,
+      "hide_platform": 0.3687,
+      "hide_user": 0.1109
+    },
+    "movielens_loso": {
+      "hide_user": 3.5326,
+      "hide_platform": 5.1078,
+      "hide_diversity": 5.4693
+    }
+  },
+  "total_time_seconds": 98.2
+}
