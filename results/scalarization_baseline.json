@@ -1,0 +1,868 @@
+{
+  "config": {
+    "simplex_resolution": 5,
+    "n_mixing_points": 21,
+    "n_pairs_per_model": 2000,
+    "diversity_weights": [
+      0.0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95,
+      1.0
+    ],
+    "top_k": 10
+  },
+  "synthetic": {
+    "per_stakeholder_frontier": [
+      {
+        "diversity_weight": 0.3,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      {
+        "diversity_weight": 0.35,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      {
+        "diversity_weight": 0.4,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      {
+        "diversity_weight": 0.45,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      }
+    ],
+    "scalarized_frontier": [
+      {
+        "diversity_weight": 0.1,
+        "platform_utility": 14.1448,
+        "society_utility": 8.4519,
+        "user_utility": 13.0678
+      },
+      {
+        "diversity_weight": 0.3,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      {
+        "diversity_weight": 0.35,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      {
+        "diversity_weight": 0.5,
+        "platform_utility": 14.1932,
+        "society_utility": 7.6139,
+        "user_utility": 12.9485
+      },
+      {
+        "diversity_weight": 0.0,
+        "platform_utility": 14.0812,
+        "society_utility": 8.7871,
+        "user_utility": 13.0796
+      },
+      {
+        "diversity_weight": 0.05,
+        "platform_utility": 14.0812,
+        "society_utility": 8.7871,
+        "user_utility": 13.0796
+      },
+      {
+        "diversity_weight": 0.1,
+        "platform_utility": 14.0812,
+        "society_utility": 8.7871,
+        "user_utility": 13.0796
+      },
+      {
+        "diversity_weight": 0.15,
+        "platform_utility": 14.0812,
+        "society_utility": 8.7871,
+        "user_utility": 13.0796
+      },
+      {
+        "diversity_weight": 0.2,
+        "platform_utility": 14.0812,
+        "society_utility": 8.7871,
+        "user_utility": 13.0796
+      },
+      {
+        "diversity_weight": 0.5,
+        "platform_utility": 14.1597,
+        "society_utility": 7.688,
+        "user_utility": 12.9353
+      },
+      {
+        "diversity_weight": 0.5,
+        "platform_utility": 14.1597,
+        "society_utility": 7.688,
+        "user_utility": 12.9353
+      },
+      {
+        "diversity_weight": 0.1,
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      {
+        "diversity_weight": 0.15,
+        "platform_utility": 14.333,
+        "society_utility": 6.0554,
+        "user_utility": 12.767
+      },
+      {
+        "diversity_weight": 0.35,
+        "platform_utility": 14.4666,
+        "society_utility": 3.6854,
+        "user_utility": 12.4269
+      },
+      {
+        "diversity_weight": 0.35,
+        "platform_utility": 14.4354,
+        "society_utility": 5.4634,
+        "user_utility": 12.738
+      },
+      {
+        "diversity_weight": 0.4,
+        "platform_utility": 14.5531,
+        "society_utility": 3.2416,
+        "user_utility": 12.4131
+      },
+      {
+        "diversity_weight": 0.45,
+        "platform_utility": 14.5531,
+        "society_utility": 3.2416,
+        "user_utility": 12.4131
+      },
+      {
+        "diversity_weight": 0.5,
+        "platform_utility": 14.5531,
+        "society_utility": 3.2416,
+        "user_utility": 12.4131
+      },
+      {
+        "diversity_weight": 0.4,
+        "platform_utility": 14.2049,
+        "society_utility": 6.2014,
+        "user_utility": 12.6907
+      },
+      {
+        "diversity_weight": 0.0,
+        "platform_utility": 14.7426,
+        "society_utility": 0.6263,
+        "user_utility": 12.072
+      },
+      {
+        "diversity_weight": 0.05,
+        "platform_utility": 14.7426,
+        "society_utility": 0.6263,
+        "user_utility": 12.072
+      },
+      {
+        "diversity_weight": 0.1,
+        "platform_utility": 14.7426,
+        "society_utility": 0.6263,
+        "user_utility": 12.072
+      },
+      {
+        "diversity_weight": 0.15,
+        "platform_utility": 14.7426,
+        "society_utility": 0.6263,
+        "user_utility": 12.072
+      },
+      {
+        "diversity_weight": 0.2,
+        "platform_utility": 14.7426,
+        "society_utility": 0.6263,
+        "user_utility": 12.072
+      },
+      {
+        "diversity_weight": 0.0,
+        "platform_utility": 14.6584,
+        "society_utility": 2.7741,
+        "user_utility": 12.41
+      },
+      {
+        "diversity_weight": 0.05,
+        "platform_utility": 14.6584,
+        "society_utility": 2.7741,
+        "user_utility": 12.41
+      },
+      {
+        "diversity_weight": 0.1,
+        "platform_utility": 14.7761,
+        "society_utility": 0.5523,
+        "user_utility": 12.0851
+      }
+    ],
+    "comparison": {
+      "per_stakeholder_hypervolume": 1260.6491,
+      "scalarized_hypervolume": 1381.3949,
+      "hypervolume_ratio": 0.9126,
+      "dominated_fraction": 0.0,
+      "n_per_stakeholder_pareto": 4,
+      "n_scalarized_pareto": 27,
+      "n_scalarized_total": 378,
+      "max_per_stakeholder": {
+        "platform_utility": 14.1445,
+        "society_utility": 8.783,
+        "user_utility": 13.1301
+      },
+      "max_scalarized": {
+        "platform_utility": 14.7761,
+        "society_utility": 8.7871,
+        "user_utility": 13.1301
+      }
+    }
+  },
+  "movielens": {
+    "per_stakeholder_frontier": [
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -5.6777,
+        "platform_utility": 31.64,
+        "user_utility": 22.8966
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": -5.6777,
+        "platform_utility": 31.64,
+        "user_utility": 22.8966
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": -5.6777,
+        "platform_utility": 31.64,
+        "user_utility": 22.8966
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": -5.6777,
+        "platform_utility": 31.64,
+        "user_utility": 22.8966
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": -5.6777,
+        "platform_utility": 31.64,
+        "user_utility": 22.8966
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": -4.2584,
+        "platform_utility": 30.6665,
+        "user_utility": 22.0369
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": -4.2584,
+        "platform_utility": 30.6665,
+        "user_utility": 22.0369
+      },
+      {
+        "diversity_weight": 0.35,
+        "diversity_utility": -4.2584,
+        "platform_utility": 30.6665,
+        "user_utility": 22.0369
+      },
+      {
+        "diversity_weight": 0.4,
+        "diversity_utility": -4.2584,
+        "platform_utility": 30.6665,
+        "user_utility": 22.0369
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": -3.436,
+        "platform_utility": 29.7152,
+        "user_utility": 21.7453
+      },
+      {
+        "diversity_weight": 0.5,
+        "diversity_utility": -3.3658,
+        "platform_utility": 29.569,
+        "user_utility": 21.7245
+      },
+      {
+        "diversity_weight": 0.9,
+        "diversity_utility": -3.1498,
+        "platform_utility": 25.8451,
+        "user_utility": 18.2426
+      },
+      {
+        "diversity_weight": 0.95,
+        "diversity_utility": -3.1498,
+        "platform_utility": 25.8451,
+        "user_utility": 18.2426
+      }
+    ],
+    "scalarized_frontier": [
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -9.4974,
+        "platform_utility": 32.5556,
+        "user_utility": 22.799
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": -9.4974,
+        "platform_utility": 32.5556,
+        "user_utility": 22.799
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": -9.4974,
+        "platform_utility": 32.5556,
+        "user_utility": 22.799
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -5.759,
+        "platform_utility": 30.7406,
+        "user_utility": 23.1219
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": -5.759,
+        "platform_utility": 30.7406,
+        "user_utility": 23.1219
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": -5.6184,
+        "platform_utility": 30.3983,
+        "user_utility": 22.7575
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -7.9815,
+        "platform_utility": 32.3093,
+        "user_utility": 23.4477
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": -7.9815,
+        "platform_utility": 32.3093,
+        "user_utility": 23.4477
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": -6.8947,
+        "platform_utility": 32.3011,
+        "user_utility": 23.1813
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -7.1479,
+        "platform_utility": 32.4081,
+        "user_utility": 22.7096
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": -7.1479,
+        "platform_utility": 32.4081,
+        "user_utility": 22.7096
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": -7.1479,
+        "platform_utility": 32.4081,
+        "user_utility": 22.7096
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": -7.8478,
+        "platform_utility": 32.3826,
+        "user_utility": 22.7685
+      },
+      {
+        "diversity_weight": 0.55,
+        "diversity_utility": -6.7863,
+        "platform_utility": 31.5948,
+        "user_utility": 22.1625
+      },
+      {
+        "diversity_weight": 0.6,
+        "diversity_utility": -6.7863,
+        "platform_utility": 31.5948,
+        "user_utility": 22.1625
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": 0.3401,
+        "platform_utility": 23.776,
+        "user_utility": 19.8741
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": 0.3401,
+        "platform_utility": 23.776,
+        "user_utility": 19.8741
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": 0.3401,
+        "platform_utility": 23.776,
+        "user_utility": 19.8741
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": -1.3472,
+        "platform_utility": 26.0794,
+        "user_utility": 21.612
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": -1.3472,
+        "platform_utility": 26.0794,
+        "user_utility": 21.612
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": 0.1331,
+        "platform_utility": 24.2902,
+        "user_utility": 20.0532
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": -0.4628,
+        "platform_utility": 24.9974,
+        "user_utility": 20.1159
+      },
+      {
+        "diversity_weight": 0.5,
+        "diversity_utility": -0.8593,
+        "platform_utility": 25.443,
+        "user_utility": 19.5422
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": 0.3681,
+        "platform_utility": 22.743,
+        "user_utility": 18.4984
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": 0.3681,
+        "platform_utility": 22.743,
+        "user_utility": 18.4984
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": 0.3681,
+        "platform_utility": 22.743,
+        "user_utility": 18.4984
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": 0.601,
+        "platform_utility": 23.0348,
+        "user_utility": 18.1608
+      },
+      {
+        "diversity_weight": 0.5,
+        "diversity_utility": -0.3619,
+        "platform_utility": 24.3056,
+        "user_utility": 18.6438
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -3.5597,
+        "platform_utility": 29.83,
+        "user_utility": 22.0776
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": -3.5597,
+        "platform_utility": 29.83,
+        "user_utility": 22.0776
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": -3.1611,
+        "platform_utility": 29.0111,
+        "user_utility": 21.9589
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": -3.1611,
+        "platform_utility": 29.0111,
+        "user_utility": 21.9589
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": -3.1611,
+        "platform_utility": 29.0111,
+        "user_utility": 21.9589
+      },
+      {
+        "diversity_weight": 0.35,
+        "diversity_utility": -2.5871,
+        "platform_utility": 28.6457,
+        "user_utility": 21.6499
+      },
+      {
+        "diversity_weight": 0.4,
+        "diversity_utility": -2.5871,
+        "platform_utility": 28.6457,
+        "user_utility": 21.6499
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": -3.9968,
+        "platform_utility": 30.6235,
+        "user_utility": 21.445
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": -3.9968,
+        "platform_utility": 30.6235,
+        "user_utility": 21.445
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": -3.9968,
+        "platform_utility": 30.6235,
+        "user_utility": 21.445
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": -3.9968,
+        "platform_utility": 30.6235,
+        "user_utility": 21.445
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": -3.5094,
+        "platform_utility": 29.8982,
+        "user_utility": 21.7174
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": -3.436,
+        "platform_utility": 29.7152,
+        "user_utility": 21.7453
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": -3.436,
+        "platform_utility": 29.7152,
+        "user_utility": 21.7453
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": -3.3658,
+        "platform_utility": 29.569,
+        "user_utility": 21.7245
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": 3.034,
+        "platform_utility": 19.8936,
+        "user_utility": 15.9467
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": 3.034,
+        "platform_utility": 19.8936,
+        "user_utility": 15.9467
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": 3.034,
+        "platform_utility": 19.8936,
+        "user_utility": 15.9467
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": 2.7243,
+        "platform_utility": 20.2242,
+        "user_utility": 16.6503
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": 2.7243,
+        "platform_utility": 20.2242,
+        "user_utility": 16.6503
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": 2.9601,
+        "platform_utility": 20.073,
+        "user_utility": 16.1114
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": 2.9601,
+        "platform_utility": 20.073,
+        "user_utility": 16.1114
+      },
+      {
+        "diversity_weight": 0.35,
+        "diversity_utility": 2.9601,
+        "platform_utility": 20.073,
+        "user_utility": 16.1114
+      },
+      {
+        "diversity_weight": 0.4,
+        "diversity_utility": 2.7317,
+        "platform_utility": 20.4813,
+        "user_utility": 16.2486
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": 2.7317,
+        "platform_utility": 20.4813,
+        "user_utility": 16.2486
+      },
+      {
+        "diversity_weight": 0.5,
+        "diversity_utility": 2.7317,
+        "platform_utility": 20.4813,
+        "user_utility": 16.2486
+      },
+      {
+        "diversity_weight": 0.55,
+        "diversity_utility": 2.7317,
+        "platform_utility": 20.4813,
+        "user_utility": 16.2486
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": 3.829,
+        "platform_utility": 19.1368,
+        "user_utility": 13.9625
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": 3.6943,
+        "platform_utility": 19.311,
+        "user_utility": 14.0548
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": 3.6943,
+        "platform_utility": 19.311,
+        "user_utility": 14.0548
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": 3.6943,
+        "platform_utility": 19.311,
+        "user_utility": 14.0548
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": 3.6943,
+        "platform_utility": 19.311,
+        "user_utility": 14.0548
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": 3.4035,
+        "platform_utility": 19.7113,
+        "user_utility": 14.8055
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": 3.4035,
+        "platform_utility": 19.7113,
+        "user_utility": 14.8055
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": 2.8369,
+        "platform_utility": 20.7164,
+        "user_utility": 15.352
+      },
+      {
+        "diversity_weight": 0.7,
+        "diversity_utility": 1.6088,
+        "platform_utility": 20.8486,
+        "user_utility": 15.4857
+      },
+      {
+        "diversity_weight": 0.0,
+        "diversity_utility": 4.3444,
+        "platform_utility": 17.9152,
+        "user_utility": 13.2991
+      },
+      {
+        "diversity_weight": 0.05,
+        "diversity_utility": 4.3444,
+        "platform_utility": 17.9152,
+        "user_utility": 13.2991
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": 4.3444,
+        "platform_utility": 17.9152,
+        "user_utility": 13.2991
+      },
+      {
+        "diversity_weight": 0.15,
+        "diversity_utility": 4.3444,
+        "platform_utility": 17.9152,
+        "user_utility": 13.2991
+      },
+      {
+        "diversity_weight": 0.2,
+        "diversity_utility": 4.3444,
+        "platform_utility": 17.9152,
+        "user_utility": 13.2991
+      },
+      {
+        "diversity_weight": 0.25,
+        "diversity_utility": 3.669,
+        "platform_utility": 19.1862,
+        "user_utility": 14.2036
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": 3.669,
+        "platform_utility": 19.1862,
+        "user_utility": 14.2036
+      },
+      {
+        "diversity_weight": 0.35,
+        "diversity_utility": 3.5343,
+        "platform_utility": 19.3605,
+        "user_utility": 14.2959
+      },
+      {
+        "diversity_weight": 0.4,
+        "diversity_utility": 3.5343,
+        "platform_utility": 19.3605,
+        "user_utility": 14.2959
+      },
+      {
+        "diversity_weight": 0.55,
+        "diversity_utility": 3.2434,
+        "platform_utility": 19.7607,
+        "user_utility": 15.0467
+      },
+      {
+        "diversity_weight": 0.65,
+        "diversity_utility": 1.5752,
+        "platform_utility": 20.8073,
+        "user_utility": 15.5303
+      },
+      {
+        "diversity_weight": 0.1,
+        "diversity_utility": 4.3774,
+        "platform_utility": 17.6496,
+        "user_utility": 13.6584
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": 4.2427,
+        "platform_utility": 17.8239,
+        "user_utility": 13.7507
+      },
+      {
+        "diversity_weight": 0.35,
+        "diversity_utility": 4.0001,
+        "platform_utility": 18.4101,
+        "user_utility": 14.604
+      },
+      {
+        "diversity_weight": 0.4,
+        "diversity_utility": 4.0001,
+        "platform_utility": 18.4101,
+        "user_utility": 14.604
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": 4.0001,
+        "platform_utility": 18.4101,
+        "user_utility": 14.604
+      },
+      {
+        "diversity_weight": 0.5,
+        "diversity_utility": 4.2325,
+        "platform_utility": 17.4233,
+        "user_utility": 13.984
+      },
+      {
+        "diversity_weight": 0.55,
+        "diversity_utility": 3.9741,
+        "platform_utility": 17.9508,
+        "user_utility": 14.7975
+      },
+      {
+        "diversity_weight": 0.3,
+        "diversity_utility": 4.5209,
+        "platform_utility": 16.7316,
+        "user_utility": 11.9328
+      },
+      {
+        "diversity_weight": 0.4,
+        "diversity_utility": 4.4002,
+        "platform_utility": 16.958,
+        "user_utility": 12.0605
+      },
+      {
+        "diversity_weight": 0.45,
+        "diversity_utility": 4.4002,
+        "platform_utility": 16.958,
+        "user_utility": 12.0605
+      },
+      {
+        "diversity_weight": 0.5,
+        "diversity_utility": 4.4002,
+        "platform_utility": 16.958,
+        "user_utility": 12.0605
+      },
+      {
+        "diversity_weight": 0.55,
+        "diversity_utility": 4.4332,
+        "platform_utility": 16.6924,
+        "user_utility": 12.4198
+      }
+    ],
+    "comparison": {
+      "per_stakeholder_hypervolume": 1838.0413,
+      "scalarized_hypervolume": 2682.6385,
+      "hypervolume_ratio": 0.6852,
+      "dominated_fraction": 0.0345,
+      "n_per_stakeholder_pareto": 13,
+      "n_scalarized_pareto": 87,
+      "n_scalarized_total": 378,
+      "max_per_stakeholder": {
+        "diversity_utility": -3.1498,
+        "platform_utility": 31.64,
+        "user_utility": 22.8966
+      },
+      "max_scalarized": {
+        "diversity_utility": 4.5209,
+        "platform_utility": 32.5556,
+        "user_utility": 23.4477
+      }
+    }
+  },
+  "total_time_seconds": 345.3
+}
