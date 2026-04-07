@@ -1,0 +1,113 @@
+{
+  "config": {
+    "n_seeds": 5,
+    "n_noise_samples": 5,
+    "fixed_sigma": 0.3,
+    "fixed_n": 2000,
+    "sigma_sweep": [
+      0.5,
+      0.3,
+      0.2,
+      0.1,
+      0.05,
+      0.0
+    ],
+    "n_sweep": [
+      25,
+      50,
+      100,
+      200,
+      500,
+      1000,
+      2000
+    ],
+    "stakeholder": "user",
+    "feature_dim": 19
+  },
+  "strategy1_better_spec": {
+    "0.5": {
+      "hausdorff_mean": 5.785,
+      "hausdorff_std": 1.2468,
+      "n_samples": 25
+    },
+    "0.3": {
+      "hausdorff_mean": 5.7428,
+      "hausdorff_std": 0.9507,
+      "n_samples": 25
+    },
+    "0.2": {
+      "hausdorff_mean": 5.8515,
+      "hausdorff_std": 0.7543,
+      "n_samples": 25
+    },
+    "0.1": {
+      "hausdorff_mean": 5.9027,
+      "hausdorff_std": 0.5555,
+      "n_samples": 25
+    },
+    "0.05": {
+      "hausdorff_mean": 6.0224,
+      "hausdorff_std": 0.469,
+      "n_samples": 25
+    },
+    "0.0": {
+      "hausdorff_mean": 6.0398,
+      "hausdorff_std": 0.4341,
+      "n_samples": 25
+    }
+  },
+  "strategy2_more_data": {
+    "25": {
+      "hausdorff_mean": 6.0761,
+      "hausdorff_std": 2.0546,
+      "n_samples": 25
+    },
+    "50": {
+      "hausdorff_mean": 4.6885,
+      "hausdorff_std": 1.2029,
+      "n_samples": 25
+    },
+    "100": {
+      "hausdorff_mean": 5.0446,
+      "hausdorff_std": 1.3174,
+      "n_samples": 25
+    },
+    "200": {
+      "hausdorff_mean": 4.9474,
+      "hausdorff_std": 0.8313,
+      "n_samples": 25
+    },
+    "500": {
+      "hausdorff_mean": 5.4394,
+      "hausdorff_std": 1.0058,
+      "n_samples": 25
+    },
+    "1000": {
+      "hausdorff_mean": 5.6751,
+      "hausdorff_std": 0.8322,
+      "n_samples": 25
+    },
+    "2000": {
+      "hausdorff_mean": 5.7428,
+      "hausdorff_std": 0.9507,
+      "n_samples": 25
+    }
+  },
+  "goodhart_detected": true,
+  "goodhart_minimum_n": 50,
+  "goodhart_minimum_hausdorff": 4.6885,
+  "goodhart_peak_n": 2000,
+  "goodhart_peak_hausdorff": 5.7428,
+  "strategy1_monotonic": false,
+  "comparison_with_synthetic": {
+    "synthetic_minimum_n": 100,
+    "synthetic_peak_n": 500,
+    "synthetic_minimum_hausdorff": 2.27,
+    "synthetic_peak_hausdorff": 6.82,
+    "movielens_minimum_n": 50,
+    "movielens_peak_n": 2000,
+    "movielens_minimum_hausdorff": 4.6885,
+    "movielens_peak_hausdorff": 5.7428
+  },
+  "total_time_seconds": 1829.8
+}
