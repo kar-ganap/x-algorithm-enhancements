@@ -1,0 +1,364 @@
+{
+  "config": {
+    "n_seeds": 5,
+    "n_pairs": 2500,
+    "eval_fraction": 0.2,
+    "loss_types": [
+      "bradley_terry",
+      "margin_bt",
+      "calibrated_bt"
+    ],
+    "stakeholders": [
+      "user",
+      "platform",
+      "diversity"
+    ],
+    "feature_dim": 19
+  },
+  "group_a_core": {
+    "within_loss_similarity": {
+      "user": {
+        "mean": 0.9573,
+        "std": 0.0034,
+        "min": 0.9514,
+        "per_seed": [
+          0.9593,
+          0.9514,
+          0.9611,
+          0.9589,
+          0.956
+        ]
+      },
+      "platform": {
+        "mean": 0.9867,
+        "std": 0.0013,
+        "min": 0.9854,
+        "per_seed": [
+          0.9861,
+          0.9854,
+          0.9864,
+          0.9862,
+          0.9892
+        ]
+      },
+      "diversity": {
+        "mean": 0.9584,
+        "std": 0.0046,
+        "min": 0.9521,
+        "per_seed": [
+          0.9563,
+          0.9573,
+          0.9656,
+          0.9521,
+          0.961
+        ]
+      }
+    },
+    "across_stakeholder_similarity": {
+      "bradley_terry": {
+        "user-platform": {
+          "mean": 0.962,
+          "std": 0.0053,
+          "per_seed": [
+            0.9562,
+            0.9646,
+            0.9555,
+            0.9647,
+            0.9691
+          ]
+        },
+        "user-diversity": {
+          "mean": -0.3382,
+          "std": 0.0268,
+          "per_seed": [
+            -0.313,
+            -0.3368,
+            -0.3713,
+            -0.3046,
+            -0.3654
+          ]
+        },
+        "platform-diversity": {
+          "mean": -0.4234,
+          "std": 0.0234,
+          "per_seed": [
+            -0.4102,
+            -0.4149,
+            -0.4606,
+            -0.3933,
+            -0.4377
+          ]
+        }
+      },
+      "margin_bt": {
+        "user-platform": {
+          "mean": 0.959,
+          "std": 0.0033,
+          "per_seed": [
+            0.9552,
+            0.9595,
+            0.9554,
+            0.9634,
+            0.9615
+          ]
+        },
+        "user-diversity": {
+          "mean": -0.2074,
+          "std": 0.0238,
+          "per_seed": [
+            -0.1881,
+            -0.2029,
+            -0.2515,
+            -0.1855,
+            -0.2091
+          ]
+        },
+        "platform-diversity": {
+          "mean": -0.3211,
+          "std": 0.0204,
+          "per_seed": [
+            -0.3079,
+            -0.326,
+            -0.3547,
+            -0.2936,
+            -0.323
+          ]
+        }
+      },
+      "calibrated_bt": {
+        "user-platform": {
+          "mean": 0.9079,
+          "std": 0.0061,
+          "per_seed": [
+            0.9003,
+            0.9139,
+            0.9022,
+            0.9072,
+            0.9158
+          ]
+        },
+        "user-diversity": {
+          "mean": -0.3601,
+          "std": 0.0105,
+          "per_seed": [
+            -0.354,
+            -0.3571,
+            -0.3811,
+            -0.3536,
+            -0.355
+          ]
+        },
+        "platform-diversity": {
+          "mean": -0.5727,
+          "std": 0.0109,
+          "per_seed": [
+            -0.5734,
+            -0.5604,
+            -0.5922,
+            -0.5722,
+            -0.5652
+          ]
+        }
+      }
+    },
+    "accuracy_summary": {
+      "train_mean": 0.9429,
+      "eval_mean": 0.9381,
+      "eval_min": 0.846
+    },
+    "n_models": 45
+  },
+  "group_b_hyperparameter": {
+    "margin_bt": {
+      "user": {
+        "pairwise_cos": [
+          0.9991,
+          0.9962,
+          0.999
+        ],
+        "mean_cos": 0.9981
+      },
+      "platform": {
+        "pairwise_cos": [
+          0.9992,
+          0.9972,
+          0.9992
+        ],
+        "mean_cos": 0.9985
+      },
+      "diversity": {
+        "pairwise_cos": [
+          0.9992,
+          0.9968,
+          0.999
+        ],
+        "mean_cos": 0.9983
+      }
+    },
+    "calibrated_bt": {
+      "user": {
+        "pairwise_cos": [
+          0.9634,
+          0.8941,
+          0.9786
+        ],
+        "mean_cos": 0.9454
+      },
+      "platform": {
+        "pairwise_cos": [
+          0.9958,
+          0.9789,
+          0.9926
+        ],
+        "mean_cos": 0.9891
+      },
+      "diversity": {
+        "pairwise_cos": [
+          0.9649,
+          0.8631,
+          0.9633
+        ],
+        "mean_cos": 0.9304
+      }
+    }
+  },
+  "group_c_temporal": {
+    "cutoff_timestamp": 882813933,
+    "n_early_movies": 1190,
+    "n_full_movies": 1440,
+    "within_loss_similarity_temporal": {
+      "user": 0.9718,
+      "platform": 0.9885,
+      "diversity": 0.962
+    },
+    "temporal_eval_accuracy": {
+      "user": 0.93,
+      "platform": 0.958,
+      "diversity": 0.942
+    }
+  },
+  "group_d_downstream": {
+    "user_bt_spearman": 0.0576,
+    "user_bt_pvalue": 0.0,
+    "platform_bt_spearman": 0.0303,
+    "platform_bt_pvalue": 0.003252,
+    "diversity_bt_spearman": -0.0854,
+    "diversity_bt_pvalue": 0.0,
+    "random_spearman": 0.0409,
+    "popularity_spearman": 0.3693
+  },
+  "group_e_user_groups": {
+    "Film-Noir": {
+      "n_users": 136,
+      "within_loss_cos": 0.9913,
+      "bt_eval_accuracy": 0.9425,
+      "margin_eval_accuracy": 0.9625
+    },
+    "Documentary": {
+      "n_users": 83,
+      "within_loss_cos": 0.9902,
+      "bt_eval_accuracy": 0.92,
+      "margin_eval_accuracy": 0.9375
+    },
+    "War": {
+      "n_users": 76,
+      "within_loss_cos": 0.9897,
+      "bt_eval_accuracy": 0.965,
+      "margin_eval_accuracy": 0.98
+    },
+    "Mystery": {
+      "n_users": 61,
+      "within_loss_cos": 0.9896,
+      "bt_eval_accuracy": 0.9625,
+      "margin_eval_accuracy": 0.97
+    },
+    "Crime": {
+      "n_users": 99,
+      "within_loss_cos": 0.9889,
+      "bt_eval_accuracy": 0.9375,
+      "margin_eval_accuracy": 0.96
+    },
+    "Animation": {
+      "n_users": 75,
+      "within_loss_cos": 0.9902,
+      "bt_eval_accuracy": 0.925,
+      "margin_eval_accuracy": 0.935
+    },
+    "Adventure": {
+      "n_users": 56,
+      "within_loss_cos": 0.9908,
+      "bt_eval_accuracy": 0.9475,
+      "margin_eval_accuracy": 0.9525
+    }
+  },
+  "group_f_genre_correlation": {
+    "top_correlated_pairs": [
+      [
+        "Animation",
+        "Children's",
+        0.4649
+      ],
+      [
+        "Action",
+        "Adventure",
+        0.3585
+      ],
+      [
+        "Animation",
+        "Musical",
+        0.3318
+      ],
+      [
+        "Comedy",
+        "Drama",
+        -0.2975
+      ],
+      [
+        "Action",
+        "Sci-Fi",
+        0.2805
+      ],
+      [
+        "Children's",
+        "Musical",
+        0.2596
+      ],
+      [
+        "Children's",
+        "Fantasy",
+        0.2571
+      ],
+      [
+        "Mystery",
+        "Thriller",
+        0.2403
+      ],
+      [
+        "Adventure",
+        "Sci-Fi",
+        0.2399
+      ],
+      [
+        "Comedy",
+        "Thriller",
+        -0.2261
+      ]
+    ],
+    "condition_number": 921.19
+  },
+  "comparison_with_synthetic": {
+    "synthetic_across": {
+      "user_platform": 0.8296,
+      "user_society": 0.8837,
+      "platform_society": 0.4777
+    },
+    "movielens_across": {
+      "user-platform": 0.962,
+      "user-diversity": -0.3382,
+      "platform-diversity": -0.4234
+    },
+    "synthetic_within_loss_min": 0.92,
+    "movielens_within_loss_min": 0.9514
+  },
+  "total_time_seconds": 1162.1
+}

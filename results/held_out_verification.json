@@ -1,0 +1,47 @@
+{
+  "config": {
+    "n_pairs": 2500,
+    "eval_fraction": 0.2,
+    "seed": 42
+  },
+  "per_stakeholder": {
+    "user": {
+      "train_accuracy": 0.931,
+      "eval_accuracy": 0.93,
+      "gap": 0.001,
+      "loss_start": 0.4924,
+      "loss_end": 0.3605
+    },
+    "platform": {
+      "train_accuracy": 0.9345,
+      "eval_accuracy": 0.918,
+      "gap": 0.0165,
+      "loss_start": 0.563,
+      "loss_end": 0.439
+    },
+    "society": {
+      "train_accuracy": 0.9505,
+      "eval_accuracy": 0.946,
+      "gap": 0.0045,
+      "loss_start": 0.5055,
+      "loss_end": 0.2976
+    }
+  },
+  "cosine_similarity": {
+    "user_platform": {
+      "held_out_split": 0.8299,
+      "existing": 0.8296,
+      "delta": 0.0003
+    },
+    "user_society": {
+      "held_out_split": 0.854,
+      "existing": 0.8837,
+      "delta": 0.0297
+    },
+    "platform_society": {
+      "held_out_split": 0.4328,
+      "existing": 0.4777,
+      "delta": 0.0449
+    }
+  }
+}
