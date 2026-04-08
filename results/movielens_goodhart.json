@@ -26,88 +26,88 @@
   },
   "strategy1_better_spec": {
     "0.5": {
-      "hausdorff_mean": 5.785,
-      "hausdorff_std": 1.2468,
+      "hausdorff_mean": 3.249,
+      "hausdorff_std": 1.5525,
       "n_samples": 25
     },
     "0.3": {
-      "hausdorff_mean": 5.7428,
-      "hausdorff_std": 0.9507,
+      "hausdorff_mean": 3.4215,
+      "hausdorff_std": 1.3944,
       "n_samples": 25
     },
     "0.2": {
-      "hausdorff_mean": 5.8515,
-      "hausdorff_std": 0.7543,
+      "hausdorff_mean": 3.824,
+      "hausdorff_std": 1.0259,
       "n_samples": 25
     },
     "0.1": {
-      "hausdorff_mean": 5.9027,
-      "hausdorff_std": 0.5555,
+      "hausdorff_mean": 4.1565,
+      "hausdorff_std": 0.6327,
       "n_samples": 25
     },
     "0.05": {
-      "hausdorff_mean": 6.0224,
-      "hausdorff_std": 0.469,
+      "hausdorff_mean": 4.288,
+      "hausdorff_std": 0.4356,
       "n_samples": 25
     },
     "0.0": {
-      "hausdorff_mean": 6.0398,
-      "hausdorff_std": 0.4341,
+      "hausdorff_mean": 4.4426,
+      "hausdorff_std": 0.3824,
       "n_samples": 25
     }
   },
   "strategy2_more_data": {
     "25": {
-      "hausdorff_mean": 6.0761,
-      "hausdorff_std": 2.0546,
+      "hausdorff_mean": 5.8731,
+      "hausdorff_std": 2.8391,
       "n_samples": 25
     },
     "50": {
-      "hausdorff_mean": 4.6885,
-      "hausdorff_std": 1.2029,
+      "hausdorff_mean": 4.3552,
+      "hausdorff_std": 2.5339,
       "n_samples": 25
     },
     "100": {
-      "hausdorff_mean": 5.0446,
-      "hausdorff_std": 1.3174,
+      "hausdorff_mean": 3.4925,
+      "hausdorff_std": 1.862,
       "n_samples": 25
     },
     "200": {
-      "hausdorff_mean": 4.9474,
-      "hausdorff_std": 0.8313,
+      "hausdorff_mean": 2.8168,
+      "hausdorff_std": 1.2593,
       "n_samples": 25
     },
     "500": {
-      "hausdorff_mean": 5.4394,
-      "hausdorff_std": 1.0058,
+      "hausdorff_mean": 3.239,
+      "hausdorff_std": 1.4729,
       "n_samples": 25
     },
     "1000": {
-      "hausdorff_mean": 5.6751,
-      "hausdorff_std": 0.8322,
+      "hausdorff_mean": 3.2048,
+      "hausdorff_std": 1.376,
       "n_samples": 25
     },
     "2000": {
-      "hausdorff_mean": 5.7428,
-      "hausdorff_std": 0.9507,
+      "hausdorff_mean": 3.4215,
+      "hausdorff_std": 1.3944,
       "n_samples": 25
     }
   },
   "goodhart_detected": true,
-  "goodhart_minimum_n": 50,
-  "goodhart_minimum_hausdorff": 4.6885,
+  "goodhart_minimum_n": 200,
+  "goodhart_minimum_hausdorff": 2.8168,
   "goodhart_peak_n": 2000,
-  "goodhart_peak_hausdorff": 5.7428,
+  "goodhart_peak_hausdorff": 3.4215,
   "strategy1_monotonic": false,
   "comparison_with_synthetic": {
     "synthetic_minimum_n": 100,
     "synthetic_peak_n": 500,
     "synthetic_minimum_hausdorff": 2.27,
     "synthetic_peak_hausdorff": 6.82,
-    "movielens_minimum_n": 50,
+    "movielens_minimum_n": 200,
     "movielens_peak_n": 2000,
-    "movielens_minimum_hausdorff": 4.6885,
-    "movielens_peak_hausdorff": 5.7428
+    "movielens_minimum_hausdorff": 2.8168,
+    "movielens_peak_hausdorff": 3.4215
   },
-  "total_time_seconds": 1829.8
+  "total_time_seconds": 1994.0
 }
