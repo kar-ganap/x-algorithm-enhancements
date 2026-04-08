@@ -414,6 +414,7 @@ def run_dataset(
 
 def main():
     parser = argparse.ArgumentParser(description="Scalarization baseline comparison")
+    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--dataset", type=str, choices=["synthetic", "movielens"])
     args = parser.parse_args()
@@ -463,7 +464,7 @@ def main():
         )
 
     if "movielens" in datasets_to_run:
-        data_dir = ROOT / "data" / "ml-100k"
+        data_dir = ROOT / Path(args.data)
         if not data_dir.exists():
             print(f"ERROR: MovieLens data not found at {data_dir}")
             sys.exit(1)
@@ -487,7 +488,8 @@ def main():
     print(f"Complete in {elapsed:.0f}s")
     print("=" * 60)
 
-    out_path = ROOT / "results" / "scalarization_baseline.json"
+    dataset_name = Path(args.data).name if "movielens" in datasets_to_run else "synthetic"
+    out_path = ROOT / "results" / f"{dataset_name}_scalarization_baseline.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
     print(f"\nResults saved to {out_path}")

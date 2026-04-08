@@ -49,9 +49,19 @@ class User:
     zip_code: str
 
 
+# Canonical genre ordering (19 genres, shared across ML-100K and ML-1M).
+# ML-1M has 18 genres (no "unknown"); we pad with index 0 = "unknown" always 0.
+GENRE_ORDER = [
+    "unknown", "Action", "Adventure", "Animation", "Children's",
+    "Comedy", "Crime", "Documentary", "Drama", "Fantasy",
+    "Film-Noir", "Horror", "Musical", "Mystery", "Romance",
+    "Sci-Fi", "Thriller", "War", "Western",
+]
+
+
 @dataclass
 class MovieLensDataset:
-    """MovieLens 100K dataset.
+    """MovieLens dataset (supports both 100K and 1M formats).
 
     Attributes:
         data_dir: Path to ml-100k directory
@@ -74,10 +84,10 @@ class MovieLensDataset:
     _user_history: dict[int, list[Rating]] = field(default_factory=dict)
 
     def __init__(self, data_dir: str | Path, val_ratio: float = 0.1):
-        """Load MovieLens 100K dataset.
+        """Load MovieLens dataset (auto-detects 100K or 1M format).
 
         Args:
-            data_dir: Path to ml-100k directory
+            data_dir: Path to ml-100k or ml-1m directory
             val_ratio: Fraction of training data to use for validation
         """
         self.data_dir = Path(data_dir)
@@ -89,10 +99,24 @@ class MovieLensDataset:
         self.genres = []
         self._user_history = {}
 
-        self._load_genres()
-        self._load_movies()
-        self._load_users()
-        self._load_ratings(val_ratio)
+        if (self.data_dir / "u.item").exists():
+            # ML-100K format
+            self._load_genres()
+            self._load_movies()
+            self._load_users()
+            self._load_ratings(val_ratio)
+        elif (self.data_dir / "movies.dat").exists():
+            # ML-1M format
+            self._load_genres_1m()
+            self._load_movies_1m()
+            self._load_users_1m()
+            self._load_ratings_1m(val_ratio)
+        else:
+            raise FileNotFoundError(
+                f"No recognized MovieLens format in {data_dir}. "
+                f"Expected u.item (ML-100K) or movies.dat (ML-1M)."
+            )
+
         self._build_user_history()
 
     def _load_genres(self) -> None:
@@ -187,6 +211,83 @@ class MovieLensDataset:
                         rating=int(parts[2]),
                         timestamp=int(parts[3]),
                     ))
+
+    # ------------------------------------------------------------------
+    # ML-1M loaders
+    # ------------------------------------------------------------------
+
+    def _load_genres_1m(self) -> None:
+        """Set genre names to canonical 19-genre ordering (ML-1M has 18, we pad with 'unknown')."""
+        self.genres = list(GENRE_ORDER)
+
+    def _load_movies_1m(self) -> None:
+        """Load movies from ML-1M movies.dat (::  separated, inline genres)."""
+        genre_to_idx = {g: i for i, g in enumerate(GENRE_ORDER)}
+        movie_file = self.data_dir / "movies.dat"
+        with open(movie_file, encoding="latin-1") as f:
+            for line in f:
+                parts = line.strip().split("::")
+                if len(parts) >= 3:
+                    movie_id = int(parts[0])
+                    title = parts[1]
+                    genre_names = parts[2].split("|")
+                    genres = np.zeros(len(GENRE_ORDER), dtype=np.float32)
+                    for g in genre_names:
+                        if g in genre_to_idx:
+                            genres[genre_to_idx[g]] = 1.0
+                    self.movies[movie_id] = Movie(
+                        movie_id=movie_id,
+                        title=title,
+                        release_date="",
+                        genres=genres,
+                    )
+
+    def _load_users_1m(self) -> None:
+        """Load users from ML-1M users.dat (:: separated)."""
+        user_file = self.data_dir / "users.dat"
+        with open(user_file, encoding="latin-1") as f:
+            for line in f:
+                parts = line.strip().split("::")
+                if len(parts) >= 5:
+                    user_id = int(parts[0])
+                    self.users[user_id] = User(
+                        user_id=user_id,
+                        age=int(parts[2]),
+                        gender=parts[1],
+                        occupation=parts[3],
+                        zip_code=parts[4],
+                    )
+
+    def _load_ratings_1m(self, val_ratio: float) -> None:
+        """Load ratings from ML-1M ratings.dat with temporal train/val/test split.
+
+        No pre-defined split in ML-1M, so we use temporal ordering:
+        Train: first 80%, Val: next 10%, Test: last 10%.
+        """
+        all_ratings = []
+        rating_file = self.data_dir / "ratings.dat"
+        with open(rating_file) as f:
+            for line in f:
+                parts = line.strip().split("::")
+                if len(parts) >= 4:
+                    all_ratings.append(Rating(
+                        user_id=int(parts[0]),
+                        movie_id=int(parts[1]),
+                        rating=int(parts[2]),
+                        timestamp=int(parts[3]),
+                    ))
+
+        # Temporal sort
+        all_ratings.sort(key=lambda r: r.timestamp)
+
+        n = len(all_ratings)
+        test_size = int(n * 0.1)
+        val_size = int(n * val_ratio)
+        train_size = n - test_size - val_size
+
+        self.train_ratings = all_ratings[:train_size]
+        self.val_ratings = all_ratings[train_size:train_size + val_size]
+        self.test_ratings = all_ratings[train_size + val_size:]
 
     def _build_user_history(self) -> None:
         """Build user history from training ratings."""
