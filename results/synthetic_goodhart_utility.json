@@ -1,0 +1,98 @@
+{
+  "config": {
+    "dataset": "synthetic",
+    "feature_dim": 18,
+    "n_content": 500,
+    "target": "user",
+    "fixed_sigma": 0.3,
+    "n_sweep": [
+      25,
+      50,
+      100,
+      200,
+      500,
+      1000,
+      2000
+    ],
+    "n_seeds": 5,
+    "n_noise_samples": 5
+  },
+  "cosine_similarities": {
+    "platform-society": 0.5096,
+    "platform-user": 0.8927,
+    "society-user": 0.8427
+  },
+  "strategy2_more_data": {
+    "25": {
+      "platform_utility_mean": 13.2408,
+      "platform_utility_std": 0.2383,
+      "society_utility_mean": 3.2072,
+      "society_utility_std": 0.7739,
+      "user_utility_mean": 11.3426,
+      "user_utility_std": 0.2738,
+      "eval_accuracy_mean": 0.888,
+      "eval_accuracy_std": 0.1505
+    },
+    "50": {
+      "platform_utility_mean": 13.3504,
+      "platform_utility_std": 0.1368,
+      "society_utility_mean": 3.3406,
+      "society_utility_std": 0.6413,
+      "user_utility_mean": 11.4566,
+      "user_utility_std": 0.1599,
+      "eval_accuracy_mean": 0.944,
+      "eval_accuracy_std": 0.0637
+    },
+    "100": {
+      "platform_utility_mean": 13.326,
+      "platform_utility_std": 0.138,
+      "society_utility_mean": 4.1661,
+      "society_utility_std": 0.2949,
+      "user_utility_mean": 11.5931,
+      "user_utility_std": 0.1294,
+      "eval_accuracy_mean": 0.922,
+      "eval_accuracy_std": 0.0567
+    },
+    "200": {
+      "platform_utility_mean": 13.3295,
+      "platform_utility_std": 0.1411,
+      "society_utility_mean": 4.4319,
+      "society_utility_std": 0.2613,
+      "user_utility_mean": 11.6462,
+      "user_utility_std": 0.1345,
+      "eval_accuracy_mean": 0.894,
+      "eval_accuracy_std": 0.0506
+    },
+    "500": {
+      "platform_utility_mean": 13.5662,
+      "platform_utility_std": 0.0706,
+      "society_utility_mean": 5.1305,
+      "society_utility_std": 0.1603,
+      "user_utility_mean": 11.9703,
+      "user_utility_std": 0.0655,
+      "eval_accuracy_mean": 0.9048,
+      "eval_accuracy_std": 0.0283
+    },
+    "1000": {
+      "platform_utility_mean": 13.6457,
+      "platform_utility_std": 0.0611,
+      "society_utility_mean": 5.2784,
+      "society_utility_std": 0.1181,
+      "user_utility_mean": 12.0627,
+      "user_utility_std": 0.0542,
+      "eval_accuracy_mean": 0.929,
+      "eval_accuracy_std": 0.0177
+    },
+    "2000": {
+      "platform_utility_mean": 13.6787,
+      "platform_utility_std": 0.0394,
+      "society_utility_mean": 5.3416,
+      "society_utility_std": 0.0871,
+      "user_utility_mean": 12.1014,
+      "user_utility_std": 0.0324,
+      "eval_accuracy_mean": 0.9305,
+      "eval_accuracy_std": 0.0093
+    }
+  },
+  "total_time_seconds": 634.4
+}

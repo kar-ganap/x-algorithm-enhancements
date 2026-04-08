@@ -965,8 +965,8 @@ predicted, and confirmed empirically.
 
 \subsection{Numerical Validation (Phase 10)}
 
-The direction condition is validated on 4 data points across 2 datasets,
-with zero violations:
+The direction condition is validated on 6 data points across 3 datasets
+(synthetic, ML-100K, ML-1M), with zero violations:
 
 \begin{center}
 \begin{tabular}{llrcl}
@@ -974,6 +974,8 @@ with zero violations:
 \textbf{Dataset} & \textbf{Hidden} & $\cos(\mathbf{w}_u, \mathbf{w}_h)$
   & \textbf{Predicted} & \textbf{Actual} \\
 \midrule
+Synthetic & platform & $+0.893$ & Improve & improving \checkmark \\
+Synthetic & society & $+0.843$ & Improve & improving \checkmark \\
 ML-100K & platform & $+0.956$ & Improve & $+14\%$ \checkmark \\
 ML-100K & diversity & $-0.313$ & Degrade & $-42\%$ \checkmark \\
 ML-1M & platform & $+0.926$ & Improve & $+14\%$ \checkmark \\
@@ -982,11 +984,19 @@ ML-1M & diversity & $-0.155$ & Degrade & $-46\%$ \checkmark \\
 \end{tabular}
 \end{center}
 
-\textbf{Direction condition holds perfectly.} Every stakeholder with
-$\cos < 0$ degrades with $N$; every stakeholder with $\cos > 0$
-improves. Platform ($\cos \approx +0.95$) serves as the positive
-control: it improves monotonically because BT converges toward a
-direction \emph{aligned} with platform utility.
+\textbf{Direction condition holds perfectly: 6/6.} Every stakeholder
+with $\cos < 0$ degrades with $N$; every stakeholder with $\cos > 0$
+improves.
+
+\textbf{Key finding on synthetic:} The synthetic benchmark has
+\emph{no Goodhart} under the utility-based metric, because all
+stakeholder pairs have $\cos > 0$ (user-society $= +0.84$,
+user-platform $= +0.89$). Society utility \emph{improves} from 3.21
+($N=25$) to 5.34 ($N=2000$). The original paper's Hausdorff-based
+``Goodhart'' on synthetic was measuring frontier distance (which
+increases with optimization precision), not hidden stakeholder
+degradation. The direction condition correctly predicts: no
+anti-correlation $\Rightarrow$ no Goodhart.
 
 \textbf{Magnitude condition is more nuanced.} ML-1M shows more
 degradation (46\%) than ML-100K (42\%) despite \emph{less}
@@ -1012,7 +1022,8 @@ $\mathbf{w}_h$ be a hidden stakeholder's true utility. Then:
   \item If $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) > 0$:
     $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually increasing in $N$.
 \end{itemize}
-Validated on 3 datasets (synthetic, ML-100K, ML-1M) with 0 violations.
+Validated on 6 data points across 3 datasets (synthetic, ML-100K, ML-1M)
+with 0 violations.
 \end{proposition}
 
 \subsection{Open Questions for Formalization}
