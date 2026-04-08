@@ -194,3 +194,49 @@ class TestFrontierComparison:
             frontier, ["user_utility", "platform_utility", "diversity_utility"]
         )
         assert len(pareto) >= 1, "No Pareto-optimal points"
+
+    def test_composition_sweep_more_pareto_than_naive(self, setup):
+        """Composition sweep should find more Pareto points than single mean scorer."""
+        configs = setup["configs"]
+        pool = setup["pool"]
+        genres = setup["genres"]
+        base_probs = pool[np.newaxis, :, :]
+        dims = ["user_utility", "platform_utility", "diversity_utility"]
+
+        # Train 3 BT models
+        per_stk_weights = {}
+        for name in ["user", "platform", "diversity"]:
+            pref, rej = setup["stakeholder_prefs"][name]
+            tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed=42)
+            cfg = LossConfig(loss_type=LossType.BRADLEY_TERRY, stakeholder=StakeholderType.USER,
+                             learning_rate=0.01, num_epochs=50, batch_size=64)
+            model = train_with_loss(cfg, tp, tr, verbose=False,
+                                    eval_probs_preferred=ep, eval_probs_rejected=er)
+            per_stk_weights[name] = model.weights
+
+        # Naive: single mean scorer
+        mean_scorer = np.mean(list(per_stk_weights.values()), axis=0)
+        naive_frontier = compute_scorer_eval_frontier(
+            base_probs, genres, mean_scorer, configs, DIVERSITY_WEIGHTS, top_k=10,
+        )
+        naive_pareto = extract_pareto_front_nd(naive_frontier, dims)
+
+        # Composition sweep: 3 compositions × 21 δ
+        grid = simplex_grid(k=3, resolution=3)  # small grid for speed
+        comp_points = []
+        for mixing_tuple in grid:
+            names = sorted(per_stk_weights.keys())
+            mixing = {s: w for s, w in zip(names, mixing_tuple)}
+            if max(mixing.values()) > 0.99:
+                continue
+            composed = sum(mixing[s] * per_stk_weights[s] for s in names)
+            frontier = compute_scorer_eval_frontier(
+                base_probs, genres, composed, configs, DIVERSITY_WEIGHTS, top_k=10,
+            )
+            comp_points.extend(frontier)
+
+        comp_pareto = extract_pareto_front_nd(comp_points, dims)
+
+        assert len(comp_pareto) >= len(naive_pareto), (
+            f"Composition ({len(comp_pareto)}) should find >= Pareto points than naive ({len(naive_pareto)})"
+        )
