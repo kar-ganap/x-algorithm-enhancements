@@ -196,11 +196,17 @@ def aggregate(results_list: list[dict]) -> dict:
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Goodhart effect on MovieLens")
+    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
+    args = parser.parse_args()
+
     print("=" * 60)
     print("Phase 6: Goodhart with Set-Level Metrics")
     print("=" * 60)
 
-    data_dir = ROOT / "data" / "ml-100k"
+    data_dir = ROOT / Path(args.data)
+    dataset_name = data_dir.name
     if not data_dir.exists():
         print(f"ERROR: MovieLens data not found at {data_dir}")
         sys.exit(1)
@@ -335,7 +341,7 @@ def main():
     print(f"\n  Complete in {elapsed:.0f}s")
     print("=" * 60)
 
-    out_path = ROOT / "results" / "movielens_goodhart.json"
+    out_path = ROOT / "results" / f"{dataset_name}_goodhart.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
     print(f"\nResults saved to {out_path}")

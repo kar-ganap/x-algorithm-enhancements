@@ -228,6 +228,7 @@ def run_data_budget(base_probs, genres, pool, configs, scorer, seeds):
 
 def main():
     parser = argparse.ArgumentParser(description="MovieLens LOSO + data budget")
+    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--exp", type=str, choices=["loso", "budget"])
     args = parser.parse_args()
@@ -239,7 +240,8 @@ def main():
     print("MovieLens LOSO + Data Budget Experiments")
     print("=" * 60)
 
-    data_dir = ROOT / "data" / "ml-100k"
+    data_dir = ROOT / Path(args.data)
+    dataset_name = data_dir.name
     if not data_dir.exists():
         print(f"ERROR: MovieLens data not found at {data_dir}")
         sys.exit(1)
@@ -294,7 +296,7 @@ def main():
     print(f"Complete in {elapsed:.0f}s")
     print("=" * 60)
 
-    out_path = ROOT / "results" / "movielens_loso.json"
+    out_path = ROOT / "results" / f"{dataset_name}_loso.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
     print(f"\nResults saved to {out_path}")

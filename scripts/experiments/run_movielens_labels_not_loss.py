@@ -488,6 +488,7 @@ class NumpyEncoder(json.JSONEncoder):
 
 def main():
     parser = argparse.ArgumentParser(description="MovieLens labels-not-loss experiment")
+    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
     parser.add_argument("--all", action="store_true", help="Run all groups")
     parser.add_argument("--group", type=str, help="Run specific group (A-F)")
     args = parser.parse_args()
@@ -506,7 +507,8 @@ def main():
     print(f"Groups: {', '.join(sorted(groups_to_run))}")
     print("=" * 60)
 
-    data_dir = ROOT / "data" / "ml-100k"
+    data_dir = ROOT / Path(args.data)
+    dataset_name = data_dir.name
     if not data_dir.exists():
         print(f"ERROR: MovieLens data not found at {data_dir}")
         sys.exit(1)
@@ -577,7 +579,7 @@ def main():
             print(f"  {p}: {v['mean']:.3f}")
     print("=" * 60)
 
-    out_path = ROOT / "results" / "movielens_labels_not_loss.json"
+    out_path = ROOT / "results" / f"{dataset_name}_labels_not_loss.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
     print(f"\nResults saved to {out_path}")

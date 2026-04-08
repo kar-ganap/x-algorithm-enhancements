@@ -72,11 +72,17 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="Verify MovieLens foundation")
+    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
+    args = parser.parse_args()
+
     print("=" * 70)
     print("Phase 1: MovieLens Multi-Stakeholder Foundation Verification")
     print("=" * 70)
 
-    data_dir = ROOT / "data" / "ml-100k"
+    data_dir = ROOT / Path(args.data)
+    dataset_name = data_dir.name
     if not data_dir.exists():
         print(f"ERROR: MovieLens data not found at {data_dir}")
         sys.exit(1)
@@ -246,7 +252,7 @@ def main() -> None:
                 return float(obj)
             return super().default(obj)
 
-    out_path = ROOT / "results" / "movielens_foundation.json"
+    out_path = ROOT / "results" / f"{dataset_name}_foundation.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=_Encoder)
