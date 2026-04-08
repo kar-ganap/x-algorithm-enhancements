@@ -49,6 +49,21 @@ def perturb_weights(w: np.ndarray, sigma: float, rng: np.random.Generator) -> np
     return w * (1 + rng.normal(0, sigma, len(w)))
 
 
+def compute_genre_entropy(
+    selected_indices: np.ndarray,
+    content_features: np.ndarray,
+) -> float:
+    """Shannon entropy of genre distribution in selected set."""
+    genres = content_features[selected_indices]
+    genre_counts = np.sum(genres > 0, axis=0).astype(float)
+    total = np.sum(genre_counts)
+    if total == 0:
+        return 0.0
+    probs = genre_counts / total
+    probs = probs[probs > 0]
+    return float(-np.sum(probs * np.log2(probs)))
+
+
 def hausdorff_distance(
     frontier_a: list[dict], frontier_b: list[dict], dims: list[str],
 ) -> float:
@@ -114,6 +129,41 @@ class TestHausdorffDistance:
         f2 = [{"a": 1.0, "b": 1.0}]
         d = hausdorff_distance(f1, f2, ["a", "b"])
         assert d > 0
+
+
+class TestGenreEntropy:
+
+    def test_uniform_high_entropy(self, setup):
+        """Selecting movies from many genres should give high entropy."""
+        pool = setup["pool"]
+        # Pick 10 movies from different genres
+        genres_seen = set()
+        indices = []
+        for i in range(pool.shape[0]):
+            primary = int(np.argmax(pool[i]))
+            if primary not in genres_seen:
+                genres_seen.add(primary)
+                indices.append(i)
+            if len(indices) >= 10:
+                break
+        if len(indices) < 5:
+            pytest.skip("Not enough diverse movies")
+        entropy = compute_genre_entropy(np.array(indices), pool)
+        assert entropy > 1.0, f"Entropy {entropy:.3f} too low for diverse selection"
+
+    def test_concentrated_low_entropy(self, setup):
+        """Selecting movies from one genre should give low entropy."""
+        pool = setup["pool"]
+        # Find 10 movies with the same primary genre
+        primary_genres = np.argmax(pool, axis=1)
+        most_common = int(np.bincount(primary_genres).argmax())
+        same_genre = np.where(primary_genres == most_common)[0][:10]
+        if len(same_genre) < 5:
+            pytest.skip("Not enough movies in one genre")
+        entropy = compute_genre_entropy(same_genre, pool)
+        # Should be lower than diverse selection
+        diverse_entropy = compute_genre_entropy(np.arange(min(10, pool.shape[0])), pool)
+        assert entropy <= diverse_entropy + 0.5
 
 
 class TestGoodhartDynamics:

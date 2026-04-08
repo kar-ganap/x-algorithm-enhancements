@@ -1,16 +1,17 @@
-"""Goodhart effect experiment on MovieLens-100K.
+"""Goodhart effect experiment on MovieLens-100K (set-level metrics).
+
+Tests whether more training data with misspecified utility weights
+degrades true stakeholder utilities and genre diversity.
+
+Metrics (replacing Hausdorff from Phase 5/5b):
+  - True user/platform/diversity utility (evaluated with TRUE weights)
+  - Genre entropy of selected set (nonlinear, set-level, scale-invariant)
 
 Strategy 1: Better specification (reduce σ) at fixed N=2000
 Strategy 2: More data (increase N) at fixed σ=0.3
 
-Shows that more data amplifies misspecified utility weights — a Goodhart
-effect where the BT model more faithfully learns the wrong objective.
-
 Usage:
     uv run python scripts/experiments/run_movielens_goodhart.py
-
-Output:
-    results/movielens_goodhart.json
 """
 
 from __future__ import annotations
@@ -44,7 +45,6 @@ generate_movielens_content_pool = _st.generate_movielens_content_pool
 generate_movielens_preferences = _st.generate_movielens_preferences
 split_preferences = _st.split_preferences
 
-compute_k_frontier = _kf.compute_k_frontier
 compute_scorer_eval_frontier = _kf.compute_scorer_eval_frontier
 
 LossConfig = _al.LossConfig
@@ -55,7 +55,6 @@ train_with_loss = _al.train_with_loss
 DIVERSITY_WEIGHTS = [round(x * 0.05, 2) for x in range(21)]
 TOP_K = 10
 
-# Experiment parameters
 SIGMA_SWEEP = [0.5, 0.3, 0.2, 0.1, 0.05, 0.0]
 N_SWEEP = [25, 50, 100, 200, 500, 1000, 2000]
 FIXED_SIGMA = 0.3
@@ -77,25 +76,53 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def perturb_weights(w: np.ndarray, sigma: float, rng: np.random.Generator) -> np.ndarray:
-    """Multiplicative Gaussian perturbation: w * (1 + N(0, σ))."""
     return w * (1 + rng.normal(0, sigma, len(w)))
 
 
-def hausdorff_distance(
-    frontier_a: list[dict], frontier_b: list[dict], dims: list[str],
-) -> float:
-    """Hausdorff distance between two frontiers in utility space."""
-    if not frontier_a or not frontier_b:
+def compute_genre_entropy(selected_indices: np.ndarray, content_features: np.ndarray) -> float:
+    """Shannon entropy of genre distribution in selected set."""
+    genres = content_features[selected_indices]
+    genre_counts = np.sum(genres > 0, axis=0).astype(float)
+    total = np.sum(genre_counts)
+    if total == 0:
         return 0.0
-    vals_a = np.array([[p[d] for d in dims] for p in frontier_a])
-    vals_b = np.array([[p[d] for d in dims] for p in frontier_b])
-    d_a_to_b = max(
-        min(float(np.linalg.norm(a - b)) for b in vals_b) for a in vals_a
-    )
-    d_b_to_a = max(
-        min(float(np.linalg.norm(a - b)) for a in vals_a) for b in vals_b
-    )
-    return max(d_a_to_b, d_b_to_a)
+    probs = genre_counts / total
+    probs = probs[probs > 0]
+    return float(-np.sum(probs * np.log2(probs)))
+
+
+def select_top_k(
+    content_features: np.ndarray,
+    content_genres: np.ndarray,
+    scorer_weights: np.ndarray,
+    diversity_weight: float,
+    top_k: int,
+) -> np.ndarray:
+    """Greedy top-K selection with diversity bonus (same logic as compute_k_frontier)."""
+    n_content = len(content_features)
+    num_topics = int(np.max(content_genres)) + 1
+    engagement_scores = content_features @ scorer_weights
+
+    if diversity_weight > 0:
+        selected = []
+        remaining = list(range(n_content))
+        topic_counts = np.zeros(num_topics)
+        for _ in range(top_k):
+            if not remaining:
+                break
+            best_idx = max(
+                remaining,
+                key=lambda idx: (
+                    (1 - diversity_weight) * engagement_scores[idx]
+                    + diversity_weight / (topic_counts[content_genres[idx]] + 1)
+                ),
+            )
+            selected.append(best_idx)
+            remaining.remove(best_idx)
+            topic_counts[content_genres[best_idx]] += 1
+        return np.array(selected)
+    else:
+        return np.argsort(engagement_scores)[-top_k:][::-1]
 
 
 def run_single_condition(
@@ -104,25 +131,14 @@ def run_single_condition(
     base_probs: np.ndarray,
     true_configs: dict[str, np.ndarray],
     true_weights: np.ndarray,
-    fixed_scorer: np.ndarray,
-    baseline_frontier: list[dict],
-    utility_dims: list[str],
     sigma: float,
     n_pairs: int,
     seed: int,
-) -> float:
-    """Run one condition: perturb, generate misspecified prefs, train, measure.
-
-    Uses a FIXED scorer for content selection (same as baseline).
-    Learned weights only replace one stakeholder's EVALUATION weights.
-    This isolates the Goodhart effect from content selection confounds.
-    """
+) -> dict:
+    """Run one condition: perturb, train, evaluate true utilities + entropy."""
     rng = np.random.default_rng(seed)
-
-    # Perturb the target stakeholder's weights
     perturbed = perturb_weights(true_weights, sigma, rng)
 
-    # Generate preference pairs using MISSPECIFIED weights
     pref, rej = generate_movielens_preferences(pool, perturbed, n_pairs, seed)
     tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed)
 
@@ -134,31 +150,54 @@ def run_single_condition(
     model = train_with_loss(config, tp, tr, verbose=False,
                             eval_probs_preferred=ep, eval_probs_rejected=er)
 
-    # Replace target stakeholder's EVALUATION weights with learned weights.
-    # Normalize learned weights to same L2 norm as true weights to remove
-    # BT scale invariance from Hausdorff computation. BT can learn weights
-    # at any scale — only direction matters for preference ordering.
-    learned_w = model.weights
-    true_norm = np.linalg.norm(true_weights)
-    learned_norm = np.linalg.norm(learned_w)
-    if learned_norm > 0:
-        learned_w = learned_w * (true_norm / learned_norm)
-
-    # Content selection uses the FIXED scorer (same as baseline)
-    eval_configs = true_configs.copy()
-    eval_configs[STAKEHOLDER] = learned_w
-
-    learned_frontier = compute_k_frontier(
-        base_probs, genres, eval_configs,
-        DIVERSITY_WEIGHTS, top_k=TOP_K, scorer_weights=fixed_scorer,
+    # Use learned weights as SCORER, true weights as EVALUATOR
+    frontier = compute_scorer_eval_frontier(
+        base_probs, genres, model.weights, true_configs,
+        DIVERSITY_WEIGHTS, top_k=TOP_K,
     )
 
-    return hausdorff_distance(learned_frontier, baseline_frontier, utility_dims)
+    # Extract mean utilities across all diversity weights
+    stakeholder_names = sorted(true_configs.keys())
+    mean_utilities = {}
+    for name in stakeholder_names:
+        key = f"{name}_utility"
+        mean_utilities[key] = float(np.mean([p[key] for p in frontier]))
+
+    # Genre entropy at δ=0.0 (pure engagement) and δ=0.5 (balanced)
+    selected_d0 = select_top_k(pool, genres, model.weights, 0.0, TOP_K)
+    selected_d05 = select_top_k(pool, genres, model.weights, 0.5, TOP_K)
+    entropy_d0 = compute_genre_entropy(selected_d0, pool)
+    entropy_d05 = compute_genre_entropy(selected_d05, pool)
+
+    # Also count unique genres
+    n_genres_d0 = len(np.unique(np.argmax(pool[selected_d0], axis=1)))
+    n_genres_d05 = len(np.unique(np.argmax(pool[selected_d05], axis=1)))
+
+    return {
+        **mean_utilities,
+        "entropy_delta0": entropy_d0,
+        "entropy_delta05": entropy_d05,
+        "n_unique_genres_d0": int(n_genres_d0),
+        "n_unique_genres_d05": int(n_genres_d05),
+        "eval_accuracy": float(model.eval_accuracy) if model.eval_accuracy else None,
+    }
+
+
+def aggregate(results_list: list[dict]) -> dict:
+    """Aggregate a list of per-condition result dicts into mean ± std."""
+    keys = results_list[0].keys()
+    agg = {}
+    for key in keys:
+        vals = [r[key] for r in results_list if r[key] is not None]
+        if vals and isinstance(vals[0], (int, float)):
+            agg[f"{key}_mean"] = round(float(np.mean(vals)), 4)
+            agg[f"{key}_std"] = round(float(np.std(vals)), 4)
+    return agg
 
 
 def main():
     print("=" * 60)
-    print("Phase 5: Goodhart Effect on MovieLens")
+    print("Phase 6: Goodhart with Set-Level Metrics")
     print("=" * 60)
 
     data_dir = ROOT / "data" / "ml-100k"
@@ -173,21 +212,22 @@ def main():
     base_probs = pool[np.newaxis, :, :]
     true_weights = configs[STAKEHOLDER]
 
-    stakeholder_names = sorted(configs.keys())
-    utility_dims = [f"{s}_utility" for s in stakeholder_names]
-
     print(f"Loaded: {pool.shape[0]} movies, {pool.shape[1]} genres")
     print(f"Target stakeholder: {STAKEHOLDER}")
 
-    # Fixed scorer for content selection (same for all conditions)
-    fixed_scorer = configs["platform"]  # platform weights as engagement proxy
-
-    # Baseline frontier: fixed scorer + true evaluation weights
-    baseline_frontier = compute_k_frontier(
-        base_probs, genres, configs, DIVERSITY_WEIGHTS,
-        top_k=TOP_K, scorer_weights=fixed_scorer,
+    # Baseline: true weights as scorer
+    baseline = run_single_condition(
+        pool, genres, base_probs, configs, true_weights,
+        sigma=0.0, n_pairs=FIXED_N, seed=42,
     )
-    print(f"Baseline frontier: {len(baseline_frontier)} points (fixed scorer)")
+    print(f"\nBaseline (σ=0, N=2000):")
+    print(f"  diversity_utility: {baseline['diversity_utility_mean']:.4f}" if 'diversity_utility_mean' in baseline else f"  diversity_utility: {baseline.get('diversity_utility', 'N/A')}")
+
+    # Actually compute baseline separately as reference
+    baseline_selected_d0 = select_top_k(pool, genres, true_weights, 0.0, TOP_K)
+    baseline_entropy_d0 = compute_genre_entropy(baseline_selected_d0, pool)
+    baseline_n_genres_d0 = len(np.unique(np.argmax(pool[baseline_selected_d0], axis=1)))
+    print(f"  True scorer entropy (δ=0): {baseline_entropy_d0:.4f}, genres: {baseline_n_genres_d0}")
 
     results = {
         "config": {
@@ -199,104 +239,88 @@ def main():
             "n_sweep": N_SWEEP,
             "stakeholder": STAKEHOLDER,
             "feature_dim": int(pool.shape[1]),
-        }
+            "top_k": TOP_K,
+            "metrics": ["user_utility", "diversity_utility", "genre_entropy", "n_unique_genres"],
+        },
+        "baseline": {
+            "entropy_delta0": baseline_entropy_d0,
+            "n_unique_genres_d0": baseline_n_genres_d0,
+        },
     }
 
-    # --- Strategy 1: Better specification (reduce σ, fixed N=2000) ---
+    # --- Strategy 1: Better specification ---
     print(f"\nStrategy 1: Better specification (fixed N={FIXED_N})")
-    print("-" * 40)
+    print("-" * 50)
     strategy1 = {}
     for sigma in SIGMA_SWEEP:
-        hausdorffs = []
+        condition_results = []
         for seed_idx in range(N_SEEDS):
             for noise_idx in range(N_NOISE_SAMPLES):
                 seed = 42 + seed_idx * 1000 + noise_idx * 100
-                hd = run_single_condition(
+                r = run_single_condition(
                     pool, genres, base_probs, configs, true_weights,
-                    fixed_scorer, baseline_frontier, utility_dims, sigma, FIXED_N, seed,
+                    sigma, FIXED_N, seed,
                 )
-                hausdorffs.append(hd)
+                condition_results.append(r)
 
-        mean_hd = float(np.mean(hausdorffs))
-        std_hd = float(np.std(hausdorffs))
-        print(f"  σ={sigma:.2f}: Hausdorff = {mean_hd:.3f} ± {std_hd:.3f}")
-        strategy1[str(sigma)] = {
-            "hausdorff_mean": round(mean_hd, 4),
-            "hausdorff_std": round(std_hd, 4),
-            "n_samples": len(hausdorffs),
-        }
+        agg = aggregate(condition_results)
+        print(f"  σ={sigma:.2f}: div_util={agg.get('diversity_utility_mean', 'N/A'):.4f}, "
+              f"entropy_d0={agg.get('entropy_delta0_mean', 'N/A'):.4f}, "
+              f"user_util={agg.get('user_utility_mean', 'N/A'):.4f}")
+        strategy1[str(sigma)] = agg
 
     results["strategy1_better_spec"] = strategy1
 
-    # --- Strategy 2: More data (increase N, fixed σ=0.3) ---
+    # --- Strategy 2: More data ---
     print(f"\nStrategy 2: More data (fixed σ={FIXED_SIGMA})")
-    print("-" * 40)
+    print("-" * 50)
     strategy2 = {}
     for n_pairs in N_SWEEP:
-        hausdorffs = []
+        condition_results = []
         for seed_idx in range(N_SEEDS):
             for noise_idx in range(N_NOISE_SAMPLES):
                 seed = 42 + seed_idx * 1000 + noise_idx * 100
-                hd = run_single_condition(
+                r = run_single_condition(
                     pool, genres, base_probs, configs, true_weights,
-                    fixed_scorer, baseline_frontier, utility_dims, FIXED_SIGMA, n_pairs, seed,
+                    FIXED_SIGMA, n_pairs, seed,
                 )
-                hausdorffs.append(hd)
+                condition_results.append(r)
 
-        mean_hd = float(np.mean(hausdorffs))
-        std_hd = float(np.std(hausdorffs))
-        print(f"  N={n_pairs:>4}: Hausdorff = {mean_hd:.3f} ± {std_hd:.3f}")
-        strategy2[str(n_pairs)] = {
-            "hausdorff_mean": round(mean_hd, 4),
-            "hausdorff_std": round(std_hd, 4),
-            "n_samples": len(hausdorffs),
-        }
+        agg = aggregate(condition_results)
+        print(f"  N={n_pairs:>4}: div_util={agg.get('diversity_utility_mean', 'N/A'):.4f}, "
+              f"entropy_d0={agg.get('entropy_delta0_mean', 'N/A'):.4f}, "
+              f"user_util={agg.get('user_utility_mean', 'N/A'):.4f}, "
+              f"genres_d0={agg.get('n_unique_genres_d0_mean', 'N/A'):.1f}")
+        strategy2[str(n_pairs)] = agg
 
     results["strategy2_more_data"] = strategy2
 
     # --- Goodhart detection ---
     n_values = N_SWEEP
-    hd_values = [strategy2[str(n)]["hausdorff_mean"] for n in n_values]
+    # Check if user utility increases with N (positive control)
+    user_utils = [strategy2[str(n)].get("user_utility_mean", 0) for n in n_values]
+    user_increasing = user_utils[-1] > user_utils[0]
 
-    # Find minimum
-    min_idx = int(np.argmin(hd_values))
-    min_n = n_values[min_idx]
-    min_hd = hd_values[min_idx]
+    # Check if diversity utility decreases with N (Goodhart signal)
+    div_utils = [strategy2[str(n)].get("diversity_utility_mean", 0) for n in n_values]
+    div_min_idx = int(np.argmin(div_utils))
+    # Goodhart: diversity utility has a maximum, then decreases
+    div_max_idx = int(np.argmax(div_utils))
+    div_decreasing_after_max = any(div_utils[i] < div_utils[div_max_idx] * 0.95
+                                    for i in range(div_max_idx + 1, len(div_utils)))
 
-    # Check if any later N has higher Hausdorff
-    goodhart_detected = any(hd_values[i] > min_hd * 1.1 for i in range(min_idx + 1, len(hd_values)))
+    # Check if entropy decreases with N (set-level narrowing)
+    entropies = [strategy2[str(n)].get("entropy_delta0_mean", 0) for n in n_values]
+    entropy_max_idx = int(np.argmax(entropies))
+    entropy_decreasing = any(entropies[i] < entropies[entropy_max_idx] * 0.95
+                              for i in range(entropy_max_idx + 1, len(entropies)))
 
-    # Find peak after minimum
-    if min_idx < len(hd_values) - 1:
-        post_min = hd_values[min_idx + 1:]
-        peak_idx = min_idx + 1 + int(np.argmax(post_min))
-        peak_n = n_values[peak_idx]
-        peak_hd = hd_values[peak_idx]
-    else:
-        peak_n = min_n
-        peak_hd = min_hd
-
-    results["goodhart_detected"] = goodhart_detected
-    results["goodhart_minimum_n"] = min_n
-    results["goodhart_minimum_hausdorff"] = round(min_hd, 4)
-    results["goodhart_peak_n"] = peak_n
-    results["goodhart_peak_hausdorff"] = round(peak_hd, 4)
-
-    # Strategy 1 monotonicity check
-    s1_values = [strategy1[str(s)]["hausdorff_mean"] for s in SIGMA_SWEEP]
-    s1_monotonic = all(s1_values[i] >= s1_values[i + 1] - 0.1 for i in range(len(s1_values) - 1))
-    results["strategy1_monotonic"] = s1_monotonic
-
-    # Comparison with synthetic
-    results["comparison_with_synthetic"] = {
-        "synthetic_minimum_n": 100,
-        "synthetic_peak_n": 500,
-        "synthetic_minimum_hausdorff": 2.27,
-        "synthetic_peak_hausdorff": 6.82,
-        "movielens_minimum_n": min_n,
-        "movielens_peak_n": peak_n,
-        "movielens_minimum_hausdorff": round(min_hd, 4),
-        "movielens_peak_hausdorff": round(peak_hd, 4),
+    results["goodhart_detected"] = {
+        "user_increasing": bool(user_increasing),
+        "diversity_decreasing_after_peak": bool(div_decreasing_after_max),
+        "entropy_decreasing_after_peak": bool(entropy_decreasing),
+        "diversity_peak_n": n_values[div_max_idx],
+        "entropy_peak_n": n_values[entropy_max_idx],
     }
 
     elapsed = time.time() - t0
@@ -304,12 +328,11 @@ def main():
 
     # Summary
     print(f"\n{'=' * 60}")
-    print("Summary:")
-    print(f"  Strategy 1 monotonic: {'✓' if s1_monotonic else '✗'}")
-    print(f"  Goodhart detected: {'✓' if goodhart_detected else '✗'}")
-    print(f"  Minimum at N={min_n} (Hausdorff={min_hd:.3f})")
-    print(f"  Peak at N={peak_n} (Hausdorff={peak_hd:.3f})")
-    print(f"  Complete in {elapsed:.0f}s")
+    print("Goodhart Detection:")
+    print(f"  User utility increasing with N: {'✓' if user_increasing else '✗'}")
+    print(f"  Diversity utility decreasing after peak: {'✓' if div_decreasing_after_max else '✗'} (peak at N={n_values[div_max_idx]})")
+    print(f"  Genre entropy decreasing after peak: {'✓' if entropy_decreasing else '✗'} (peak at N={n_values[entropy_max_idx]})")
+    print(f"\n  Complete in {elapsed:.0f}s")
     print("=" * 60)
 
     out_path = ROOT / "results" / "movielens_goodhart.json"
