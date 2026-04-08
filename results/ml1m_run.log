@@ -1,0 +1,333 @@
+============================================
+Running all experiments on: data/ml-1m
+============================================
+
+>>> Foundation verification
+======================================================================
+Phase 1: MovieLens Multi-Stakeholder Foundation Verification
+======================================================================
+
+1. Loading MovieLens-100K...
+   Users: 6040, Movies: 3883, Train ratings: 800169
+
+2. Stakeholder genre weights:
+
+   user:
+     Shape: (19,), dtype: float32
+     Range: [0.000, 1.000], mean: 0.552
+     Top 3: Film-Noir=1.000, Documentary=0.868, War=0.830
+     Bot 3: unknown=0.000, Horror=0.207, Children's=0.389
+
+   platform:
+     Shape: (19,), dtype: float32
+     Range: [0.000, 1.000], mean: 0.798
+     Top 3: Drama=1.000, Comedy=0.937, Action=0.906
+     Bot 3: unknown=0.000, Documentary=0.726, Western=0.749
+
+   diversity:
+     Shape: (19,), dtype: float32
+     Range: [-1.000, 0.465], mean: 0.000
+     Top 3: Documentary=0.465, Film-Noir=0.417, Western=0.408
+     Bot 3: Comedy=-1.000, Drama=-0.990, Action=-0.615
+
+3. Content pool:
+   Shape: (3347, 19) (movies × genres)
+   Genre distribution: [0, 475, 145, 90, 88, 902, 114, 77, 927, 1, 22, 240, 23, 34, 36, 42, 91, 11, 29]
+   Feature range: [0.000, 0.950]
+   Mean features per movie: 1.7 genres
+
+4. Pairwise label disagreement (10,000 pairs):
+   ✓ user-platform: 10.4%
+   ✓ user-diversity: 63.6%
+   ✓ platform-diversity: 65.8%
+
+5. BT training convergence (D=19, 2500 pairs, 80/20 split, 50 epochs):
+   ✓ user: train=92.5%, held-out=91.0%, loss 0.6286→0.3855, 18.5s
+   ✓ platform: train=94.0%, held-out=92.6%, loss 0.6245→0.3744, 16.3s
+   ✓ diversity: train=94.9%, held-out=95.4%, loss 0.6537→0.3018, 16.4s
+
+6. Trained weight vector cosine similarity:
+   user-platform: 0.926
+   user-diversity: -0.155
+   platform-diversity: -0.304
+
+   Min similarity: -0.304 ✓ < 0.9
+
+======================================================================
+Phase 1 Success Criteria:
+  ✓ PASS: BT converges for all stakeholders (held-out acc > 80%)
+  ✓ PASS: All disagreement rates > 5%
+  ✓ PASS: Diversity disagreement > 40%
+  ✓ PASS: Trained weight vectors differentiated (min cos < 0.9)
+======================================================================
+
+Results saved to /Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/results/ml-1m_foundation.json
+
+>>> Labels-not-loss (all groups)
+/Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3023: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/.venv/lib/python3.11/site-packages/numpy/lib/_function_base_impl.py:3024: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+============================================================
+MovieLens Labels-Not-Loss Experiment
+Groups: A, B, C, D, E, F
+============================================================
+Loaded: 6040 users, 3347 movies
+
+============================================================
+Group A: Core Labels-Not-Loss Replication
+  3 losses × 3 stakeholders × 5 seeds = 45 runs
+============================================================
+  user/bradley_terry/seed=42: train=92.5%, eval=91.0%
+  user/margin_bt/seed=42: train=95.1%, eval=94.0%
+  user/calibrated_bt/seed=42: train=88.0%, eval=87.2%
+  platform/bradley_terry/seed=42: train=94.0%, eval=92.6%
+  platform/margin_bt/seed=42: train=96.2%, eval=95.4%
+  platform/calibrated_bt/seed=42: train=92.8%, eval=90.4%
+  diversity/bradley_terry/seed=42: train=94.9%, eval=95.4%
+  diversity/margin_bt/seed=42: train=96.3%, eval=95.8%
+  diversity/calibrated_bt/seed=42: train=92.7%, eval=93.6%
+  user/bradley_terry/seed=142: train=92.9%, eval=92.8%
+  user/margin_bt/seed=142: train=96.0%, eval=96.0%
+  user/calibrated_bt/seed=142: train=88.1%, eval=87.2%
+  platform/bradley_terry/seed=142: train=92.8%, eval=93.4%
+  platform/margin_bt/seed=142: train=94.7%, eval=96.4%
+  platform/calibrated_bt/seed=142: train=91.5%, eval=94.2%
+  diversity/bradley_terry/seed=142: train=94.0%, eval=95.2%
+  diversity/margin_bt/seed=142: train=95.8%, eval=96.2%
+  diversity/calibrated_bt/seed=142: train=91.9%, eval=92.0%
+  user/bradley_terry/seed=242: train=92.8%, eval=92.2%
+  user/margin_bt/seed=242: train=95.5%, eval=94.0%
+  user/calibrated_bt/seed=242: train=87.7%, eval=90.6%
+  platform/bradley_terry/seed=242: train=93.9%, eval=91.0%
+  platform/margin_bt/seed=242: train=96.4%, eval=93.0%
+  platform/calibrated_bt/seed=242: train=92.7%, eval=90.4%
+  diversity/bradley_terry/seed=242: train=94.8%, eval=95.0%
+  diversity/margin_bt/seed=242: train=96.0%, eval=96.0%
+  diversity/calibrated_bt/seed=242: train=92.5%, eval=92.6%
+  user/bradley_terry/seed=342: train=92.6%, eval=93.4%
+  user/margin_bt/seed=342: train=95.9%, eval=95.8%
+  user/calibrated_bt/seed=342: train=87.5%, eval=90.0%
+  platform/bradley_terry/seed=342: train=94.2%, eval=94.4%
+  platform/margin_bt/seed=342: train=95.7%, eval=95.6%
+  platform/calibrated_bt/seed=342: train=92.5%, eval=92.2%
+  diversity/bradley_terry/seed=342: train=94.9%, eval=94.8%
+  diversity/margin_bt/seed=342: train=95.8%, eval=95.4%
+  diversity/calibrated_bt/seed=342: train=92.7%, eval=92.2%
+  user/bradley_terry/seed=442: train=91.9%, eval=92.2%
+  user/margin_bt/seed=442: train=94.8%, eval=94.8%
+  user/calibrated_bt/seed=442: train=88.1%, eval=86.8%
+  platform/bradley_terry/seed=442: train=93.2%, eval=92.8%
+  platform/margin_bt/seed=442: train=95.2%, eval=95.8%
+  platform/calibrated_bt/seed=442: train=91.1%, eval=90.6%
+  diversity/bradley_terry/seed=442: train=94.5%, eval=94.2%
+  diversity/margin_bt/seed=442: train=96.2%, eval=95.4%
+  diversity/calibrated_bt/seed=442: train=93.3%, eval=93.0%
+
+  ✓ Within-loss (user): 0.956 ± 0.001
+
+  ✓ Within-loss (platform): 0.988 ± 0.001
+
+  ✓ Within-loss (diversity): 0.955 ± 0.003
+
+  Across-stakeholder (BT):
+    user-platform: 0.937 ± 0.006
+    user-diversity: -0.176 ± 0.038
+    platform-diversity: -0.310 ± 0.026
+
+============================================================
+Group B: Hyperparameter Robustness
+============================================================
+  ✓ margin_bt/user: cos=0.999
+  ✓ margin_bt/platform: cos=0.998
+  ✓ margin_bt/diversity: cos=0.999
+  ✓ calibrated_bt/user: cos=0.951
+  ✓ calibrated_bt/platform: cos=0.993
+  ✓ calibrated_bt/diversity: cos=0.927
+
+============================================================
+Group C: Temporal Generalization
+============================================================
+  Median timestamp: 967588077
+  Early pool: 3191 movies, Full pool: 3446 movies
+  ✓ user within-loss: 0.958  ✓ temporal eval: 94.2%
+  ✓ platform within-loss: 0.988  ✓ temporal eval: 95.2%
+  ✓ diversity within-loss: 0.960  ✓ temporal eval: 94.2%
+
+============================================================
+Group D: Downstream Rating Prediction
+============================================================
+  user BT weights: Spearman=0.0653 (p=4.45e-95)
+  platform BT weights: Spearman=0.0132 (p=3.17e-05)
+  diversity BT weights: Spearman=-0.0595 (p=3.49e-79)
+  Random weights: Spearman=0.0604
+  Popularity baseline: Spearman=0.4637
+
+============================================================
+Group E: User-Group Preference Heterogeneity
+============================================================
+  Found 18 groups: Documentary(528), Film-Noir(864), Romance(133), Fantasy(359), War(580), Sci-Fi(56), Mystery(304), Horror(163), Animation(548), Crime(438), Western(311), Children's(221), Musical(298), Thriller(108), Adventure(190), Comedy(74), Drama(130), Action(95)
+  ✓ Documentary (528 users): BT-margin cos=0.990, eval acc=90.0%
+  ✓ Film-Noir (864 users): BT-margin cos=0.989, eval acc=90.0%
+  ✓ Romance (133 users): BT-margin cos=0.987, eval acc=91.8%
+  ✓ Fantasy (359 users): BT-margin cos=0.986, eval acc=90.8%
+  ✓ War (580 users): BT-margin cos=0.983, eval acc=92.8%
+  ✓ Sci-Fi (56 users): BT-margin cos=0.990, eval acc=91.8%
+  ✓ Mystery (304 users): BT-margin cos=0.988, eval acc=93.0%
+  ✓ Horror (163 users): BT-margin cos=0.991, eval acc=92.2%
+  ✓ Animation (548 users): BT-margin cos=0.987, eval acc=90.0%
+  ✓ Crime (438 users): BT-margin cos=0.987, eval acc=90.2%
+  ✓ Western (311 users): BT-margin cos=0.987, eval acc=91.8%
+  ✓ Children's (221 users): BT-margin cos=0.990, eval acc=93.2%
+  ✓ Musical (298 users): BT-margin cos=0.986, eval acc=92.2%
+  ✓ Thriller (108 users): BT-margin cos=0.989, eval acc=94.2%
+  ✓ Adventure (190 users): BT-margin cos=0.990, eval acc=92.2%
+  ✓ Comedy (74 users): BT-margin cos=0.988, eval acc=92.8%
+  ✓ Drama (130 users): BT-margin cos=0.985, eval acc=94.2%
+  ✓ Action (95 users): BT-margin cos=0.986, eval acc=92.2%
+
+============================================================
+Group F: Genre Correlation Matrix
+============================================================
+  Top 5 correlated genre pairs:
+    Animation-Children's: 0.522
+    Action-Adventure: 0.284
+    Animation-Musical: 0.280
+    Comedy-Drama: -0.259
+    Children's-Fantasy: 0.243
+  Condition number: 34.7
+
+============================================================
+Complete in 2487s
+
+Within-loss similarity (mean):
+  user: 0.956
+  platform: 0.988
+  diversity: 0.955
+Across-stakeholder (BT):
+  user-platform: 0.937
+  user-diversity: -0.176
+  platform-diversity: -0.310
+============================================================
+
+Results saved to /Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/results/ml-1m_labels_not_loss.json
+
+>>> LOSO + data budget
+============================================================
+MovieLens LOSO + Data Budget Experiments
+============================================================
+Loaded: 3347 movies, 19 genres
+
+============================================================
+Exp 1: Geometric LOSO Regret
+============================================================
+  Full frontier: 21 points
+  ✓ Hide user: avg_regret=2.135, max_regret=16.783, 2D Pareto points=15/21
+  ✓ Hide platform: avg_regret=5.246, max_regret=27.194, 2D Pareto points=12/21
+  ✓ Hide diversity: avg_regret=7.133, max_regret=8.354, 2D Pareto points=8/21
+
+  Regret ranking: hide_diversity > hide_platform > hide_user
+
+============================================================
+Exp 2: Data Budget (5 seeds × 8 N values)
+============================================================
+  LOSO baseline regret: 4.658
+  ✓ N=   0: regret=4.658 ± 0.000
+  ✓ N=  25: regret=2.370 ± 0.770, ρ=0.410
+  ✓ N=  50: regret=2.432 ± 0.467, ρ=0.453
+  ✓ N= 100: regret=1.482 ± 0.720, ρ=0.542
+  ✓ N= 200: regret=-1.033 ± 0.674, ρ=0.700
+  ✓ N= 500: regret=-4.117 ± 0.439, ρ=0.826
+  ✓ N=1000: regret=-5.498 ± 0.121, ρ=0.856
+  ✓ N=2000: regret=-5.911 ± 0.131, ρ=0.874
+
+============================================================
+Complete in 192s
+============================================================
+
+Results saved to /Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/results/ml-1m_loso.json
+
+>>> Scalarization baseline
+
+============================================================
+Dataset: movielens
+============================================================
+  Simplex grid: 21 mixing points
+
+  Per-stakeholder frontier:
+    diversity: eval_acc=96.5%
+    platform: eval_acc=95.8%
+    user: eval_acc=92.5%
+    Naive (mean scorer): 21 points, 13 Pareto-optimal
+
+  Per-stakeholder composition sweep (21 compositions × 21 δ):
+    Total points: 378, Pareto-optimal: 102
+
+  Scalarized frontier (21 models × 21 δ):
+    5/21 mixing points processed
+    10/21 mixing points processed
+    15/21 mixing points processed
+    20/21 mixing points processed
+    Total points: 378, Pareto-optimal: 85
+
+  Comparison:
+    Naive (mean) HV:       3357.686
+    Composition sweep HV:  5530.806
+    Scalarized HV:         5591.878
+    Naive/Scalar ratio:    0.600
+    Comp/Scalar ratio:     0.989
+    Comp dominated by scalar: 10.8%
+    Scalar dominated by comp: 18.8%
+    Training runs: per-stakeholder=3, scalarization=18
+
+============================================================
+Complete in 314s
+============================================================
+
+Results saved to /Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/results/ml-1m_scalarization_baseline.json
+
+>>> Goodhart
+============================================================
+Phase 6: Goodhart with Set-Level Metrics
+============================================================
+Loaded: 3347 movies, 19 genres
+Target stakeholder: user
+
+Baseline (σ=0, N=2000):
+  diversity_utility: -7.371784420240493
+  True scorer entropy (δ=0): 3.7323, genres: 3
+
+Strategy 1: Better specification (fixed N=2000)
+--------------------------------------------------
+  σ=0.50: div_util=-7.6953, entropy_d0=3.2351, user_util=18.7665
+  σ=0.30: div_util=-7.9339, entropy_d0=3.3763, user_util=19.5089
+  σ=0.20: div_util=-7.8157, entropy_d0=3.4711, user_util=19.7855
+  σ=0.10: div_util=-7.5845, entropy_d0=3.5195, user_util=20.0116
+  σ=0.05: div_util=-7.5010, entropy_d0=3.5517, user_util=20.0621
+  σ=0.00: div_util=-7.5010, entropy_d0=3.5169, user_util=20.0641
+
+Strategy 2: More data (fixed σ=0.3)
+--------------------------------------------------
+  N=  25: div_util=-5.4448, entropy_d0=3.1336, user_util=16.9995, genres_d0=3.5
+  N=  50: div_util=-5.6200, entropy_d0=3.2398, user_util=17.5917, genres_d0=3.6
+  N= 100: div_util=-6.4117, entropy_d0=3.2303, user_util=18.1285, genres_d0=3.6
+  N= 200: div_util=-6.6041, entropy_d0=3.3598, user_util=18.8579, genres_d0=3.2
+  N= 500: div_util=-7.1569, entropy_d0=3.3402, user_util=19.3268, genres_d0=3.3
+  N=1000: div_util=-7.8512, entropy_d0=3.3628, user_util=19.4235, genres_d0=3.5
+  N=2000: div_util=-7.9339, entropy_d0=3.3763, user_util=19.5089, genres_d0=3.6
+
+============================================================
+Goodhart Detection:
+  User utility increasing with N: ✓
+  Diversity utility decreasing after peak: ✓ (peak at N=25)
+  Genre entropy decreasing after peak: ✗ (peak at N=2000)
+
+  Complete in 1916s
+============================================================
+
+Results saved to /Users/kartikganapathi/Documents/Personal/random_projects/opensource_x/x-algorithm/results/ml-1m_goodhart.json
+
+============================================
+All experiments complete for data/ml-1m
+Results in results/ml-1m_*.json
+============================================

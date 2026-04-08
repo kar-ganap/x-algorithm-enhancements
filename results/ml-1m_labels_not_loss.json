@@ -1,0 +1,430 @@
+{
+  "config": {
+    "n_seeds": 5,
+    "n_pairs": 2500,
+    "eval_fraction": 0.2,
+    "loss_types": [
+      "bradley_terry",
+      "margin_bt",
+      "calibrated_bt"
+    ],
+    "stakeholders": [
+      "user",
+      "platform",
+      "diversity"
+    ],
+    "feature_dim": 19
+  },
+  "group_a_core": {
+    "within_loss_similarity": {
+      "user": {
+        "mean": 0.9559,
+        "std": 0.0014,
+        "min": 0.9543,
+        "per_seed": [
+          0.958,
+          0.9549,
+          0.9571,
+          0.9543,
+          0.9552
+        ]
+      },
+      "platform": {
+        "mean": 0.9881,
+        "std": 0.0014,
+        "min": 0.9855,
+        "per_seed": [
+          0.9893,
+          0.9894,
+          0.9883,
+          0.9855,
+          0.9879
+        ]
+      },
+      "diversity": {
+        "mean": 0.9551,
+        "std": 0.0028,
+        "min": 0.9511,
+        "per_seed": [
+          0.9557,
+          0.9511,
+          0.9535,
+          0.9596,
+          0.9554
+        ]
+      }
+    },
+    "across_stakeholder_similarity": {
+      "bradley_terry": {
+        "user-platform": {
+          "mean": 0.9372,
+          "std": 0.0062,
+          "per_seed": [
+            0.9258,
+            0.9419,
+            0.9376,
+            0.9368,
+            0.9436
+          ]
+        },
+        "user-diversity": {
+          "mean": -0.176,
+          "std": 0.0384,
+          "per_seed": [
+            -0.1554,
+            -0.1638,
+            -0.1255,
+            -0.1979,
+            -0.2372
+          ]
+        },
+        "platform-diversity": {
+          "mean": -0.3097,
+          "std": 0.0262,
+          "per_seed": [
+            -0.3042,
+            -0.3067,
+            -0.2656,
+            -0.3302,
+            -0.3419
+          ]
+        }
+      },
+      "margin_bt": {
+        "user-platform": {
+          "mean": 0.9466,
+          "std": 0.007,
+          "per_seed": [
+            0.9336,
+            0.9542,
+            0.9476,
+            0.9466,
+            0.951
+          ]
+        },
+        "user-diversity": {
+          "mean": -0.0456,
+          "std": 0.0326,
+          "per_seed": [
+            -0.0233,
+            -0.0359,
+            -0.0045,
+            -0.0692,
+            -0.0953
+          ]
+        },
+        "platform-diversity": {
+          "mean": -0.2057,
+          "std": 0.0251,
+          "per_seed": [
+            -0.2077,
+            -0.1997,
+            -0.163,
+            -0.2189,
+            -0.2391
+          ]
+        }
+      },
+      "calibrated_bt": {
+        "user-platform": {
+          "mean": 0.8627,
+          "std": 0.0066,
+          "per_seed": [
+            0.8498,
+            0.8654,
+            0.8635,
+            0.8664,
+            0.8683
+          ]
+        },
+        "user-diversity": {
+          "mean": -0.1888,
+          "std": 0.0397,
+          "per_seed": [
+            -0.1643,
+            -0.2043,
+            -0.1383,
+            -0.1815,
+            -0.2555
+          ]
+        },
+        "platform-diversity": {
+          "mean": -0.4903,
+          "std": 0.0241,
+          "per_seed": [
+            -0.4836,
+            -0.5129,
+            -0.4551,
+            -0.4783,
+            -0.5214
+          ]
+        }
+      }
+    },
+    "accuracy_summary": {
+      "train_mean": 0.9339,
+      "eval_mean": 0.9318,
+      "eval_min": 0.868
+    },
+    "n_models": 45
+  },
+  "group_b_hyperparameter": {
+    "margin_bt": {
+      "user": {
+        "pairwise_cos": [
+          0.9996,
+          0.998,
+          0.9993
+        ],
+        "mean_cos": 0.999
+      },
+      "platform": {
+        "pairwise_cos": [
+          0.9989,
+          0.9956,
+          0.9986
+        ],
+        "mean_cos": 0.9977
+      },
+      "diversity": {
+        "pairwise_cos": [
+          0.9995,
+          0.9973,
+          0.9989
+        ],
+        "mean_cos": 0.9986
+      }
+    },
+    "calibrated_bt": {
+      "user": {
+        "pairwise_cos": [
+          0.9634,
+          0.9045,
+          0.9838
+        ],
+        "mean_cos": 0.9506
+      },
+      "platform": {
+        "pairwise_cos": [
+          0.997,
+          0.9862,
+          0.9956
+        ],
+        "mean_cos": 0.9929
+      },
+      "diversity": {
+        "pairwise_cos": [
+          0.9617,
+          0.8571,
+          0.9629
+        ],
+        "mean_cos": 0.9273
+      }
+    }
+  },
+  "group_c_temporal": {
+    "cutoff_timestamp": 967588077,
+    "n_early_movies": 3191,
+    "n_full_movies": 3446,
+    "within_loss_similarity_temporal": {
+      "user": 0.9583,
+      "platform": 0.9882,
+      "diversity": 0.9595
+    },
+    "temporal_eval_accuracy": {
+      "user": 0.942,
+      "platform": 0.952,
+      "diversity": 0.942
+    }
+  },
+  "group_d_downstream": {
+    "user_bt_spearman": 0.0653,
+    "user_bt_pvalue": 0.0,
+    "platform_bt_spearman": 0.0132,
+    "platform_bt_pvalue": 3.2e-05,
+    "diversity_bt_spearman": -0.0595,
+    "diversity_bt_pvalue": 0.0,
+    "random_spearman": 0.0604,
+    "popularity_spearman": 0.4637
+  },
+  "group_e_user_groups": {
+    "Documentary": {
+      "n_users": 528,
+      "within_loss_cos": 0.9899,
+      "bt_eval_accuracy": 0.9,
+      "margin_eval_accuracy": 0.9125
+    },
+    "Film-Noir": {
+      "n_users": 864,
+      "within_loss_cos": 0.9885,
+      "bt_eval_accuracy": 0.9,
+      "margin_eval_accuracy": 0.9275
+    },
+    "Romance": {
+      "n_users": 133,
+      "within_loss_cos": 0.9869,
+      "bt_eval_accuracy": 0.9175,
+      "margin_eval_accuracy": 0.9375
+    },
+    "Fantasy": {
+      "n_users": 359,
+      "within_loss_cos": 0.9864,
+      "bt_eval_accuracy": 0.9075,
+      "margin_eval_accuracy": 0.9275
+    },
+    "War": {
+      "n_users": 580,
+      "within_loss_cos": 0.983,
+      "bt_eval_accuracy": 0.9275,
+      "margin_eval_accuracy": 0.955
+    },
+    "Sci-Fi": {
+      "n_users": 56,
+      "within_loss_cos": 0.9901,
+      "bt_eval_accuracy": 0.9175,
+      "margin_eval_accuracy": 0.9475
+    },
+    "Mystery": {
+      "n_users": 304,
+      "within_loss_cos": 0.9881,
+      "bt_eval_accuracy": 0.93,
+      "margin_eval_accuracy": 0.9475
+    },
+    "Horror": {
+      "n_users": 163,
+      "within_loss_cos": 0.9913,
+      "bt_eval_accuracy": 0.9225,
+      "margin_eval_accuracy": 0.93
+    },
+    "Animation": {
+      "n_users": 548,
+      "within_loss_cos": 0.9873,
+      "bt_eval_accuracy": 0.9,
+      "margin_eval_accuracy": 0.9275
+    },
+    "Crime": {
+      "n_users": 438,
+      "within_loss_cos": 0.9866,
+      "bt_eval_accuracy": 0.9025,
+      "margin_eval_accuracy": 0.9375
+    },
+    "Western": {
+      "n_users": 311,
+      "within_loss_cos": 0.987,
+      "bt_eval_accuracy": 0.9175,
+      "margin_eval_accuracy": 0.935
+    },
+    "Children's": {
+      "n_users": 221,
+      "within_loss_cos": 0.9901,
+      "bt_eval_accuracy": 0.9325,
+      "margin_eval_accuracy": 0.955
+    },
+    "Musical": {
+      "n_users": 298,
+      "within_loss_cos": 0.9864,
+      "bt_eval_accuracy": 0.9225,
+      "margin_eval_accuracy": 0.945
+    },
+    "Thriller": {
+      "n_users": 108,
+      "within_loss_cos": 0.9887,
+      "bt_eval_accuracy": 0.9425,
+      "margin_eval_accuracy": 0.95
+    },
+    "Adventure": {
+      "n_users": 190,
+      "within_loss_cos": 0.9899,
+      "bt_eval_accuracy": 0.9225,
+      "margin_eval_accuracy": 0.94
+    },
+    "Comedy": {
+      "n_users": 74,
+      "within_loss_cos": 0.988,
+      "bt_eval_accuracy": 0.9275,
+      "margin_eval_accuracy": 0.95
+    },
+    "Drama": {
+      "n_users": 130,
+      "within_loss_cos": 0.9849,
+      "bt_eval_accuracy": 0.9425,
+      "margin_eval_accuracy": 0.96
+    },
+    "Action": {
+      "n_users": 95,
+      "within_loss_cos": 0.9858,
+      "bt_eval_accuracy": 0.9225,
+      "margin_eval_accuracy": 0.9375
+    }
+  },
+  "group_f_genre_correlation": {
+    "top_correlated_pairs": [
+      [
+        "Animation",
+        "Children's",
+        0.5217
+      ],
+      [
+        "Action",
+        "Adventure",
+        0.284
+      ],
+      [
+        "Animation",
+        "Musical",
+        0.2805
+      ],
+      [
+        "Comedy",
+        "Drama",
+        -0.2593
+      ],
+      [
+        "Children's",
+        "Fantasy",
+        0.2425
+      ],
+      [
+        "Drama",
+        "Horror",
+        -0.2251
+      ],
+      [
+        "Adventure",
+        "Fantasy",
+        0.223
+      ],
+      [
+        "Children's",
+        "Musical",
+        0.2195
+      ],
+      [
+        "Action",
+        "Sci-Fi",
+        0.2152
+      ],
+      [
+        "Comedy",
+        "Thriller",
+        -0.208
+      ]
+    ],
+    "condition_number": 34.73
+  },
+  "comparison_with_synthetic": {
+    "synthetic_across": {
+      "user_platform": 0.8296,
+      "user_society": 0.8837,
+      "platform_society": 0.4777
+    },
+    "movielens_across": {
+      "user-platform": 0.9372,
+      "user-diversity": -0.176,
+      "platform-diversity": -0.3097
+    },
+    "synthetic_within_loss_min": 0.92,
+    "movielens_within_loss_min": 0.9511
+  },
+  "total_time_seconds": 2487.4
+}
