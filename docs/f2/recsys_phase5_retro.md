@@ -1,8 +1,8 @@
-# RecSys Phase 5: Goodhart Effect on MovieLens — Retro
+# RecSys Phase 5/5b: Goodhart Effect on MovieLens — Retro
 
 **Goal**: Replicate the Goodhart effect (more data amplifies misspecification) on MovieLens.
 
-**Status**: Complete. Weak Goodhart signal detected (min at N=50, gradual rise). Strategy 1 non-monotonicity reveals a baseline scorer confound.
+**Status**: Complete after two iterations. Phase 5 was confounded (learned scorer changed content selection). Phase 5b fixed with fixed scorer + weight normalization. Result: **Goodhart inconclusive on MovieLens** — weak signal within noise, Strategy 1 non-monotonic.
 
 ---
 
@@ -43,21 +43,44 @@ The Goodhart finding partially replicates: the direction (more data eventually h
 
 **Honest framing**: "The Goodhart curve replicates on MovieLens (Hausdorff minimum at N=50, rising 22% by N=2000), but the effect is weaker than on synthetic data (3× vs 1.2×). Binary genre features dampen the effect because misspecification needs to reverse genre importance ordering, not just shift continuous probabilities."
 
+## Phase 5b: Fixed Scorer + Weight Normalization
+
+Phase 5 was confounded: learned weights drove content SELECTION, not just evaluation. Fixed by:
+1. **Fixed scorer** (platform weights) for content selection in both baseline and learned conditions
+2. **Weight normalization** — normalize learned weights to same L2 norm as true weights (BT is scale-invariant)
+
+### Phase 5b Results (normalized)
+
+**Strategy 1** still not monotonic: σ=0.5 → 3.25, σ=0.0 → 4.44. Better specification makes things WORSE. This means BT-learned weight DIRECTION systematically differs from true direction, even under correct specification, because BT optimizes for preference ordering accuracy not weight recovery.
+
+**Strategy 2**: min at N=200 (2.82), rises to N=2000 (3.42). 21% increase, but error bars overlap (std ~1.3). Signal is within noise.
+
+**Conclusion**: Goodhart effect on MovieLens is **inconclusive**. The mechanism (BT over-learning misspecified labels) may exist but cannot be cleanly separated from BT's inherent weight direction bias on sparse binary features.
+
+### Key insight: Why synthetic works but MovieLens doesn't
+
+The synthetic Goodhart experiment succeeds because:
+1. Continuous [0,1] action probabilities → fine-grained mislabeling
+2. Shared fixed scorer (hardcoded engagement formula) → zero confound
+3. Well-separated stakeholders (cos 0.48-0.88) → large misspecification signal
+4. BT weight scale naturally bounded by [0,1] features
+
+MovieLens breaks these conditions:
+1. Binary genre features → coarse mislabeling
+2. BT weight direction bias on sparse features
+3. User-platform near-identical → small misspecification window
+4. BT scale invariance unbounded → needed normalization hack
+
 ## 6. Metrics
 
-| Metric | Value |
-|--------|-------|
-| Files created | 3 (script, tests, retro) |
-| New tests | 6 |
-| Total tests | 282 |
-| BT training runs | ~325 |
-| Runtime | 1830s (~30 min) |
-| **Strategy 1 (better spec)** | |
-| σ=0.5 Hausdorff | 5.785 |
-| σ=0.0 Hausdorff | 6.040 (NOT monotonic) |
-| **Strategy 2 (more data, σ=0.3)** | |
-| N=50 (minimum) | 4.689 |
-| N=2000 (peak) | 5.743 |
-| Goodhart amplification | 1.22× (vs synthetic 3.0×) |
-| Goodhart detected | Yes (weak) |
-| Results artifact | `results/movielens_goodhart.json` |
+| Metric | Phase 5 (confounded) | Phase 5b (clean, normalized) |
+|--------|---------------------|------------------------------|
+| σ=0.0 Hausdorff | 6.04 | 4.44 |
+| Strategy 1 monotonic | No | No |
+| Strategy 2 min | N=50, 4.69 | N=200, 2.82 |
+| Strategy 2 peak | N=2000, 5.74 | N=2000, 3.42 |
+| Goodhart amplification | 1.22× | 1.21× |
+| Goodhart detected | Yes (weak) | Yes (weak, within noise) |
+| Files created | 3 (script, tests, retro) | Modified script |
+| Total tests | 282 | 282 |
+| Results artifact | `results/movielens_goodhart.json` (overwritten) |

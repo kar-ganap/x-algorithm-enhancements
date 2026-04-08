@@ -44,6 +44,7 @@ generate_movielens_content_pool = _st.generate_movielens_content_pool
 generate_movielens_preferences = _st.generate_movielens_preferences
 split_preferences = _st.split_preferences
 
+compute_k_frontier = _kf.compute_k_frontier
 compute_scorer_eval_frontier = _kf.compute_scorer_eval_frontier
 
 LossConfig = _al.LossConfig
@@ -103,13 +104,19 @@ def run_single_condition(
     base_probs: np.ndarray,
     true_configs: dict[str, np.ndarray],
     true_weights: np.ndarray,
+    fixed_scorer: np.ndarray,
     baseline_frontier: list[dict],
     utility_dims: list[str],
     sigma: float,
     n_pairs: int,
     seed: int,
 ) -> float:
-    """Run one condition: perturb, generate misspecified prefs, train, measure."""
+    """Run one condition: perturb, generate misspecified prefs, train, measure.
+
+    Uses a FIXED scorer for content selection (same as baseline).
+    Learned weights only replace one stakeholder's EVALUATION weights.
+    This isolates the Goodhart effect from content selection confounds.
+    """
     rng = np.random.default_rng(seed)
 
     # Perturb the target stakeholder's weights
@@ -127,10 +134,23 @@ def run_single_condition(
     model = train_with_loss(config, tp, tr, verbose=False,
                             eval_probs_preferred=ep, eval_probs_rejected=er)
 
-    # Compute frontier using learned (misspecified) weights as scorer
-    learned_frontier = compute_scorer_eval_frontier(
-        base_probs, genres, model.weights, true_configs,
-        DIVERSITY_WEIGHTS, top_k=TOP_K,
+    # Replace target stakeholder's EVALUATION weights with learned weights.
+    # Normalize learned weights to same L2 norm as true weights to remove
+    # BT scale invariance from Hausdorff computation. BT can learn weights
+    # at any scale — only direction matters for preference ordering.
+    learned_w = model.weights
+    true_norm = np.linalg.norm(true_weights)
+    learned_norm = np.linalg.norm(learned_w)
+    if learned_norm > 0:
+        learned_w = learned_w * (true_norm / learned_norm)
+
+    # Content selection uses the FIXED scorer (same as baseline)
+    eval_configs = true_configs.copy()
+    eval_configs[STAKEHOLDER] = learned_w
+
+    learned_frontier = compute_k_frontier(
+        base_probs, genres, eval_configs,
+        DIVERSITY_WEIGHTS, top_k=TOP_K, scorer_weights=fixed_scorer,
     )
 
     return hausdorff_distance(learned_frontier, baseline_frontier, utility_dims)
@@ -159,12 +179,15 @@ def main():
     print(f"Loaded: {pool.shape[0]} movies, {pool.shape[1]} genres")
     print(f"Target stakeholder: {STAKEHOLDER}")
 
-    # Compute baseline frontier using true weights as scorer
-    baseline_scorer = (configs["user"] + configs["platform"] + configs["diversity"]) / 3.0
-    baseline_frontier = compute_scorer_eval_frontier(
-        base_probs, genres, baseline_scorer, configs, DIVERSITY_WEIGHTS, top_k=TOP_K,
+    # Fixed scorer for content selection (same for all conditions)
+    fixed_scorer = configs["platform"]  # platform weights as engagement proxy
+
+    # Baseline frontier: fixed scorer + true evaluation weights
+    baseline_frontier = compute_k_frontier(
+        base_probs, genres, configs, DIVERSITY_WEIGHTS,
+        top_k=TOP_K, scorer_weights=fixed_scorer,
     )
-    print(f"Baseline frontier: {len(baseline_frontier)} points")
+    print(f"Baseline frontier: {len(baseline_frontier)} points (fixed scorer)")
 
     results = {
         "config": {
@@ -190,7 +213,7 @@ def main():
                 seed = 42 + seed_idx * 1000 + noise_idx * 100
                 hd = run_single_condition(
                     pool, genres, base_probs, configs, true_weights,
-                    baseline_frontier, utility_dims, sigma, FIXED_N, seed,
+                    fixed_scorer, baseline_frontier, utility_dims, sigma, FIXED_N, seed,
                 )
                 hausdorffs.append(hd)
 
@@ -216,7 +239,7 @@ def main():
                 seed = 42 + seed_idx * 1000 + noise_idx * 100
                 hd = run_single_condition(
                     pool, genres, base_probs, configs, true_weights,
-                    baseline_frontier, utility_dims, FIXED_SIGMA, n_pairs, seed,
+                    fixed_scorer, baseline_frontier, utility_dims, FIXED_SIGMA, n_pairs, seed,
                 )
                 hausdorffs.append(hd)
 
