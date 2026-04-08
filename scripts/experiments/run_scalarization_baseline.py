@@ -277,7 +277,27 @@ def run_dataset(
         DIVERSITY_WEIGHTS, top_k=TOP_K,
     )
     per_stk_pareto = extract_pareto_front_nd(per_stk_frontier, utility_dims)
-    print(f"    Frontier: {len(per_stk_frontier)} points, {len(per_stk_pareto)} Pareto-optimal")
+    print(f"    Naive (mean scorer): {len(per_stk_frontier)} points, {len(per_stk_pareto)} Pareto-optimal")
+
+    # --- Per-stakeholder composition sweep (NO retraining) ---
+    print(f"\n  Per-stakeholder composition sweep ({len(grid)} compositions × {len(DIVERSITY_WEIGHTS)} δ):")
+    all_composition_points = []
+    for mixing_tuple in grid:
+        mixing = {s: w for s, w in zip(stakeholder_names, mixing_tuple)}
+        if max(mixing.values()) > 0.99:
+            continue
+        # Compose scorer from pre-trained weight vectors — zero retraining
+        composed_scorer = sum(
+            mixing[s] * per_stk_weights[s] for s in stakeholder_names
+        )
+        frontier = compute_scorer_eval_frontier(
+            base_probs, genres, composed_scorer, stakeholder_weights,
+            DIVERSITY_WEIGHTS, top_k=TOP_K,
+        )
+        all_composition_points.extend(frontier)
+
+    composition_pareto = extract_pareto_front_nd(all_composition_points, utility_dims)
+    print(f"    Total points: {len(all_composition_points)}, Pareto-optimal: {len(composition_pareto)}")
 
     # --- Scalarized frontier ---
     print(f"\n  Scalarized frontier ({len(grid)} models × {len(DIVERSITY_WEIGHTS)} δ):")
@@ -315,52 +335,74 @@ def run_dataset(
     # --- Comparison ---
     print("\n  Comparison:")
 
-    # Reference point for hypervolume: minimum across both frontiers
-    all_points = per_stk_frontier + all_scalarized_points
+    # Reference point for hypervolume: minimum across ALL frontiers
+    all_points = per_stk_frontier + all_composition_points + all_scalarized_points
     ref_point = tuple(
         min(p[d] for p in all_points) - 0.01 for d in utility_dims
     )
 
-    hv_per_stk = compute_hypervolume_3d(per_stk_pareto, utility_dims, ref_point)
+    hv_naive = compute_hypervolume_3d(per_stk_pareto, utility_dims, ref_point)
+    hv_composition = compute_hypervolume_3d(composition_pareto, utility_dims, ref_point)
     hv_scalar = compute_hypervolume_3d(scalar_pareto, utility_dims, ref_point)
-    hv_ratio = hv_per_stk / hv_scalar if hv_scalar > 0 else float("inf")
 
-    # Dominated fraction: % of scalarized Pareto points dominated by per-stakeholder
-    dominated = sum(
-        1 for sp in scalar_pareto
-        if is_dominated_nd(sp, per_stk_pareto, utility_dims)
+    hv_naive_vs_scalar = hv_naive / hv_scalar if hv_scalar > 0 else float("inf")
+    hv_comp_vs_scalar = hv_composition / hv_scalar if hv_scalar > 0 else float("inf")
+
+    # Dominated fraction: composition vs scalarization (bidirectional)
+    comp_dominated_by_scalar = sum(
+        1 for cp in composition_pareto
+        if is_dominated_nd(cp, scalar_pareto, utility_dims)
     )
-    dominated_frac = dominated / len(scalar_pareto) if scalar_pareto else 0
+    scalar_dominated_by_comp = sum(
+        1 for sp in scalar_pareto
+        if is_dominated_nd(sp, composition_pareto, utility_dims)
+    )
+    comp_dom_frac = comp_dominated_by_scalar / len(composition_pareto) if composition_pareto else 0
+    scalar_dom_frac = scalar_dominated_by_comp / len(scalar_pareto) if scalar_pareto else 0
 
-    # Max per-dimension
-    max_per_stk = {d: max(p[d] for p in per_stk_pareto) for d in utility_dims}
+    max_naive = {d: max(p[d] for p in per_stk_pareto) for d in utility_dims}
+    max_comp = {d: max(p[d] for p in composition_pareto) for d in utility_dims}
     max_scalar = {d: max(p[d] for p in scalar_pareto) for d in utility_dims}
 
-    print(f"    Per-stakeholder HV: {hv_per_stk:.3f}")
-    print(f"    Scalarized HV:     {hv_scalar:.3f}")
-    print(f"    HV ratio:          {hv_ratio:.3f}")
-    print(f"    Dominated frac:    {dominated_frac:.1%}")
-    print(f"    Max per-dim (per-stk): {', '.join(f'{d}={v:.2f}' for d, v in max_per_stk.items())}")
-    print(f"    Max per-dim (scalar):  {', '.join(f'{d}={v:.2f}' for d, v in max_scalar.items())}")
+    print(f"    Naive (mean) HV:       {hv_naive:.3f}")
+    print(f"    Composition sweep HV:  {hv_composition:.3f}")
+    print(f"    Scalarized HV:         {hv_scalar:.3f}")
+    print(f"    Naive/Scalar ratio:    {hv_naive_vs_scalar:.3f}")
+    print(f"    Comp/Scalar ratio:     {hv_comp_vs_scalar:.3f}")
+    print(f"    Comp dominated by scalar: {comp_dom_frac:.1%}")
+    print(f"    Scalar dominated by comp: {scalar_dom_frac:.1%}")
+    print(f"    Training runs: per-stakeholder=3, scalarization=18")
 
     return {
-        "per_stakeholder_frontier": [
+        "per_stakeholder_naive_frontier": [
             {k: round(v, 4) if isinstance(v, float) else v for k, v in p.items()}
             for p in per_stk_pareto
+        ],
+        "per_stakeholder_composition_frontier": [
+            {k: round(v, 4) if isinstance(v, float) else v for k, v in p.items()}
+            for p in composition_pareto
         ],
         "scalarized_frontier": [
             {k: round(v, 4) if isinstance(v, float) else v for k, v in p.items()}
             for p in scalar_pareto
         ],
         "comparison": {
-            "per_stakeholder_hypervolume": round(hv_per_stk, 4),
+            "naive_hypervolume": round(hv_naive, 4),
+            "composition_hypervolume": round(hv_composition, 4),
             "scalarized_hypervolume": round(hv_scalar, 4),
-            "hypervolume_ratio": round(hv_ratio, 4),
-            "dominated_fraction": round(dominated_frac, 4),
-            "n_per_stakeholder_pareto": len(per_stk_pareto),
+            "naive_vs_scalar_ratio": round(hv_naive_vs_scalar, 4),
+            "composition_vs_scalar_ratio": round(hv_comp_vs_scalar, 4),
+            "composition_dominated_by_scalar_frac": round(comp_dom_frac, 4),
+            "scalar_dominated_by_composition_frac": round(scalar_dom_frac, 4),
+            "n_naive_pareto": len(per_stk_pareto),
+            "n_composition_pareto": len(composition_pareto),
+            "n_composition_total": len(all_composition_points),
             "n_scalarized_pareto": len(scalar_pareto),
             "n_scalarized_total": len(all_scalarized_points),
-            "max_per_stakeholder": {k: round(v, 4) for k, v in max_per_stk.items()},
+            "training_runs_per_stakeholder": 3,
+            "training_runs_scalarization": len([t for t in grid if max(t) <= 0.99]),
+            "max_naive": {k: round(v, 4) for k, v in max_naive.items()},
+            "max_composition": {k: round(v, 4) for k, v in max_comp.items()},
             "max_scalarized": {k: round(v, 4) for k, v in max_scalar.items()},
         },
     }
