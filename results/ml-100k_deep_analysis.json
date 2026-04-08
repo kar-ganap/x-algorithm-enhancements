@@ -1,0 +1,175 @@
+{
+  "dataset": "ml-100k",
+  "composition": {
+    "mean_projection_cosine": 0.979,
+    "min_projection_cosine": 0.9461,
+    "std_projection_cosine": 0.0165,
+    "mean_residual_norm": 0.8709,
+    "n_above_095": 16,
+    "n_total": 18,
+    "per_model": [
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "platform": 0.2,
+          "user": 0.8
+        },
+        "projection_cosine": 0.9956,
+        "residual_norm": 0.8269
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "platform": 0.4,
+          "user": 0.6
+        },
+        "projection_cosine": 0.9975,
+        "residual_norm": 0.6317
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "platform": 0.6,
+          "user": 0.4
+        },
+        "projection_cosine": 0.9972,
+        "residual_norm": 0.6623
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "platform": 0.8,
+          "user": 0.2
+        },
+        "projection_cosine": 0.9943,
+        "residual_norm": 0.9485
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "platform": 0.0,
+          "user": 0.8
+        },
+        "projection_cosine": 0.9884,
+        "residual_norm": 0.8686
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "platform": 0.2,
+          "user": 0.6
+        },
+        "projection_cosine": 0.9877,
+        "residual_norm": 0.7746
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "platform": 0.4,
+          "user": 0.4
+        },
+        "projection_cosine": 0.9896,
+        "residual_norm": 0.747
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "platform": 0.6,
+          "user": 0.2
+        },
+        "projection_cosine": 0.9914,
+        "residual_norm": 0.6981
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "platform": 0.8,
+          "user": 0.0
+        },
+        "projection_cosine": 0.9868,
+        "residual_norm": 0.8418
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "platform": 0.0,
+          "user": 0.6
+        },
+        "projection_cosine": 0.9775,
+        "residual_norm": 0.8177
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "platform": 0.2,
+          "user": 0.4
+        },
+        "projection_cosine": 0.9489,
+        "residual_norm": 1.2028
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "platform": 0.4,
+          "user": 0.2
+        },
+        "projection_cosine": 0.9777,
+        "residual_norm": 0.7803
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "platform": 0.6,
+          "user": 0.0
+        },
+        "projection_cosine": 0.9881,
+        "residual_norm": 0.6409
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "platform": 0.0,
+          "user": 0.4
+        },
+        "projection_cosine": 0.9461,
+        "residual_norm": 1.0665
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "platform": 0.2,
+          "user": 0.2
+        },
+        "projection_cosine": 0.9648,
+        "residual_norm": 0.9335
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "platform": 0.4,
+          "user": 0.0
+        },
+        "projection_cosine": 0.9521,
+        "residual_norm": 1.0495
+      },
+      {
+        "mixing": {
+          "diversity": 0.8,
+          "platform": 0.0,
+          "user": 0.2
+        },
+        "projection_cosine": 0.9724,
+        "residual_norm": 1.0586
+      },
+      {
+        "mixing": {
+          "diversity": 0.8,
+          "platform": 0.2,
+          "user": 0.0
+        },
+        "projection_cosine": 0.9665,
+        "residual_norm": 1.1275
+      }
+    ]
+  }
+}

@@ -270,6 +270,9 @@ def run_dataset(
         per_stk_weights[s_name] = model.weights
         print(f"    {s_name}: eval_acc={model.eval_accuracy:.1%}")
 
+    # Save per-stakeholder weight vectors for composition analysis
+    per_stk_weight_vectors = {name: w.tolist() for name, w in per_stk_weights.items()}
+
     # Composite scorer = mean of 3 learned weight vectors
     composite_scorer = np.mean(list(per_stk_weights.values()), axis=0)
     per_stk_frontier = compute_scorer_eval_frontier(
@@ -302,6 +305,7 @@ def run_dataset(
     # --- Scalarized frontier ---
     print(f"\n  Scalarized frontier ({len(grid)} models × {len(DIVERSITY_WEIGHTS)} δ):")
     all_scalarized_points = []
+    scalarized_weight_vectors = []  # Save for composition analysis
     for gi, mixing_tuple in enumerate(grid):
         mixing = {s: w for s, w in zip(stakeholder_names, mixing_tuple)}
 
@@ -318,6 +322,10 @@ def run_dataset(
         )
         model = train_with_loss(config, tp, tr, verbose=False,
                                 eval_probs_preferred=ep, eval_probs_rejected=er)
+        scalarized_weight_vectors.append({
+            "mixing": {s: w for s, w in zip(stakeholder_names, mixing_tuple)},
+            "weights": model.weights.tolist(),
+        })
 
         # Sweep diversity weights with this model's learned weights as scorer
         frontier = compute_scorer_eval_frontier(
@@ -374,6 +382,10 @@ def run_dataset(
     print(f"    Training runs: per-stakeholder=3, scalarization=18")
 
     return {
+        "weight_vectors": {
+            "per_stakeholder": per_stk_weight_vectors,
+            "scalarized": scalarized_weight_vectors,
+        },
         "per_stakeholder_naive_frontier": [
             {k: round(v, 4) if isinstance(v, float) else v for k, v in p.items()}
             for p in per_stk_pareto
