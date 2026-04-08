@@ -1,0 +1,111 @@
+{
+  "ml-100k": {
+    "dataset": "ml-100k",
+    "target": "user",
+    "cosine_similarities": {
+      "platform": 0.9562,
+      "diversity": -0.313
+    },
+    "per_hidden_stakeholder": {
+      "platform": {
+        "cosine_with_target": 0.9562,
+        "prediction": "IMPROVE",
+        "actual": "improving",
+        "match": true,
+        "peak_n": 2000,
+        "peak_utility": 29.8812,
+        "final_utility": 29.8812,
+        "degradation_from_peak": 0.0,
+        "monotonic_after_peak": true,
+        "overall_improving": true
+      },
+      "diversity": {
+        "cosine_with_target": -0.313,
+        "prediction": "DEGRADE",
+        "actual": "degrading",
+        "match": true,
+        "peak_n": 50,
+        "peak_utility": -6.3365,
+        "final_utility": -8.9794,
+        "degradation_from_peak": 0.4171,
+        "monotonic_after_peak": true,
+        "overall_improving": false
+      }
+    },
+    "target_improving": true,
+    "target_change": 0.1417,
+    "direction_condition_holds": true
+  },
+  "ml-1m": {
+    "dataset": "ml-1m",
+    "target": "user",
+    "cosine_similarities": {
+      "platform": 0.9258,
+      "diversity": -0.1554
+    },
+    "per_hidden_stakeholder": {
+      "platform": {
+        "cosine_with_target": 0.9258,
+        "prediction": "IMPROVE",
+        "actual": "improving",
+        "match": true,
+        "peak_n": 2000,
+        "peak_utility": 29.6564,
+        "final_utility": 29.6564,
+        "degradation_from_peak": 0.0,
+        "monotonic_after_peak": true,
+        "overall_improving": true
+      },
+      "diversity": {
+        "cosine_with_target": -0.1554,
+        "prediction": "DEGRADE",
+        "actual": "degrading",
+        "match": true,
+        "peak_n": 25,
+        "peak_utility": -5.4448,
+        "final_utility": -7.9339,
+        "degradation_from_peak": 0.4572,
+        "monotonic_after_peak": true,
+        "overall_improving": false
+      }
+    },
+    "target_improving": true,
+    "target_change": 0.1476,
+    "direction_condition_holds": true
+  },
+  "cross_dataset": {
+    "points": [
+      {
+        "dataset": "ml-100k",
+        "hidden": "platform",
+        "cosine": 0.9562,
+        "degradation": 0.0,
+        "improving": true
+      },
+      {
+        "dataset": "ml-100k",
+        "hidden": "diversity",
+        "cosine": -0.313,
+        "degradation": 0.4171,
+        "improving": false
+      },
+      {
+        "dataset": "ml-1m",
+        "hidden": "platform",
+        "cosine": 0.9258,
+        "degradation": 0.0,
+        "improving": true
+      },
+      {
+        "dataset": "ml-1m",
+        "hidden": "diversity",
+        "cosine": -0.1554,
+        "degradation": 0.4572,
+        "improving": false
+      }
+    ],
+    "spearman_rho": -0.7379,
+    "spearman_pval": 0.2621,
+    "direction_condition_holds": true
+  }
+}

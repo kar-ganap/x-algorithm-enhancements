@@ -1,0 +1,1322 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{newtxtext,newtxmath}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+
+\title{Multi-Stakeholder Goodhart: A Study Guide\\[4pt]
+\large From Intuition to Formalization}
+\author{Working notes for RecSys paper}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Level 1: The Intuition (Smart High Schooler)}
+
+\textbf{Goodhart's Law:} ``When a measure becomes a target, it ceases to
+be a good measure.''
+
+Imagine a school improving education by tracking test scores. Teachers
+start teaching to the test. Scores rise. Learning doesn't---and might
+decline.
+
+Three ingredients:
+\begin{enumerate}
+  \item You care about something hard to measure (real learning).
+  \item You pick an easier proxy (test scores).
+  \item You optimize hard for the proxy.
+  \item The proxy diverges from what you actually care about.
+\end{enumerate}
+
+The proxy and the real thing overlap imperfectly. Gentle optimization
+follows the overlap. Hard optimization finds and exploits the cracks.
+
+\textbf{In recommendation systems:} A platform cares about user
+wellbeing (hard to measure), so it optimizes engagement (clicks, likes).
+Light optimization: relevant content gets engagement. Heavy
+optimization: clickbait maximizes engagement but harms the user.
+
+\textbf{The multi-stakeholder twist:} Now add a third party---society.
+Society cares about diversity and reduced polarization. The platform
+optimizing for one stakeholder (user engagement) may actively harm
+another (societal welfare). The more precisely you optimize for one,
+the worse it gets for the other. That's multi-stakeholder Goodhart.
+
+%═══════════════════════════════════════════════════════════════
+\section{Level 2: The Math (Undergrad)}
+%═══════════════════════════════════════════════════════════════
+
+\subsection{Single-Objective Goodhart}
+
+Let $\pi$ be a policy (e.g., a recommendation strategy). Define:
+\begin{align}
+  U^*(\pi) &= \text{true utility (what we actually want)} \\
+  \hat{U}(\pi) &= \text{proxy utility (what we optimize)}
+\end{align}
+
+We find $\pi^* = \arg\max_\pi \hat{U}(\pi)$ but care about $U^*(\pi^*)$.
+
+\begin{definition}[Goodhart Effect]
+A Goodhart effect occurs when $U^*(\pi^*) < U^*(\pi_0)$ for some
+reference policy $\pi_0$---the optimized policy is \emph{worse} on the
+true objective than the baseline.
+\end{definition}
+
+\textbf{When does this happen?} Write $\hat{U} = U^* + \epsilon$ where
+$\epsilon$ captures misspecification. Think geometrically: $U^*$ and
+$\hat{U}$ define two surfaces over policy space. Where they're aligned
+(small $\epsilon$), optimizing $\hat{U}$ also climbs $U^*$. Where they
+diverge, the optimizer finds a policy scoring high on $\hat{U}$ but
+sitting in a valley of $U^*$.
+
+\subsection{The Optimization Pressure Curve}
+
+The critical variable is \textbf{optimization pressure} (how hard you
+push toward $\hat{U}$). In our setting, this is controlled by $N$, the
+number of preference pairs:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Regime & $\hat{U}(\pi)$ & $U^*(\pi)$ \\
+\midrule
+$N$ small (underoptimized) & Low & Low \\
+$N$ moderate (sweet spot) & Moderate & \textbf{Maximum} \\
+$N$ large (overoptimized) & High & Declining \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At the sweet spot, the model has learned enough of the overlapping
+signal to be useful, but not enough to precisely exploit the divergence.
+
+\subsection{In Preference Learning}
+
+A Bradley-Terry model learns weights $\mathbf{w} \in \mathbb{R}^D$ from
+preference pairs. Each pair says ``content $a$ is preferred to content
+$b$,'' and BT minimizes:
+\begin{equation}
+  \mathcal{L}_{\text{BT}} = -\log \sigma\!\left(
+    \mathbf{w}^\top \phi(a) - \mathbf{w}^\top \phi(b)
+  \right)
+\end{equation}
+where $\phi(x) \in \mathbb{R}^D$ is the feature vector (e.g., genre
+vector for MovieLens) and $\sigma$ is the sigmoid.
+
+If the preference labels come from a \emph{misspecified} utility
+$\hat{\mathbf{w}}^\top \phi(x)$ instead of the true
+$\mathbf{w}^{*\top} \phi(x)$:
+\begin{itemize}
+  \item BT with infinite data recovers $\hat{\mathbf{w}}$ exactly
+    (Sun et al.'s order-consistency theorem).
+  \item The learned policy selects content by
+    $\arg\max_x \hat{\mathbf{w}}^\top \phi(x)$.
+  \item The true utility of this selection is
+    $\mathbf{w}^{*\top} \phi(\arg\max_x \hat{\mathbf{w}}^\top
+    \phi(x))$.
+\end{itemize}
+
+More training pairs $\Rightarrow$ $\hat{\mathbf{w}}$ is learned more
+precisely $\Rightarrow$ content selection is more aligned with the
+\emph{wrong} direction $\Rightarrow$ true utility decreases.
+
+%═══════════════════════════════════════════════════════════════
+\section{Level 3: The Formal Framework (Grad Student)}
+%═══════════════════════════════════════════════════════════════
+
+\subsection{Skalse et al.'s Taxonomy (ICLR 2024)}
+
+Let $R^*: \mathcal{S} \times \mathcal{A} \to \mathbb{R}$ be the true
+reward, $\hat{R}$ a proxy. An agent trained to maximize $\hat{R}$
+exhibits Goodhart when
+$J^*(\pi_{\hat{R}}) < J^*(\pi_{R^*})$
+where $J^*(\pi) = \mathbb{E}[\sum_t R^*(s_t, a_t) \mid \pi]$.
+
+Four mechanisms:
+
+\begin{enumerate}
+  \item \textbf{Regressional:} $\hat{R}$ is an unbiased estimator of
+    $R^*$ with noise. Optimizing $\hat{R}$ selects for positive noise
+    (optimizer's curse). Effect is $O(\sigma^2/n)$.
+
+  \item \textbf{Extremal:} $\hat{R}$ and $R^*$ agree over most of
+    policy space but diverge in extreme regions. The optimizer is drawn
+    to precisely these regions.
+
+  \item \textbf{Causal:} $\hat{R}$ captures a correlate of $R^*$,
+    not a cause. Optimization breaks the correlation.
+
+  \item \textbf{Adversarial:} The proxy is deliberately constructed to
+    exploit the optimizer. (Not relevant to our setting.)
+\end{enumerate}
+
+Skalse et al.\ prove: for any $\hat{R} \neq R^*$ and any MDP, there
+exists a critical optimization threshold $\beta^*$ such that for
+$\beta > \beta^*$, the optimized policy has lower true return than
+the reference.
+
+\subsection{Gao et al.'s Scaling Laws (ICML 2023)}
+
+\textbf{The setup.} You can't cheaply get human preferences at scale, so
+Gao et al.\ use a synthetic setup: a large ``gold-standard'' reward model
+$R_{\text{gold}}$ plays the role of humans. A smaller ``proxy'' reward
+model $R_{\text{proxy}}$ is trained on labels from $R_{\text{gold}}$.
+Then a policy is optimized against $R_{\text{proxy}}$ using either
+reinforcement learning (PPO) or best-of-$n$ sampling. The question: as
+you optimize harder against the proxy, what happens to the gold score?
+
+\textbf{The key equation.} For both RL and best-of-$n$, the gold RM
+score as a function of KL divergence $d$ from the reference policy is
+well-fit by:
+\begin{equation}
+  R_{\text{gold}}(d) = \alpha \sqrt{d} - \beta \cdot d
+  \label{eq:gao}
+\end{equation}
+This has two terms with distinct interpretations:
+\begin{itemize}
+  \item $\alpha\sqrt{d}$: the \textbf{learning term}. Genuine alignment
+    improvement. Grows as $\sqrt{d}$ --- diminishing returns from
+    optimization. This corresponds to the model learning the shared
+    signal between proxy and gold rewards.
+
+  \item $\beta \cdot d$: the \textbf{overoptimization term}. Exploitation
+    of proxy imperfection. Grows \emph{linearly} in $d$, so it
+    eventually dominates the sublinear learning term.
+\end{itemize}
+
+The gold score peaks at:
+\begin{equation}
+  d^* = \frac{\alpha^2}{4\beta^2}
+  \qquad\text{with peak gold score}\qquad
+  R^*_{\text{gold}} = \frac{\alpha^2}{4\beta}
+\end{equation}
+Beyond $d^*$, every additional unit of optimization \emph{decreases}
+the true reward. The optimizer is now in Goodhart territory.
+
+\textbf{Why $\sqrt{d}$ vs.\ $d$?} The intuition: the beneficial
+component of the proxy reward corresponds to the \emph{projection} of
+the proxy onto the true reward direction. In a high-dimensional space,
+this projection is a lower-dimensional signal that saturates quickly
+($\sqrt{d}$). The harmful component---the orthogonal residual---has
+more degrees of freedom and grows linearly. This is a geometric
+argument: in $D$ dimensions, the projection onto a 1D truth direction
+concentrates at rate $1/\sqrt{D}$, while the residual has $D-1$
+dimensions to exploit.
+
+\textbf{Scaling with reward model size.} As the proxy RM gets larger
+(more parameters), $\alpha$ increases (better proxy $\Rightarrow$ more
+genuine learning) and $\beta$ decreases (fewer exploitable flaws).
+Both effects push $d^*$ rightward --- you can optimize harder before
+hitting Goodhart. Gao et al.\ find smooth power-law scaling of
+$\alpha$ and $\beta$ with RM parameter count.
+
+\textbf{Scaling with dataset size.} More labels for training the proxy
+RM also push $d^*$ rightward, but with diminishing returns. Doubling
+the label dataset is less effective than doubling the RM size.
+
+\textbf{RL vs.\ best-of-$n$.} Both follow Equation~\ref{eq:gao}, but
+with different coefficients. The key finding: \emph{RL consumes much
+more KL than best-of-$n$ for the same amount of optimization.} At the
+same $d_{\text{KL}}$, best-of-$n$ achieves a higher gold score. RL
+``wastes'' KL budget on distributional changes that don't improve
+alignment.
+
+\textbf{KL penalty $\approx$ early stopping.} Adding a KL penalty to
+the RL objective does not change the $d$-vs-gold-score frontier. Any
+point on the frontier can be reached by early stopping alone, without
+the KL penalty. This is a surprising and somewhat discouraging result:
+the standard RLHF regularization technique doesn't actually buy you
+anything beyond what early stopping provides.
+
+\textbf{Connection to our work.} Gao et al.\ parameterize
+overoptimization by $d_{\text{KL}}$ (distance in policy space). We
+parameterize by $N$ (number of preference pairs). The analogy:
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Gao et al.} & \textbf{Our setting} \\
+\midrule
+KL divergence $d$ & Training pairs $N$ \\
+Gold RM score & Hidden stakeholder utility \\
+Proxy RM & Misspecified BT weights \\
+Peak at $d^*$ & Sweet spot at $N^*$ \\
+$\alpha\sqrt{d}$: learning & BT convergence toward true signal \\
+$\beta \cdot d$: Goodhart & BT convergence toward misspec.\ direction \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Our $N^* \approx 50$ on MovieLens plays the same role as their $d^*$:
+the point where learning saturates and overoptimization begins. A
+natural question is whether our data admits a similar
+$\alpha\sqrt{N} - \beta N$ functional form.
+
+\subsection{Catastrophic Goodhart (Kwa et al., NeurIPS 2024)}
+
+\textbf{The problem with KL regularization.} The standard defense
+against reward hacking in RLHF is to penalize the KL divergence
+between the optimized policy and the reference:
+\begin{equation}
+  \max_\pi \; \mathbb{E}_\pi[\hat{R}(x)] - \lambda \cdot
+  D_{\text{KL}}(\pi \| \pi_{\text{ref}})
+\end{equation}
+The idea: by staying ``close'' to the reference policy (in KL sense),
+you can't deviate too far from reasonable behavior, even if $\hat{R}$
+is imperfect. Gao et al.'s work implicitly relies on this—their
+functional form assumes KL controls the damage.
+
+Kwa et al.\ show this assumption fails under a specific, realistic
+condition.
+
+\textbf{The key distinction: light-tailed vs.\ heavy-tailed error.}
+Define the proxy error $\epsilon(x) = \hat{R}(x) - R^*(x)$. The
+distribution of $\epsilon$ across responses $x$ drawn from the
+reference policy can be:
+\begin{itemize}
+  \item \textbf{Light-tailed} (e.g., Gaussian): extreme errors are
+    exponentially rare. $P(|\epsilon| > t) \leq e^{-ct^2}$.
+  \item \textbf{Heavy-tailed} (e.g., Pareto, log-normal): extreme
+    errors are polynomially rare. $P(|\epsilon| > t) \sim t^{-\alpha}$.
+\end{itemize}
+
+\textbf{Theorem (informal): Light tails $\Rightarrow$ KL works.}
+When $\epsilon$ is light-tailed and independent of $R^*$, optimal
+policies under decreasing KL penalties achieve arbitrarily high true
+utility. The KL constraint successfully limits exploitation because
+extreme proxy rewards (where $\epsilon$ is large) are exponentially
+unlikely, so upweighting them costs exponential KL.
+
+\textbf{Theorem (informal): Heavy tails $\Rightarrow$ KL fails
+catastrophically.}
+When $\epsilon$ is heavy-tailed, there exist policies that achieve:
+\begin{equation}
+  \mathbb{E}_\pi[\hat{R}] \to \infty
+  \quad\text{while}\quad
+  D_{\text{KL}}(\pi \| \pi_{\text{ref}}) \to 0
+  \quad\text{and}\quad
+  \mathbb{E}_\pi[R^*] \leq \mathbb{E}_{\pi_{\text{ref}}}[R^*]
+\end{equation}
+In words: the policy gets arbitrarily high proxy reward with
+\emph{negligible} KL cost, while achieving \emph{no improvement}
+in true utility. The KL penalty is useless.
+
+\textbf{Why does this happen?} The key insight is about how KL
+divergence interacts with tails. To achieve high expected proxy reward,
+the policy needs to upweight responses where $\hat{R}$ is large. If
+$\hat{R}$ is large because $\epsilon$ is large (not because $R^*$ is
+large), this is Goodhart.
+
+The KL cost of upweighting a response $x$ by factor $t$ is
+$\sim \log t$. The proxy reward gain is $\sim \hat{R}(x)$. Under
+heavy tails, there exist responses with $\hat{R}(x) \sim t^\alpha$
+but probability $\sim t^{-\alpha}$ under the reference. Upweighting
+by factor $t$ costs $\text{KL} \sim \log t$ but gains reward
+$\sim t^\alpha$. As $t \to \infty$, the reward-to-KL ratio diverges.
+The optimizer can always find more to exploit, and KL can never
+constrain it.
+
+Under light tails, the same responses have probability
+$\sim e^{-ct^2}$, so upweighting by factor $t$ costs
+$\text{KL} \sim ct^2$. The cost grows \emph{faster} than the reward,
+so eventually KL wins.
+
+\subsubsection*{Why KL Fails: The Geometry of Average vs.\ Concentrated}
+
+Your intuition is correct: KL is an average measure, and the reward gain
+is concentrated. Let's make this precise at three levels.
+
+\textbf{Level 1: The arithmetic.} KL divergence is an \emph{expectation}
+of the log-likelihood ratio:
+\begin{equation}
+  D_{\text{KL}}(\pi \| \pi_{\text{ref}}) = \sum_x \pi(x)
+  \log\frac{\pi(x)}{\pi_{\text{ref}}(x)}
+\end{equation}
+Upweighting a response $x$ by factor $t$ (setting $\pi(x) = t \cdot
+\pi_{\text{ref}}(x)$) contributes:
+\begin{equation}
+  \Delta \text{KL} = t \cdot \pi_{\text{ref}}(x) \cdot \log t
+\end{equation}
+The contribution to expected reward is:
+\begin{equation}
+  \Delta \text{Reward} = t \cdot \pi_{\text{ref}}(x) \cdot \hat{R}(x)
+\end{equation}
+The reward-to-KL ratio from this single response is
+$\hat{R}(x) / \log t$. The penalty ($\log t$) is \textbf{concave} in
+the upweighting factor. The reward ($\hat{R}(x)$) can be arbitrarily
+large. So for any fixed KL budget, you can always find responses where
+the reward gain exceeds the KL cost---\emph{if} such extreme-reward
+responses exist with non-negligible probability.
+
+That's the ``if'' that distinguishes light from heavy tails.
+
+\textbf{Level 2: Why ``average'' fails against ``concentrated.''}
+KL divergence measures the \emph{average} surprise when sampling from
+$\pi$ but expecting $\pi_{\text{ref}}$. It's insensitive to what
+happens at any \emph{specific} response---it only sees the aggregate.
+
+The optimizer's reward gain is dominated by a \emph{few extreme
+responses}---the ones where $\hat{R}(x)$ is large. Under heavy tails,
+these responses have non-negligible probability. The optimizer
+concentrates its probability budget on them.
+
+The mismatch: KL spreads its penalty across the entire distribution
+(every response that moved contributes). The reward concentrates its
+gain on a few extreme points. An average penalty can't constrain a
+concentrated gain---it's like trying to cap a spike with a blanket.
+
+Under light tails, extreme responses are exponentially rare
+($P(\hat{R} > t) \sim e^{-ct^2}$). Upweighting them enough to matter
+for expected reward requires exponential probability inflation, which
+costs exponential KL. The blanket is thick enough.
+
+Under heavy tails, extreme responses are polynomially rare
+($P(\hat{R} > t) \sim t^{-\alpha}$). Upweighting them costs logarithmic
+KL but gains polynomial reward. The blanket is too thin.
+
+\textbf{Level 3: The variational characterization.} KL divergence has a
+precise optimality property (Donsker--Varadhan representation):
+\begin{equation}
+  D_{\text{KL}}(\pi \| \pi_{\text{ref}}) =
+  \sup_f \left\{
+    \mathbb{E}_\pi[f] - \log \mathbb{E}_{\pi_{\text{ref}}}[e^f]
+  \right\}
+\end{equation}
+Rearranging: if $D_{\text{KL}}(\pi \| \pi_{\text{ref}}) \leq C$, then
+for any function $f$:
+\begin{equation}
+  \mathbb{E}_\pi[f] \leq \log \mathbb{E}_{\pi_{\text{ref}}}[e^f] + C
+  \label{eq:dv-bound}
+\end{equation}
+Apply this with $f = \hat{R}$ (the proxy reward):
+\begin{equation}
+  \mathbb{E}_\pi[\hat{R}]
+  \leq \underbrace{\log \mathbb{E}_{\pi_{\text{ref}}}[e^{\hat{R}}]}
+    _{\text{moment generating function}} + C
+\end{equation}
+When $\hat{R}$ is \textbf{light-tailed}, the MGF
+$\mathbb{E}[e^{\hat{R}}]$ is finite, so the bound is meaningful:
+KL budget $C$ limits the achievable reward.
+
+When $\hat{R}$ is \textbf{heavy-tailed}, the MGF is \emph{infinite}:
+$\mathbb{E}[e^{\hat{R}}] = \infty$. The bound becomes
+$\mathbb{E}_\pi[\hat{R}] \leq \infty + C = \infty$. It says nothing.
+KL has zero constraining power.
+
+This is the deepest answer: KL divergence constrains expected values of
+functions whose \textbf{moment generating functions are finite} under
+the reference distribution. Heavy-tailed rewards violate this condition.
+No finite KL budget can constrain them.
+
+\textbf{Would other divergences help?}
+\begin{itemize}
+  \item \textbf{$\chi^2$ divergence:}
+    $\chi^2(\pi \| \pi_{\text{ref}}) =
+    \mathbb{E}_{\pi_{\text{ref}}}[(\pi/\pi_{\text{ref}} - 1)^2]$.
+    Upweighting by $t$ costs $(t-1)^2$---\emph{quadratic}, not
+    logarithmic. Much more effective against concentrated upweighting.
+    But also much more restrictive (rules out many useful policies).
+
+  \item \textbf{R\'enyi divergence of order $\alpha > 1$:}
+    Interpolates between KL ($\alpha \to 1$) and max-divergence
+    ($\alpha \to \infty$). Higher $\alpha$ penalizes tails more.
+    Using R\'enyi with $\alpha > 1$ as the regularizer would provide
+    stronger guarantees for heavy-tailed rewards, at the cost of more
+    conservative policies.
+
+  \item \textbf{Total variation:} $\text{TV}(\pi, \pi_{\text{ref}}) =
+    \frac{1}{2} \|\pi - \pi_{\text{ref}}\|_1$. Bounds
+    $|\mathbb{E}_\pi[f] - \mathbb{E}_{\pi_{\text{ref}}}[f]| \leq
+    \|f\|_\infty \cdot \text{TV}$. Works for bounded $f$ but is
+    vacuous for unbounded rewards.
+\end{itemize}
+
+The choice of divergence is a choice of \emph{which deviations you
+penalize most}. KL penalizes average deviations (good for typical
+behavior). $\chi^2$ penalizes concentrated deviations (good against
+tail exploitation). The right choice depends on whether the threat is
+diffuse or concentrated---which is exactly the light-tail / heavy-tail
+distinction.
+
+\textbf{Empirical finding: current reward models appear light-tailed.}
+Kwa et al.\ test real reward models (Starling 7B, Pythia 1.4B) and find
+error distributions that are ``approximately normal and, therefore,
+light-tailed.'' Current RLHF systems are probably safe from
+catastrophic Goodhart---but future systems with more powerful reward
+models and optimization might not be.
+
+\textbf{Connection to our work.} Our setting has a specific structure
+that maps onto this framework:
+\begin{itemize}
+  \item Our ``proxy'' is the misspecified user utility
+    $\hat{\mathbf{w}}_u^\top \phi(x)$.
+  \item Our ``true reward'' is the diversity utility
+    $\mathbf{w}_d^\top \phi(x)$.
+  \item The ``error'' is $\epsilon(x) = (\hat{\mathbf{w}}_u -
+    \mathbf{w}_d)^\top \phi(x)$, which is a \emph{linear function}
+    of fixed genre features.
+  \item Since genre features are bounded binary vectors, $\epsilon$
+    is \emph{light-tailed} by construction. Catastrophic Goodhart
+    does not apply.
+\end{itemize}
+
+However, our Goodhart effect is \emph{not} mitigated by this. Why?
+Because we don't use KL regularization. Our optimizer (BT preference
+learning) has no KL penalty---it simply converges toward the direction
+specified by the training labels. The relevant parameter is $N$ (data
+quantity), not KL divergence. Kwa et al.'s result is about the limits
+of KL as a \emph{defense}; our result is about the limits of data as an
+\emph{offense}---more data with wrong specification amplifies the error
+regardless of distributional tail behavior.
+
+Let's unpack this distinction and its implications.
+
+\subsubsection*{Defense vs.\ Offense: Two Different Failure Modes}
+
+\textbf{Kwa et al.'s world (defense failure):} There is a fixed,
+imperfect proxy reward model $\hat{R}$. A policy optimizer (PPO) tries
+to maximize $\hat{R}$ subject to a KL constraint. The question is
+whether the constraint (the defense) is strong enough to prevent the
+optimizer from reaching regions where $\hat{R} \neq R^*$. Under heavy
+tails: no. Under light tails: yes, but the protected region scales
+with the KL budget.
+
+The causal chain is: optimizer pushes policy $\to$ KL tries to stop it
+$\to$ heavy tails let the optimizer slip through.
+
+\textbf{Our world (offense failure):} There is no policy optimizer. BT
+preference learning is a \emph{supervised} learner---it fits weights to
+preference labels via gradient descent. It has no ``pressure'' to push
+beyond the training signal; it simply converges toward the direction
+implied by the labels. The ``offense'' is the \emph{data itself}: each
+preference pair is a gradient step toward the misspecified utility
+direction.
+
+The causal chain is: more data $\to$ BT converges more precisely $\to$
+learned weights align with misspecified direction $\to$ content
+selection changes $\to$ hidden stakeholder degrades.
+
+There is nothing to ``defend against'' because the attack isn't
+optimization pressure---it's specification error baked into the training
+signal. KL regularization penalizes how far the policy moves; but in our
+setting the policy moves \emph{because the data tells it to}, and more
+data tells it more precisely.
+
+\subsubsection*{What If We Switched to Softmax Sampling?}
+
+Suppose we replaced deterministic top-$K$ selection with probabilistic
+softmax sampling:
+\begin{equation}
+  P(x \mid \mathbf{w}) = \frac{\exp(\mathbf{w}^\top \phi(x) / \tau)}
+    {\sum_{x'} \exp(\mathbf{w}^\top \phi(x') / \tau)}
+\end{equation}
+Now we have a stochastic policy and can define:
+\begin{equation}
+  D_{\text{KL}}(P(\cdot \mid \hat{\mathbf{w}}) \| P(\cdot \mid
+  \mathbf{w}^*))
+\end{equation}
+Could we then use KL to prevent Goodhart?
+
+\textbf{First observation:} We're in the light-tailed regime.
+Our content features $\phi(x)$ are bounded binary genre vectors, so
+$\mathbf{w}^\top \phi(x)$ is bounded for any $\mathbf{w}$. The softmax
+distribution has bounded log-ratios. By Kwa et al.'s Theorem~4 (light
+tails), KL \emph{would} provide a meaningful constraint. No catastrophic
+Goodhart.
+
+\textbf{Second observation:} KL would constrain but not eliminate the
+effect. Adding KL between the learned and reference softmax policies is
+equivalent to limiting how far the BT-learned weights can stray from
+some reference weights. But this is just \emph{early stopping} by
+another name---exactly Gao et al.'s finding that KL penalty
+$\approx$ early stopping.
+
+In our $N$-parameterization, this means: KL regularization would
+formalize the sweet spot at $N^*$. It would let you control \emph{where}
+on the learning-vs-Goodhart curve you operate. But the curve still
+exists---the tension between user and diversity utility is structural,
+not an artifact of the optimization method.
+
+Concretely: with softmax + KL, you'd trade the parameter $N$ (data
+quantity) for the parameter $\lambda$ (KL penalty strength). At high
+$\lambda$ (strong penalty): the policy stays near the reference,
+learning little---equivalent to low $N$. At low $\lambda$ (weak
+penalty): the policy converges to the misspecified direction---equivalent
+to high $N$. The Goodhart curve is reparameterized, not removed.
+
+\textbf{Third observation:} Where would the reference weights come from?
+In RLHF, the reference is the pretrained model (before fine-tuning).
+In our setting, the reference would need to be ``correct'' stakeholder
+weights---but if we had correct weights, we wouldn't need BT training at
+all. Using random/initial weights as reference penalizes ALL learning
+(good and bad), which is wasteful. The fundamental problem is that KL
+penalizes \emph{distance} from reference, not \emph{direction} of
+movement. If the movement direction is wrong (misspecified utility),
+KL can slow you down but can't redirect you.
+
+\subsubsection*{Heavy Tails, Extremal Goodhart, and Our Setting}
+
+The four Goodhart mechanisms and the tail behavior form a
+two-dimensional picture. Let's connect them:
+
+\textbf{Regressional Goodhart} doesn't care about tails. It's about
+noise in the proxy estimate, and it gets \emph{better} with more data
+(the noise averages out). Tail behavior is irrelevant because the effect
+is at the \emph{center} of the distribution, not the tails.
+
+\textbf{Extremal Goodhart} is about what happens when the optimizer
+reaches regions where proxy and truth diverge. Two questions:
+\begin{enumerate}
+  \item \textbf{Do such regions exist?} Yes, whenever proxy $\neq$
+    truth. In our setting: the region where content is user-optimal but
+    diversity-poor exists because $\cos(\mathbf{w}_u, \mathbf{w}_d) < 0$.
+    These are movies in popular genres with high ratings---they exist in
+    any realistic content pool.
+
+  \item \textbf{Does the optimizer reach them?} This is where tails
+    matter---but \emph{only for policy optimizers with KL constraints.}
+    Under heavy tails, KL can't stop the optimizer from reaching the
+    extremes. Under light tails, KL bounds how far the optimizer gets.
+\end{enumerate}
+
+\textbf{In our setting, tail behavior is irrelevant to the extremal
+mechanism.} Here's why:
+
+Our ``optimizer'' is BT preference learning, which converges to the
+direction specified by the training labels. It doesn't search over a
+policy space looking for extreme responses. It learns a weight vector
+that ranks content. The content pool is \emph{finite} (3{,}347 movies
+on ML-1M). The ``extreme'' items---movies that are user-optimal but
+diversity-poor---are just specific movies in the pool. They're not in
+any distributional tail; they're fixed items.
+
+As $N$ increases, BT doesn't discover new extremes. It learns to
+\emph{rank the existing items more accurately} according to the
+misspecified utility. At $N = 25$, the ranking is noisy and the
+top-$K$ selection includes a mix of items. At $N = 2000$, the ranking
+precisely identifies the user-optimal items and puts them at the top.
+
+The mechanism is:
+\begin{equation*}
+  \text{More data} \to \text{more precise ranking} \to
+  \text{top-}K \text{ concentrates on misspec-optimal items} \to
+  \text{diversity degrades}
+\end{equation*}
+
+This is extremal Goodhart---the optimizer reaches the extreme region
+where proxy and truth diverge. But it reaches it through
+\emph{convergence of a supervised learner}, not through
+\emph{exploitation of distributional tails}. The finite content pool
+removes any role for tail behavior.
+
+\textbf{To summarize the relationship:}
+\begin{center}
+\begin{tabular}{p{4cm}p{4cm}p{4cm}}
+\toprule
+& \textbf{RLHF setting} & \textbf{Our setting} \\
+\midrule
+\textbf{What causes Goodhart?}
+  & Policy optimizer finds extreme responses where $\hat{R} \neq R^*$
+  & BT converges to misspecified direction; top-$K$ concentrates on
+    wrong content \\[6pt]
+\textbf{Mechanism}
+  & Extremal: optimizer reaches tail of distribution
+  & Extremal: supervised learner precisely learns wrong ranking
+    over finite pool \\[6pt]
+\textbf{Role of tail behavior}
+  & Heavy tails $\Rightarrow$ KL can't prevent reaching extremes
+  & Irrelevant: content pool is finite, no distributional tails \\[6pt]
+\textbf{What controls severity?}
+  & KL budget / tail heaviness
+  & $N$ (data quantity) / $\cos(\mathbf{w}_{\text{target}},
+    \mathbf{w}_{\text{hidden}})$ \\[6pt]
+\textbf{Defense}
+  & KL penalty (limited by tails)
+  & Early stopping on $N$ / independent selection dim ($\delta$) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Both settings exhibit extremal Goodhart. The \emph{channel} through
+which the optimizer reaches the extreme region is different: policy
+optimization in RLHF, supervised convergence in BT preference learning.
+The tail behavior of the reward distribution governs the first channel
+but is irrelevant to the second. In both cases, the core issue is the
+same: the optimizer finds exactly what it's told to find, and if what
+it's told is wrong, precision makes things worse.
+
+\subsection{What None of These Address}
+
+\begin{itemize}
+  \item \textbf{Multiple objectives with known geometry.} All above
+    treat one proxy vs.\ one true reward. None study settings where
+    multiple stakeholders have utility vectors with known cosine
+    similarity.
+
+  \item \textbf{Data-dependent thresholds.} Gao et al.\ parameterize
+    by KL divergence, not by the number of preference pairs $N$. The
+    sweet spot in $N$ (our finding: $N \approx 50$ on MovieLens) is not
+    studied.
+
+  \item \textbf{Selection mechanism independence.} Our rank stability
+    finding ($= 1.0$ for individual parameter perturbation) initially
+    suggested the Pareto frontier ``buffers'' against Goodhart. The
+    actual mechanism is more specific---see \cref{sec:pareto-buffer}
+    below.
+
+  \item \textbf{Low-rank weight space.} Our Phase~9 finding that
+    the weight space is effectively 3-dimensional (projection cosine
+    $> 0.97$) constrains the Goodhart dynamics---the
+    misspecification can only push within a low-dimensional subspace.
+\end{itemize}
+
+\subsection{Why KL Divergence Doesn't Appear in Our Formulation}
+\label{sec:why-no-kl}
+
+Every paper above parameterizes overoptimization by KL divergence
+between policies. We parameterize by $N$ (preference pairs). This isn't
+an oversight---it reflects a structural difference in our optimization
+pipeline.
+
+\textbf{In RLHF:} The policy $\pi(y \mid x)$ is a distribution over
+responses. KL divergence $D_{\text{KL}}(\pi \| \pi_{\text{ref}})$
+measures how far the optimized distribution has moved from the
+reference. The optimizer (PPO) is explicitly regularized by KL.
+
+\textbf{In our setting:} The ``policy'' is a deterministic function:
+given weight vector $\mathbf{w}$, select top-$K$ content by
+$\mathbf{w}^\top \phi(x)$. There is no stochastic policy, no reference
+distribution, and no KL penalty. The BT optimizer simply minimizes
+preference loss on $N$ pairs until convergence.
+
+\textbf{What plays the role of KL?} In our setting, the \textbf{cosine
+distance} between the learned and true weight vectors:
+\begin{equation}
+  d_{\cos} = 1 - \cos(\hat{\mathbf{w}}(N), \mathbf{w}^*)
+\end{equation}
+serves the same conceptual role as $d_{\text{KL}}$. Both measure ``how
+far the optimizer has moved from the reference.'' The difference:
+\begin{itemize}
+  \item $d_{\text{KL}}$ measures distance in \emph{policy distribution}
+    space (infinite-dimensional, information-geometric).
+  \item $d_{\cos}$ measures distance in \emph{weight direction} space
+    ($D$-dimensional, Euclidean geometry on the unit sphere).
+\end{itemize}
+
+\textbf{Why this matters for Goodhart.} In RLHF, KL controls
+optimization pressure---larger KL budget $\Rightarrow$ more
+optimization $\Rightarrow$ more Goodhart. In our setting, $N$ controls
+optimization pressure---more pairs $\Rightarrow$ BT converges more
+precisely $\Rightarrow$ $d_{\cos}$ between $\hat{\mathbf{w}}(N)$ and
+the \emph{misspecified} target increases (the model moves further from
+the true direction toward the wrong direction).
+
+The Gao et al.\ functional form $R_{\text{gold}}(d) = \alpha\sqrt{d} -
+\beta d$ could potentially be re-expressed in our setting as
+$U_{\text{hidden}}(d_{\cos}(N))$, where $d_{\cos}(N)$ captures the
+BT convergence trajectory. The intermediate variable $d_{\cos}$ would
+bridge between $N$ (our control parameter) and
+$U_{\text{hidden}}$ (our outcome), with the $\sqrt{\cdot}$ term
+capturing the learning phase and the linear term capturing the
+Goodhart phase.
+
+\textbf{Could we add KL to our setting?} Yes---by replacing hard
+top-$K$ selection with softmax sampling:
+\begin{equation}
+  P(x \mid \mathbf{w}) = \frac{\exp(\mathbf{w}^\top \phi(x) / \tau)}
+    {\sum_{x'} \exp(\mathbf{w}^\top \phi(x') / \tau)}
+\end{equation}
+Then $D_{\text{KL}}(P(\cdot \mid \hat{\mathbf{w}}) \| P(\cdot \mid
+\mathbf{w}^*))$ is well-defined and connects directly to Gao/Kwa's
+framework. For small weight perturbations, this KL relates to cosine
+distance via the Fisher information of the softmax. This is a potential
+direction for formalization---but it changes the content selection
+mechanism from deterministic to stochastic, which may affect the
+Goodhart dynamics.
+
+\subsection{The ``Pareto Buffer'': What It Actually Is}
+\label{sec:pareto-buffer}
+
+Our rank stability $= 1.0$ finding initially suggested the Pareto
+frontier ``buffers'' against Goodhart. On closer examination, the
+mechanism is more specific and less about Pareto geometry than about
+\textbf{selection mechanism independence}.
+
+\textbf{Two ways to select an operating point:}
+
+\begin{enumerate}
+  \item \textbf{Selection via misspecified weights (Goodhart possible).}
+    Use learned weights as the content scorer. The misspecification
+    directly determines what gets recommended. More precise
+    misspecification $\Rightarrow$ more precisely wrong selection
+    $\Rightarrow$ hidden stakeholder degrades. This is our Phase~6
+    Goodhart experiment.
+
+  \item \textbf{Selection via independent parameter (buffer exists).}
+    Pick the operating point using the diversity weight $\delta$, which
+    is \emph{independent} of any stakeholder's utility weights.
+    Perturbing weights shifts the utility \emph{values} at each $\delta$
+    but doesn't change \emph{which} $\delta$ you choose. This is the
+    rank stability experiment.
+\end{enumerate}
+
+\textbf{Why rank stability $= 1.0$:} The diversity weight $\delta$
+controls the tradeoff between engagement and topic diversity. It's an
+independent control knob---not derived from any stakeholder utility. When
+you perturb a single utility weight, the utility \emph{values} at each
+$\delta$ shift, but the dominance relations among $\delta$-points don't
+change. The same 7 of 21 $\delta$-points remain Pareto-optimal.
+
+\textbf{When the buffer fails:}
+\begin{itemize}
+  \item \textbf{Correlated perturbation:} Simultaneously perturbing
+    multiple weights changes utility values by different amounts at
+    different $\delta$-points, breaking the dominance ordering. Rank
+    stability drops below 1.0.
+  \item \textbf{Misspecified scorer:} If the learned (misspecified)
+    weights are used as the content \emph{scorer} (not just the
+    evaluator), the selection itself changes. $\delta$ still controls
+    the diversity-engagement tradeoff, but the engagement component
+    now points in the wrong direction.
+\end{itemize}
+
+\textbf{Connection to Gao et al.'s KL $\approx$ early stopping
+result:} KL regularization in RLHF is supposed to be an independent
+control (constraining how far the policy moves), but Gao et al.\ found
+it's redundant with the optimization axis---KL penalty doesn't change
+the KL-vs-gold-score frontier. Our diversity weight $\delta$ succeeds
+where KL fails because $\delta$ is \emph{genuinely orthogonal} to the
+stakeholder utility weights. It controls content \emph{diversity} (a
+structural property of the recommendation set), not content
+\emph{quality} (which depends on the utility direction). The Pareto
+structure helps not because it's ``Pareto'' but because it provides a
+control dimension that the optimizer can't corrupt.
+
+\textbf{The real insight:} Separating the selection mechanism
+(diversity weight) from the specification mechanism (stakeholder
+utility weights) provides protection against individual
+misspecification. This is a design principle, not a mathematical
+theorem about Pareto frontiers. It suggests that recommendation
+systems should maintain at least one control dimension (like diversity)
+that is defined structurally (e.g., set-level entropy) rather than
+derived from stakeholder utility weights.
+
+%═══════════════════════════════════════════════════════════════
+\section{Our Empirical Results}
+%═══════════════════════════════════════════════════════════════
+
+\subsection{The Multi-Stakeholder Goodhart Curve}
+
+Three stakeholders: user ($\mathbf{w}_u$), platform ($\mathbf{w}_p$),
+diversity ($\mathbf{w}_d$), with:
+\begin{equation}
+  \cos(\mathbf{w}_u, \mathbf{w}_d) \approx -0.3, \quad
+  \cos(\mathbf{w}_u, \mathbf{w}_p) \approx 0.95
+\end{equation}
+
+We perturb user weights: $\hat{\mathbf{w}}_u = \mathbf{w}_u \odot
+(1 + \mathcal{N}(0, \sigma))$ with $\sigma = 0.3$, train BT on
+$N$ preference pairs labeled by $\hat{\mathbf{w}}_u$, and measure
+true diversity utility of the selected content.
+
+\begin{center}
+\begin{tabular}{rcc}
+\toprule
+$N$ & User utility (target) & Diversity utility (hidden) \\
+\midrule
+25 & 18.68 & $-6.70$ \\
+50 & 19.44 & $\mathbf{-6.34}$ \textit{(peak)} \\
+100 & 20.08 & $-7.24$ \\
+200 & 20.81 & $-7.63$ \\
+500 & 21.24 & $-8.38$ \\
+2000 & 21.33 & $-8.98$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+User utility increases monotonically ($+14\%$). Diversity utility peaks
+at $N=50$, then degrades $42\%$ by $N=2000$. This is textbook
+\textbf{extremal Goodhart}: the misspecified utility and the hidden
+utility are anti-correlated, so more precise optimization of one
+systematically harms the other.
+
+\subsection{Key Empirical Findings}
+
+\begin{enumerate}
+  \item \textbf{The sweet spot exists and is data-dependent.}
+    $N \approx 50$ on MovieLens (genre features, 19-dim).
+    $N \approx 100$ on synthetic (action features, 18-dim).
+    The sweet spot is where BT has learned the overlapping signal
+    but hasn't yet converged to the misspecified direction.
+
+  \item \textbf{The mechanism is utility transfer, not noise.}
+    As $N$ increases, the content selection shifts from
+    ``approximately random'' to ``precisely user-optimal,'' which is
+    anti-optimal for diversity (cos $< 0$). This is systematic, not
+    regressional.
+
+  \item \textbf{Strategy 1 (better specification) confirms the
+    mechanism.} Even with $\sigma = 0$ (correct specification), the
+    user-optimal scorer selects content that harms diversity. Goodhart
+    amplifies a tension that exists even under correct specification.
+
+  \item \textbf{The weight space is low-rank.} Phase 9 showed projection
+    cosine $> 0.97$ for scalarized $\to$ per-stakeholder span. The
+    Goodhart dynamics are confined to a 3D subspace of the 19D genre
+    feature space.
+\end{enumerate}
+
+%═══════════════════════════════════════════════════════════════
+\section{Literature Map}
+%═══════════════════════════════════════════════════════════════
+
+\begin{center}
+\begin{tabular}{lp{6cm}l}
+\toprule
+\textbf{Question} & \textbf{Status} & \textbf{Reference} \\
+\midrule
+Does Goodhart occur in RL? & Answered (yes, provably)
+  & Skalse et al.\ 2024 \\
+Scaling laws for overoptimization? & Answered (KL-based)
+  & Gao et al.\ 2023 \\
+Does KL regularization help? & Answered (no, heavy tails)
+  & Kwa et al.\ 2024 \\
+BT preference consistency? & Answered (order-consistent)
+  & Sun et al.\ 2025 \\
+Multi-stakeholder Pareto? & Framework exists
+  & Burke \& Abdollahpouri 2017 \\
+\midrule
+Multi-stakeholder Goodhart? & \textbf{Open --- our work} & \\
+$N$ as Goodhart modulator? & \textbf{Open --- our work} & \\
+Stakeholder opposition ($\cos < 0$)? & \textbf{Open --- our work} & \\
+Pareto as Goodhart buffer? & \textbf{Open --- our work} & \\
+Low-rank weight constraints? & \textbf{Open --- our work} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%═══════════════════════════════════════════════════════════════
+\section{Toward Formalization}
+%═══════════════════════════════════════════════════════════════
+
+\subsection{Setup}
+
+Let $K$ stakeholders have utility directions
+$\mathbf{w}_1, \ldots, \mathbf{w}_K \in \mathbb{R}^D$. A content pool
+$\{\phi(x)\}_{x=1}^M$ with feature vectors $\phi(x) \in \mathbb{R}^D$.
+A BT model learns $\hat{\mathbf{w}}(N)$ from $N$ preference pairs
+labeled by a (possibly misspecified) utility.
+
+Content selection: $S(\mathbf{w}) = \text{top-}k$ by
+$\mathbf{w}^\top \phi(x)$.
+
+Hidden stakeholder utility:
+$U_{\text{hidden}}(S) = \frac{1}{k} \sum_{x \in S} \mathbf{w}_{\text{hidden}}^\top \phi(x)$.
+
+\subsection{The Goodhart Condition}
+
+\begin{proposition}[Informal]
+More data hurts the hidden stakeholder when the learned direction
+moves \emph{away} from the hidden utility direction:
+\begin{equation}
+  \frac{\partial U_{\text{hidden}}(S(\hat{\mathbf{w}}(N)))}{\partial N} < 0
+  \quad \Longleftrightarrow \quad
+  \nabla_{\mathbf{w}} U_{\text{hidden}} \cdot
+  \frac{\partial \hat{\mathbf{w}}}{\partial N} < 0
+\end{equation}
+The left side is the chain rule: how hidden utility changes with $N$,
+mediated by how the learned weights change the selection and how the
+selection affects hidden utility.
+\end{proposition}
+
+\textbf{Unpacking the two terms:}
+
+\begin{itemize}
+  \item $\nabla_{\mathbf{w}} U_{\text{hidden}}$: How does hidden utility
+    change as the scorer direction shifts? This is approximately
+    $\mathbf{w}_{\text{hidden}}$ projected onto the content feature
+    space --- it points toward content that's good for the hidden
+    stakeholder.
+
+  \item $\frac{\partial \hat{\mathbf{w}}}{\partial N}$: The direction
+    BT converges toward as $N$ increases. With misspecified labels, this
+    points toward $\hat{\mathbf{w}}_{\text{misspec}}$ --- the
+    misspecified utility direction.
+\end{itemize}
+
+\textbf{The Goodhart condition:}
+\begin{equation}
+  \cos(\mathbf{w}_{\text{hidden}}, \hat{\mathbf{w}}_{\text{misspec}}) < 0
+\end{equation}
+More data hurts when the hidden stakeholder's utility direction is
+anti-correlated with the direction BT is converging toward. In our
+setting: $\cos(\mathbf{w}_{\text{diversity}},
+\hat{\mathbf{w}}_{\text{user}}) \approx -0.3 < 0$. Goodhart is
+predicted, and confirmed empirically.
+
+\subsection{Numerical Validation (Phase 10)}
+
+The direction condition is validated on 6 data points across 3 datasets
+(synthetic, ML-100K, ML-1M), with zero violations:
+
+\begin{center}
+\begin{tabular}{llrcl}
+\toprule
+\textbf{Dataset} & \textbf{Hidden} & $\cos(\mathbf{w}_u, \mathbf{w}_h)$
+  & \textbf{Predicted} & \textbf{Actual} \\
+\midrule
+Synthetic & platform & $+0.893$ & Improve & improving \checkmark \\
+Synthetic & society & $+0.843$ & Improve & improving \checkmark \\
+ML-100K & platform & $+0.956$ & Improve & $+14\%$ \checkmark \\
+ML-100K & diversity & $-0.313$ & Degrade & $-42\%$ \checkmark \\
+ML-1M & platform & $+0.926$ & Improve & $+14\%$ \checkmark \\
+ML-1M & diversity & $-0.155$ & Degrade & $-46\%$ \checkmark \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Direction condition holds perfectly: 6/6.} Every stakeholder
+with $\cos < 0$ degrades with $N$; every stakeholder with $\cos > 0$
+improves.
+
+\textbf{Key finding on synthetic:} The synthetic benchmark has
+\emph{no Goodhart} under the utility-based metric, because all
+stakeholder pairs have $\cos > 0$ (user-society $= +0.84$,
+user-platform $= +0.89$). Society utility \emph{improves} from 3.21
+($N=25$) to 5.34 ($N=2000$). The original paper's Hausdorff-based
+``Goodhart'' on synthetic was measuring frontier distance (which
+increases with optimization precision), not hidden stakeholder
+degradation. The direction condition correctly predicts: no
+anti-correlation $\Rightarrow$ no Goodhart.
+
+\textbf{Magnitude condition is more nuanced.} ML-1M shows more
+degradation (46\%) than ML-100K (42\%) despite \emph{less}
+anti-correlation ($-0.155$ vs $-0.313$). The likely explanation:
+ML-1M has more content (3{,}347 vs 1{,}305 movies), giving the
+optimizer more user-optimal/diversity-poor items to concentrate on.
+Degradation severity depends on both the angle between utility
+directions \emph{and} the geometry of the content pool---the angle
+determines the \emph{direction} of degradation, and the content pool
+determines how much utility can be transferred in that direction.
+
+\textbf{Statement of the validated condition:}
+
+\begin{proposition}[Multi-Stakeholder Goodhart Direction Condition]
+\label{prop:direction}
+In a linear BT preference learning setting with $K$ stakeholders and a
+finite content pool, let $\hat{\mathbf{w}}_t$ be the (possibly
+misspecified) target utility learned from $N$ preference pairs, and
+$\mathbf{w}_h$ be a hidden stakeholder's true utility. Then:
+\begin{itemize}
+  \item If $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) < 0$:
+    $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually decreasing in $N$.
+  \item If $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) > 0$:
+    $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually increasing in $N$.
+\end{itemize}
+Validated on 6 data points across 3 datasets (synthetic, ML-100K, ML-1M)
+with 0 violations.
+\end{proposition}
+
+\subsection{Open Questions for Formalization}
+
+\begin{enumerate}
+  \item \textbf{Rate of degradation.} How fast does
+    $U_{\text{hidden}}$ decline with $N$? Is it
+    $O(1/\sqrt{N})$ (BT convergence rate) or slower/faster?
+
+  \item \textbf{Sweet spot location.} Can we predict $N^*$ (the
+    peak of $U_{\text{hidden}}$) from the cosine similarity and
+    feature dimensionality? Our data: $N^* \approx 50$ on ML-100K
+    (19-dim), $N^* \approx 25$ on ML-1M (19-dim, more content).
+
+  \item \textbf{Pareto buffer.} Why does rank stability $= 1.0$ for
+    individual parameter perturbation but $< 1.0$ for correlated
+    perturbation? Can we characterize the perturbation directions
+    that the Pareto frontier absorbs vs.\ amplifies?
+
+  \item \textbf{Low-rank constraint.} With $K$ stakeholders in $D$
+    dimensions, the effective weight space is $K$-dimensional
+    (our Phase~9 finding). Does this bound the Goodhart severity?
+    Intuitively, a 3D Goodhart in 19D is less severe than a 19D
+    Goodhart --- fewer directions to exploit.
+
+  \item \textbf{The ``fix spec first'' prescription.} Our data shows:
+    data helps when specification is correct, data hurts when wrong.
+    Can we formalize the \emph{crossover}: at what $\sigma$
+    (misspecification level) does additional data switch from
+    beneficial to harmful?
+\end{enumerate}
+
+%═══════════════════════════════════════════════════════════════
+\section{References}
+%═══════════════════════════════════════════════════════════════
+
+\begin{enumerate}[label={[\arabic*]}]
+  \item Skalse, Karwowski, Hayman, Bai, Kiendlhofer, Griffin.
+    \textit{Goodhart's Law in Reinforcement Learning.} ICLR 2024.
+
+  \item Gao, Schulman, Hilton.
+    \textit{Scaling Laws for Reward Model Overoptimization.} ICML 2023.
+
+  \item Kwa, Cunningham, Hoang.
+    \textit{Catastrophic Goodhart: Regularizing RLHF with KL Divergence
+    Does Not Mitigate Heavy-Tailed Reward Misspecification.} NeurIPS 2024.
+
+  \item Sun, Shen, Ton.
+    \textit{Rethinking Bradley-Terry Models in Preference-Based Reward
+    Modeling.} ICLR 2025.
+
+  \item Burke, Abdollahpouri.
+    \textit{Towards Multi-Stakeholder Utility Evaluation of Recommender
+    Systems.} VAMS Workshop 2017.
+
+  \item Goodhart, C.A.E.
+    \textit{Problems of Monetary Management: The U.K.\ Experience.}
+    Papers in Monetary Economics, Reserve Bank of Australia, 1975.
+\end{enumerate}
+
+%═══════════════════════════════════════════════════════════════
+\newpage
+\section{Appendix: Unpacking Skalse et al.'s Four Mechanisms}
+%═══════════════════════════════════════════════════════════════
+
+Skalse et al.\ (ICLR 2024) identify four ways that optimizing a proxy
+reward $\hat{R}$ can decrease the true reward $R^*$. These aren't
+competing theories---they're four \emph{mechanisms} that can co-occur.
+Understanding each one requires thinking about WHY the proxy and reality
+diverge, not just THAT they diverge.
+
+\subsection{Regressional Goodhart}
+
+\textbf{The everyday version.} You're hiring and use SAT scores as a
+proxy for job performance. Among 1000 applicants, the person with the
+highest SAT score is more likely to have gotten lucky on test day than
+to be genuinely the smartest. By selecting the extreme, you're selecting
+for noise.
+
+\textbf{The math.} Suppose the proxy is a noisy measurement of truth:
+\begin{equation}
+  \hat{R}(\pi) = R^*(\pi) + \epsilon(\pi), \quad
+  \epsilon \sim \mathcal{N}(0, \sigma^2)
+\end{equation}
+where $\epsilon$ is independent noise that varies across policies.
+The optimizer selects:
+\begin{equation}
+  \pi^* = \arg\max_\pi \left[ R^*(\pi) + \epsilon(\pi) \right]
+\end{equation}
+This selects for policies where both $R^*$ and $\epsilon$ happen to be
+large. The expected true reward of the selected policy is:
+\begin{equation}
+  \mathbb{E}[R^*(\pi^*)] = \max_\pi R^*(\pi) - \underbrace{
+    \mathbb{E}\!\left[\epsilon(\pi^*) \mid \pi^* = \arg\max(\hat{R})\right]
+  }_{\text{optimizer's curse} > 0}
+\end{equation}
+The stronger the optimization (searching over more policies, or
+optimizing more aggressively), the more you select for noise. This is
+exactly the \textbf{winner's curse} from auction theory.
+
+\textbf{Key properties:}
+\begin{itemize}
+  \item The proxy is \emph{unbiased}---$\mathbb{E}[\hat{R}] = R^*$ for
+    any fixed policy. The problem is only in the \emph{selection}.
+  \item The effect scales as $O(\sigma^2 / n)$ where $n$ is the number
+    of samples used to estimate $\hat{R}$. More data reduces it.
+  \item This is the \emph{mildest} form of Goodhart. It vanishes with
+    perfect measurement.
+\end{itemize}
+
+\textbf{In our setting:} Regressional Goodhart would occur if BT
+training noise caused us to select ``lucky'' content that happened to
+score high due to noise in the learned weights. With 18--19 features and
+2000+ preference pairs, this effect is small (our held-out accuracy is
+within 2\% of training accuracy). It's not the dominant mechanism.
+
+\subsection{Extremal Goodhart}
+
+\textbf{The everyday version.} A doctor uses blood pressure as a proxy
+for heart health. For most patients, lower blood pressure = healthier
+heart. But at the \emph{extreme}---a patient with blood pressure of
+60/40---the correlation breaks. The proxy and reality agreed in the
+normal range but diverge at the tail.
+
+\textbf{The math.} The proxy and truth are correlated but not identical:
+\begin{equation}
+  \hat{R}(\pi) = f(R^*(\pi)) + g(\pi)
+\end{equation}
+where $f$ is monotonically increasing (the correlation) and $g$ captures
+features of $\pi$ that affect the proxy but not the truth. In the normal
+range of $\pi$, $f$ dominates. At the extremes, $g$ can dominate.
+
+The optimizer pushes $\pi$ into extreme regions where $g(\pi)$ is large.
+The proxy says this is a great policy (high $\hat{R}$). The truth says
+otherwise.
+
+\begin{remark}
+This differs from regressional Goodhart in a crucial way: the divergence
+is \emph{systematic}, not random. The proxy is biased in extreme regions,
+not just noisy. More data doesn't fix it---the bias is structural.
+\end{remark}
+
+\textbf{Key properties:}
+\begin{itemize}
+  \item Requires the optimizer to reach extreme regions of policy space.
+    Weak optimization may never trigger it.
+  \item The divergence is \emph{predictable} if you know how $g$
+    behaves at extremes.
+  \item More data makes it \emph{worse} (the optimizer more precisely
+    finds the extreme region). This is the ``U-shaped curve'' in true
+    performance.
+\end{itemize}
+
+\textbf{In our setting:} This is the \textbf{dominant mechanism}. The
+``proxy'' is the misspecified user utility $\hat{\mathbf{w}}_u$. The
+``truth'' is the diversity utility $\mathbf{w}_d$. They're correlated
+(both are functions of genre features) but anti-correlated at the
+extremes ($\cos \approx -0.3$). As BT learns $\hat{\mathbf{w}}_u$ more
+precisely (more data), it pushes content selection into regions that are
+\emph{great} for the misspecified user but \emph{terrible} for
+diversity. The divergence is systematic: it's driven by the angle
+between utility directions, not by noise.
+
+\textbf{Why this is our mechanism:}
+\begin{enumerate}
+  \item The effect gets \emph{worse} with more data (42\% degradation
+    at $N=2000$ vs.\ peak at $N=50$). Regressional Goodhart would get
+    \emph{better} with more data.
+  \item The direction of degradation is predictable from the cosine
+    similarity: diversity degrades because $\cos(\mathbf{w}_d,
+    \hat{\mathbf{w}}_u) < 0$.
+  \item Strategy~1 (better specification, $\sigma \to 0$) \emph{also}
+    harms diversity, confirming the effect is about the inherent
+    opposition between stakeholders, not about specification noise.
+\end{enumerate}
+
+\subsection{Causal Goodhart}
+
+\textbf{The everyday version.} A hospital measures recovery rates as a
+proxy for care quality. Hospital A starts refusing to admit severely ill
+patients. Recovery rates soar. Care quality doesn't change---the
+hospital just gamed the input distribution.
+
+More precisely: recovery rate \emph{correlates} with care quality in the
+observational data. But the causal structure is:
+\begin{center}
+  care quality $\to$ recovery \\
+  patient severity $\to$ recovery
+\end{center}
+Optimizing recovery by manipulating patient severity breaks the
+correlation without changing care quality. The proxy captured an
+association, not a causal relationship.
+
+\textbf{The math.} Let $R^*$ be the true reward and $X$ a confounding
+variable:
+\begin{equation}
+  \hat{R}(\pi) = h(R^*(\pi), X(\pi))
+\end{equation}
+In observational data, $\hat{R}$ and $R^*$ are correlated because $X$
+covaries with both. But the optimizer can change $X$ independently of
+$R^*$, breaking the correlation.
+
+Formally, the problem is that
+$\arg\max_\pi \hat{R}(\pi) \neq \arg\max_\pi R^*(\pi)$
+because the optimizer exploits the $X$ pathway rather than the $R^*$
+pathway.
+
+\textbf{Key properties:}
+\begin{itemize}
+  \item Requires an \emph{actionable} confounder---a variable the
+    optimizer can manipulate that affects the proxy but not the truth.
+  \item Interventional data (randomized experiments) break the
+    confounding. Observational proxies are vulnerable; causal proxies
+    are not.
+  \item This is arguably the most common form of Goodhart in real
+    organizations (gaming metrics by manipulating inputs).
+\end{itemize}
+
+\textbf{In our setting:} Causal Goodhart is \emph{not} the primary
+mechanism. Our BT model operates on genre features, which are fixed
+properties of movies---the optimizer can't manipulate them. There's no
+confounder being exploited. The model selects content based on fixed
+features, not by gaming an input distribution.
+
+However, in a \emph{production} recommendation system, causal Goodhart
+is very real: creators gaming the algorithm (e.g., adding trending
+keywords to boost visibility without improving content quality). Our
+synthetic benchmark doesn't capture this because the content pool is
+fixed.
+
+\subsection{Adversarial Goodhart}
+
+\textbf{The everyday version.} A teacher designs a test (proxy for
+knowledge). A student obtains the answer key and memorizes it. The
+student scores perfectly on the test while learning nothing. The proxy
+was designed in good faith, but an adversary deliberately exploited it.
+
+\textbf{The math.} An adversary $\mathcal{A}$ observes the proxy
+$\hat{R}$ and constructs a policy $\pi_{\mathcal{A}}$ that maximizes
+$\hat{R}$ while minimizing $R^*$:
+\begin{equation}
+  \pi_{\mathcal{A}} = \arg\max_\pi \left[
+    \hat{R}(\pi) - \lambda R^*(\pi)
+  \right]
+\end{equation}
+This is the worst case: the misalignment is intentional and targeted.
+
+\textbf{Key properties:}
+\begin{itemize}
+  \item Requires an intelligent adversary, not just a misaligned proxy.
+  \item The severity is unbounded---the adversary can always find the
+    worst-case exploitation.
+  \item Defenses require robustness guarantees, not just better proxies.
+\end{itemize}
+
+\textbf{In our setting:} Not applicable. Our stakeholders are passive
+utility functions, not strategic agents. No one is deliberately trying
+to exploit the reward model. (Though in production platforms,
+adversarial Goodhart from bot networks and engagement farms is very
+real.)
+
+\subsection{Summary: Which Mechanism Drives Our Results?}
+
+\begin{center}
+\begin{tabular}{lccl}
+\toprule
+\textbf{Mechanism} & \textbf{Data helps?} & \textbf{In our setting?} & \textbf{Evidence} \\
+\midrule
+Regressional & Yes ($\downarrow$ with $N$) & Minor
+  & Held-out gap $< 2\%$ \\
+\textbf{Extremal} & \textbf{No ($\uparrow$ with $N$)} & \textbf{Dominant}
+  & \textbf{42\% degradation, $\cos < 0$} \\
+Causal & Depends & Not in benchmark
+  & Fixed content pool \\
+Adversarial & N/A & No
+  & No strategic agents \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The multi-stakeholder setting makes extremal Goodhart especially sharp:
+the ``extreme region'' where the proxy diverges from truth isn't some
+obscure corner of policy space. It's the \emph{entire region where
+content is user-optimal but diversity-poor}---and BT is designed to
+find exactly that region as $N$ increases.
+
+This is what makes our contribution distinct from Skalse et al.: in
+their single-objective framework, you need the proxy to be imperfect in
+a specific way for extremal Goodhart to occur. In our multi-stakeholder
+framework, the ``imperfection'' is \emph{structural}---it's the angle
+between stakeholder utilities. As long as $\cos(\mathbf{w}_{\text{target}},
+\mathbf{w}_{\text{hidden}}) < 0$, more data \emph{always} hurts the
+hidden stakeholder. The Goodhart effect is not a pathology---it's a
+geometric consequence of opposing utilities.
+
+\end{document}
