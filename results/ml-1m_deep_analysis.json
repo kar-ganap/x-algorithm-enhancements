@@ -1,175 +1,89 @@
 {
   "dataset": "ml-1m",
-  "composition": {
-    "mean_projection_cosine": 0.9837,
-    "min_projection_cosine": 0.9594,
-    "std_projection_cosine": 0.0098,
-    "mean_residual_norm": 0.8878,
-    "n_above_095": 18,
-    "n_total": 18,
-    "per_model": [
+  "bootstrap": {
+    "baseline_regret": 4.6579,
+    "per_n": [
       {
-        "mixing": {
-          "diversity": 0.0,
-          "platform": 0.2,
-          "user": 0.8
-        },
-        "projection_cosine": 0.9975,
-        "residual_norm": 0.6277
+        "n_pairs": 0,
+        "regret_mean": 4.6579,
+        "regret_ci_lo": 4.6579,
+        "regret_ci_hi": 4.6579,
+        "recovery_mean": 0.0,
+        "recovery_ci_lo": 0.0,
+        "recovery_ci_hi": 0.0,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.0,
-          "platform": 0.4,
-          "user": 0.6
-        },
-        "projection_cosine": 0.9966,
-        "residual_norm": 0.7209
+        "n_pairs": 25,
+        "regret_mean": 2.5023,
+        "regret_ci_lo": 2.1997,
+        "regret_ci_hi": 2.802,
+        "recovery_mean": 0.4628,
+        "recovery_ci_lo": 0.3984,
+        "recovery_ci_hi": 0.5277,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.0,
-          "platform": 0.6,
-          "user": 0.4
-        },
-        "projection_cosine": 0.9902,
-        "residual_norm": 1.2537
+        "n_pairs": 50,
+        "regret_mean": 2.3353,
+        "regret_ci_lo": 2.0657,
+        "regret_ci_hi": 2.6165,
+        "recovery_mean": 0.4986,
+        "recovery_ci_lo": 0.4383,
+        "recovery_ci_hi": 0.5565,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.0,
-          "platform": 0.8,
-          "user": 0.2
-        },
-        "projection_cosine": 0.9969,
-        "residual_norm": 0.6964
+        "n_pairs": 100,
+        "regret_mean": 0.9905,
+        "regret_ci_lo": 0.5938,
+        "regret_ci_hi": 1.3776,
+        "recovery_mean": 0.7874,
+        "recovery_ci_lo": 0.7042,
+        "recovery_ci_hi": 0.8725,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.2,
-          "platform": 0.0,
-          "user": 0.8
-        },
-        "projection_cosine": 0.989,
-        "residual_norm": 0.9003
+        "n_pairs": 200,
+        "regret_mean": -1.2593,
+        "regret_ci_lo": -1.6223,
+        "regret_ci_hi": -0.8725,
+        "recovery_mean": 1.2704,
+        "recovery_ci_lo": 1.1873,
+        "recovery_ci_hi": 1.3483,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.2,
-          "platform": 0.2,
-          "user": 0.6
-        },
-        "projection_cosine": 0.9906,
-        "residual_norm": 0.8113
+        "n_pairs": 500,
+        "regret_mean": -4.4556,
+        "regret_ci_lo": -4.7047,
+        "regret_ci_hi": -4.2047,
+        "recovery_mean": 1.9566,
+        "recovery_ci_lo": 1.9027,
+        "recovery_ci_hi": 2.01,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.2,
-          "platform": 0.4,
-          "user": 0.4
-        },
-        "projection_cosine": 0.9851,
-        "residual_norm": 0.9447
+        "n_pairs": 1000,
+        "regret_mean": -5.5266,
+        "regret_ci_lo": -5.6024,
+        "regret_ci_hi": -5.4472,
+        "recovery_mean": 2.1865,
+        "recovery_ci_lo": 2.1694,
+        "recovery_ci_hi": 2.2028,
+        "n_seeds": 20
       },
       {
-        "mixing": {
-          "diversity": 0.2,
-          "platform": 0.6,
-          "user": 0.2
-        },
-        "projection_cosine": 0.9841,
-        "residual_norm": 1.0411
-      },
-      {
-        "mixing": {
-          "diversity": 0.2,
-          "platform": 0.8,
-          "user": 0.0
-        },
-        "projection_cosine": 0.9871,
-        "residual_norm": 0.9663
-      },
-      {
-        "mixing": {
-          "diversity": 0.4,
-          "platform": 0.0,
-          "user": 0.6
-        },
-        "projection_cosine": 0.9594,
-        "residual_norm": 1.2727
-      },
-      {
-        "mixing": {
-          "diversity": 0.4,
-          "platform": 0.2,
-          "user": 0.4
-        },
-        "projection_cosine": 0.9822,
-        "residual_norm": 0.7332
-      },
-      {
-        "mixing": {
-          "diversity": 0.4,
-          "platform": 0.4,
-          "user": 0.2
-        },
-        "projection_cosine": 0.9862,
-        "residual_norm": 0.7071
-      },
-      {
-        "mixing": {
-          "diversity": 0.4,
-          "platform": 0.6,
-          "user": 0.0
-        },
-        "projection_cosine": 0.9664,
-        "residual_norm": 1.0814
-      },
-      {
-        "mixing": {
-          "diversity": 0.6,
-          "platform": 0.0,
-          "user": 0.4
-        },
-        "projection_cosine": 0.9778,
-        "residual_norm": 0.8683
-      },
-      {
-        "mixing": {
-          "diversity": 0.6,
-          "platform": 0.2,
-          "user": 0.2
-        },
-        "projection_cosine": 0.9753,
-        "residual_norm": 0.8344
-      },
-      {
-        "mixing": {
-          "diversity": 0.6,
-          "platform": 0.4,
-          "user": 0.0
-        },
-        "projection_cosine": 0.9765,
-        "residual_norm": 0.7919
-      },
-      {
-        "mixing": {
-          "diversity": 0.8,
-          "platform": 0.0,
-          "user": 0.2
-        },
-        "projection_cosine": 0.9813,
-        "residual_norm": 0.8936
-      },
-      {
-        "mixing": {
-          "diversity": 0.8,
-          "platform": 0.2,
-          "user": 0.0
-        },
-        "projection_cosine": 0.9845,
-        "residual_norm": 0.8353
+        "n_pairs": 2000,
+        "regret_mean": -5.8949,
+        "regret_ci_lo": -5.9563,
+        "regret_ci_hi": -5.835,
+        "recovery_mean": 2.2656,
+        "recovery_ci_lo": 2.2527,
+        "recovery_ci_hi": 2.2787,
+        "n_seeds": 20
       }
-    ]
+    ],
+    "n25_significant": true
   }
 }

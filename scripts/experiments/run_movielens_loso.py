@@ -55,7 +55,8 @@ train_with_loss = _al.train_with_loss
 
 DIVERSITY_WEIGHTS = [round(x * 0.05, 2) for x in range(21)]
 TOP_K = 10
-SEEDS = [42, 142, 242, 342, 442]
+SEEDS = [42, 142, 242, 342, 442, 542, 642, 742, 842, 942,
+         1042, 1142, 1242, 1342, 1442, 1542, 1642, 1742, 1842, 1942]
 N_PAIRS_SWEEP = [0, 25, 50, 100, 200, 500, 1000, 2000]
 
 
