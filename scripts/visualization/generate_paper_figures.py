@@ -297,31 +297,27 @@ def fig5_data_budget():
         lo = np.array([e["recovery_ci_lo"] * 100 for e in entries])
         hi = np.array([e["recovery_ci_hi"] * 100 for e in entries])
 
-        # Cap display at N≤500 and recovery≤120% for readability
-        mask = N <= 500
-        ax.plot(N[mask], np.clip(rec[mask], -5, 115), color=color,
+        # Show up to N=200 where recovery stays below ~100%
+        mask = N <= 200
+        ax.plot(N[mask], rec[mask], color=color,
                 marker=marker, markersize=5.5, linewidth=1.8,
                 label=ds_name, zorder=3)
-        ax.fill_between(N[mask],
-                         np.clip(lo[mask], -5, 115),
-                         np.clip(hi[mask], -5, 115),
+        ax.fill_between(N[mask], lo[mask], hi[mask],
                          alpha=0.18, color=color, zorder=2)
 
     ax.axhline(y=0, color="#999999", linewidth=0.6, linestyle="--", zorder=1)
     ax.axhline(y=100, color="#888888", linewidth=0.8, linestyle=":",
                zorder=1, label="Full recovery")
 
-    # N=25 marker — vertical line instead of annotation box
-    ax.axvline(x=25, color="#AAAAAA", linewidth=0.6, linestyle=":", zorder=1)
-    ax.text(28, 105, "N = 25", fontsize=9, color="#555555", va="bottom")
+    # No extra annotation — the data points and CI bands tell the story
 
     ax.set_xscale("log")
     ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
-    ax.set_xticks([25, 50, 100, 200, 500])
+    ax.set_xticks([25, 50, 100, 200])
     ax.xaxis.set_minor_formatter(mticker.NullFormatter())
     ax.set_xlabel("Hidden stakeholder preference pairs (N)")
     ax.set_ylabel("Recovery of hidden stakeholder harm (%)")
-    ax.set_ylim(-8, 118)
+    ax.set_ylim(-5, 105)
     ax.legend(loc="lower right", fontsize=9, framealpha=0.95,
               edgecolor="#CCCCCC", borderpad=0.6)
     ax.grid(True, alpha=0.2, linewidth=0.5)
