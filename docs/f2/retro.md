@@ -500,4 +500,110 @@ F2 is a genuine research contribution: it discovered (and rigorously proved thro
 
 But it is *research*, not product. Every result is on synthetic or proxy data. The central unanswered question — how to design stakeholder utility functions for real engagement data — is a product/policy problem that F2's modeling infrastructure can support but cannot answer.
 
-The natural next step is not more modeling but deeper investigation of the identifiability and robustness properties of what we've built: what can BT actually recover from preference data, how sensitive are Pareto frontiers to utility specification, and what happens when stakeholders go unobserved? These are questions practitioners will face when deploying any multistakeholder system, and F2's infrastructure — 648-parameter ground truth, verified training pipeline, Pareto frontier computation — is well-positioned to answer them.
+The natural next step is not more modeling but deeper investigation of the identifiability and robustness properties of what we've built: what can BT actually recover from preference data, how sensitive are Pareto frontiers to utility specification, and what happens when stakeholders go unobserved?
+
+---
+
+## RecSys Experiment Phases (Phases 1-13)
+
+These "next steps" became a 13-phase experimental campaign validating the multi-stakeholder framework on real data (MovieLens-100K, MovieLens-1M) and deepening the analysis. The campaign produced the project's core novel finding and corrected a significant error in the original preprint.
+
+### What We Set Out To Do
+
+Address two RecSys reviewer concerns: (1) all results were synthetic-only, (2) no comparison baselines.
+
+### What Actually Happened
+
+The MovieLens experiments uncovered something the synthetic benchmark couldn't: **the Goodhart direction condition**. On synthetic data, all stakeholder pairs have cos > 0, so there's no Goodhart under utility-based metrics. On MovieLens, user-diversity cos ≈ -0.3, producing genuine Goodhart (diversity degrades 42-46% as user optimization gets more precise).
+
+This led to the project's core contribution: **cos(w_target, w_hidden) < 0 predicts when more data hurts the hidden stakeholder**. Validated 6/6 across 3 datasets.
+
+Along the way, we discovered the original preprint's Hausdorff-based Goodhart claim was a metric artifact. Three iterations (Phases 5, 5b, 6) to find the right metric. The correction itself is a methodological contribution.
+
+### The Journey
+
+| Phase | What | Key Finding |
+|-------|------|-------------|
+| 1+1.5 | MovieLens foundation + held-out eval | BT converges at 93-95% on D=19 genres; train/eval gap < 2% |
+| 2 | Labels-not-loss on MovieLens | Replicates stronger (cos 0.96-0.99); temporal + user-group validation |
+| 3 | LOSO + data budget | Ranking replicates; 25 pairs = 53% recovery; negative regret at N≥200 |
+| 4 | Scalarization baseline | Scalarization wins on HV (0.69-0.91) — per-stakeholder naive composition loses |
+| 5-6 | Goodhart on MovieLens | Three iterations to get metric right; utility-based: diversity degrades 42% |
+| 7 | Composition sweep | Closes the gap: comp/scalar = 0.94-1.00 with 3 vs 18 training runs |
+| 8 | MovieLens-1M | All findings replicate at 10× scale |
+| 9 | Analysis deepening | Low-rank weight space (cos > 0.97); bootstrap CIs; degradation prediction |
+| 10 | Goodhart formalization | Direction condition 6/6 validated; synthetic has NO Goodhart (all cos > 0) |
+| 11 | Functional form | Gao's α√d - βd doesn't fit; BT shows "sharp Goodhart" |
+| 12 | Audit toolkit | Applied to X's 18 actions; one observable predicts societal risk |
+| 13 | Data budget robustness | 20 seeds; CIs halved; non-monotonicity resolved |
+
+### What Worked
+
+**TDD discipline.** Every phase had plan → tests → implement → retro. This caught the Hausdorff metric error (the tests forced us to compare utility-based metrics), the held-out evaluation gap (the retro forced us to ask "are we evaluating on training data?"), and the branch discipline violation (the user caught us working uncommitted on the wrong branch).
+
+**MovieLens genre features (D=19).** The decision to use binary genre vectors instead of remapping to the 18-action Phoenix space was correct. It gave honest "real data" results and exposed the stakeholder opposition (cos < 0) that synthetic couldn't show.
+
+**The scalarization baseline.** Running the comparison that showed "baseline wins" (Phase 4) forced us to understand WHY (naive composition wastes the per-stakeholder advantage), which led to the composition sweep (Phase 7) and the low-rank weight space insight (Phase 9).
+
+### What Surprised Us
+
+**Synthetic has no Goodhart.** All synthetic stakeholder pairs have cos > 0 because the utility structure (U = pos - α·neg) shares positive actions. The "Goodhart" in the original preprint was Hausdorff measuring frontier precision, not stakeholder harm. Discovering this required running the same experiment on MovieLens (where cos < 0 exists) and comparing.
+
+**The direction condition is perfect.** 6/6 data points, zero violations, across 3 datasets. We expected some noise. The cleanness suggests this is a mathematical property of linear BT, not an empirical regularity.
+
+**The scalarization "loss" was our mistake.** Per-stakeholder training produces 3 excellent weight vectors. We combined them with a mean scorer (which drowns out the diversity signal). Composition sweep (which uses weighted combinations) closes the gap to 99%. The "loss" was in how we composed, not in how we trained.
+
+### What We Got Wrong
+
+**The Hausdorff Goodhart claim.** The original preprint's "deepest finding" was wrong. Three phases (5, 5b, 6) to discover and correct it. The error: Hausdorff distance conflates optimization precision with stakeholder harm. With the correct metric (per-stakeholder utility on selected content), synthetic has no Goodhart and MovieLens has clear Goodhart — exactly as the cosine condition predicts.
+
+**5 seeds was not enough.** The data budget experiment at N=25-50 had high per-seed variance. ML-1M showed non-monotonicity (N=50 worse than N=25) with 5 seeds, resolved with 20 seeds. Should have used 20 from the start.
+
+**Working on the wrong branch.** Three phases of uncommitted work on `paper/f2-preprint` (a paper branch, not an experiment branch). Lesson documented in `tasks/lessons.md` rule #9.
+
+### The Core Contribution
+
+One genuinely novel finding: **cos(w_target, w_hidden) < 0 predicts multi-stakeholder Goodhart**. Nobody has stated or tested this in the multi-stakeholder literature. Everything else is either known theory (Sun et al., Skalse et al.), standard methodology (LOSO, VoI), or supporting evidence for this finding.
+
+The low-rank weight space (projection cos > 0.97) is the theoretical explanation: with K stakeholders, BT-learned weights lie in a K-dimensional subspace, making convergence direction fully determined by stakeholder geometry.
+
+### Key Files
+
+```
+scripts/experiments/
+├── run_movielens_labels_not_loss.py     # Phase 2: 6 experiment groups
+├── run_movielens_loso.py                # Phase 3: LOSO + data budget
+├── run_scalarization_baseline.py        # Phase 4+7: with composition sweep
+├── run_movielens_goodhart.py            # Phase 6: utility-based metrics
+├── run_synthetic_goodhart_utility.py    # Phase 10: synthetic validation
+├── run_all_movielens.sh                 # Phase 8: ML-1M batch runner
+├── verify_movielens_foundation.py       # Phase 1: foundation verification
+└── verify_held_out.py                   # Phase 1.5: held-out verification
+
+scripts/analysis/
+├── analyze_recsys_deep.py               # Phase 9: composition + bootstrap + degradation
+├── analyze_goodhart_condition.py        # Phase 10: direction condition validation
+├── analyze_functional_form.py           # Phase 11: Gao form fitting
+└── analyze_audit_toolkit.py             # Phase 12: X audit scenarios
+
+scripts/visualization/
+└── generate_paper_figures.py            # 4 publication figures
+
+enhancements/data/
+└── movielens_stakeholders.py            # MovieLens multi-stakeholder bridge
+
+results/
+├── ml-100k_*.json                       # ML-100K experiment results
+├── ml-1m_*.json                         # ML-1M experiment results
+├── synthetic_goodhart_utility.json      # Synthetic with utility metrics
+├── goodhart_condition_validation.json   # 6/6 direction condition
+├── functional_form_fit.json             # Gao form fitting
+└── audit_toolkit.json                   # X audit scenarios
+
+docs/f2/
+├── recsys_phase{1..13}_retro.md         # Per-phase retros
+├── arxiv_paper_plan.md                  # Paper structure plan
+├── paper_rewrite_checklist.md           # Line-by-line revision guide
+├── preprint_retention_assessment.md     # What to keep/change/drop
+└── goodhart_formalization.tex           # 18-page study guide (PDF)
+```

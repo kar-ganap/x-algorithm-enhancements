@@ -1331,12 +1331,16 @@ uv run pytest tests/ -v
 
 | Phase | Status | Key Achievement |
 |-------|--------|-----------------|
-| Phase 1 | ✅ Complete | BT preference learning: **99.3% accuracy**, sensitive to label noise |
+| Phase 1 | ✅ Complete | BT preference learning: **99.3% validation accuracy**, sensitive to label noise |
 | Phase 2 | ✅ Complete | Pluralistic models: weight recovery is fundamental BT limit, differentiation is solvable |
 | Phase 3 | ✅ Complete | Causal verification: **all 5 test suites pass** |
 | Phase 4 | ✅ Complete | Multi-stakeholder: **cosine sim 0.478** via label differentiation (was 1.0) |
+| Phase 5 | ✅ Complete | MovieLens validation: **+59% NDCG** with BPR + in-batch negatives |
+| Phase 6 | ✅ Complete | Synthetic Twitter: **all 5 test suites pass**, 648 params recovered |
+| Phase 7 | ✅ Complete | Research directions: α-recovery, LOSO, sensitivity, nonlinear robustness |
+| RecSys 1-13 | ✅ Complete | MovieLens multi-stakeholder validation + Goodhart direction condition |
 
-**Key F2 Finding**: Stakeholder model differentiation requires stakeholder-specific preference labels, not alternative loss functions. Standard BT with different utility functions per stakeholder achieves cosine similarity of 0.478 (target was < 0.95). The 87-experiment sweep confirmed no alternative loss improves on baseline BT.
+**Key F2 Finding (updated after RecSys experiments)**: In multi-stakeholder BT preference learning, the cosine similarity between the optimization target and a hidden stakeholder's utility direction predicts whether more training data helps (cos > 0) or hurts (cos < 0) — a **directional Goodhart condition** validated 6/6 across 3 datasets with zero violations. The earlier Hausdorff-based Goodhart claim on synthetic data was a metric artifact. Labels-not-loss (labels determine differentiation, not loss functions) is the theoretical explanation: the weight space is K-dimensional for K stakeholders, making the direction of convergence fully determined by stakeholder geometry.
 
 ---
 
@@ -2364,3 +2368,136 @@ PYTHONUNBUFFERED=1 uv run python scripts/experiments/run_loss_experiments.py --a
 # Quick sanity test (4 experiments, 10 epochs)
 uv run python scripts/experiments/run_loss_experiments.py --quick-test
 ```
+
+---
+
+## RecSys Experiment Phases (MovieLens Multi-Stakeholder Validation)
+
+13 experiment phases validating the multi-stakeholder framework on real data (MovieLens-100K and MovieLens-1M) and deepening the analysis. ~1500 BT training runs total. All results in `results/ml-100k_*.json` and `results/ml-1m_*.json`.
+
+### Phase 1+1.5: MovieLens Foundation + Held-Out Evaluation
+
+Built the bridge from MovieLens to multi-stakeholder framework using 19-dim genre features (D=19). Three stakeholders defined on MovieLens: user (mean rating per genre), platform (popularity × avg rating), diversity (anti-popularity). Added held-out evaluation to `train_with_loss()` (was evaluating on training data since Phase 4 — confirmed existing results are robust, train/held-out gap < 2%).
+
+| Metric | ML-100K | ML-1M |
+|--------|---------|-------|
+| BT held-out accuracy | 93-95% | 91-95% |
+| User-platform disagreement | 8.1% | 10.4% |
+| User-diversity disagreement | 66.2% | 63.8% |
+| User-platform cosine (trained) | 0.956 | 0.926 |
+| User-diversity cosine (trained) | -0.313 | -0.155 |
+
+Key finding: user and platform are nearly aligned on MovieLens (both reward highly-rated content). Diversity is genuinely opposed (cos < 0).
+
+### Phase 2: Labels-Not-Loss on MovieLens
+
+6 experiment groups, 85 training runs, 19 minutes:
+
+| Group | Finding |
+|-------|---------|
+| A: Core replication | Within-loss cos 0.957-0.988 (exceeds synthetic 0.92) |
+| B: Hyperparameter robustness | All configs > 0.93 |
+| C: Temporal generalization | 93-96% held-out across time split |
+| D: Downstream prediction | Directional signal (Spearman 0.058, significant) |
+| E: User-group universality | All 7 genre groups > 0.989 |
+| F: Genre correlation | Robust despite condition number 921 |
+
+Labels-not-loss is even stronger on real data than synthetic.
+
+### Phase 3: LOSO + Data Budget
+
+LOSO regret ranking replicates: diversity > platform > user (same as synthetic society > platform > user).
+
+Data budget (20 seeds, bootstrap CIs): 25 pairs recover 46-56% of hidden stakeholder harm. ML-100K: 56% [48%, 64%]. ML-1M: 46% [40%, 53%]. Significant on both datasets.
+
+### Phase 4+7: Scalarization Baseline + Composition Sweep
+
+Per-stakeholder composition achieves 94-100% of scalarization hypervolume with 3 training runs instead of 18. The weight space is K-dimensional (projection cos > 0.97 for all 18 scalarized vectors onto the 3-vector span).
+
+| | Naive/Scalar | Comp/Scalar | Training runs |
+|---|:---:|:---:|:---:|
+| Synthetic | 0.913 | 0.999 | 3 vs 18 |
+| ML-100K | 0.694 | 0.939 | 3 vs 18 |
+| ML-1M | 0.601 | 0.989 | 3 vs 18 |
+
+### Phase 5+6: Goodhart on MovieLens
+
+Three iterations to get the metric right:
+- Phase 5: learned scorer as Goodhart test → confounded (Hausdorff measured scorer divergence)
+- Phase 5b: fixed scorer + weight normalization → Strategy 1 non-monotonic (BT direction bias)
+- Phase 6: utility-based metrics → **clean signal**. Diversity degrades 42-46% while user/platform improve 14%.
+
+The Hausdorff-based Goodhart claim from the original preprint was a **metric artifact**. Under utility-based metrics, synthetic has NO Goodhart (all cos > 0). MovieLens DOES have Goodhart because user-diversity cos < 0.
+
+### Phase 8: MovieLens-1M Scale Validation
+
+All findings replicate at 10× scale:
+
+| Finding | ML-100K | ML-1M |
+|---------|---------|-------|
+| Within-loss cos | 0.957-0.987 | 0.955-0.988 |
+| Temporal acc | 93-96% | 94-95% |
+| LOSO ranking | div > plat > user | div > plat > user |
+| N=25 recovery | 56% | 46% |
+| Comp/Scalar | 0.939 | 0.989 |
+| Goodhart (diversity) | -42% | -46% |
+
+### Phase 9: Analysis Deepening
+
+Three analyses connecting findings:
+
+**A. Composition explains scalarization**: Every scalarized weight vector projects onto the 3-vector per-stakeholder span with cos > 0.97 (ML-100K: 0.979, ML-1M: 0.984). The weight space IS 3-dimensional.
+
+**B. LOSO degradation prediction**: Cosine-based proxy correctly predicts regret ranking on both datasets (diversity > platform > user). The synthetic degradation bound transfers as ordinal prediction.
+
+**C. Bootstrap CIs**: N=25 recovery is statistically significant on both datasets. Lower bound ~40% even in worst case.
+
+### Phase 10+11: Goodhart Formalization
+
+**The direction condition**: cos(w_target, w_hidden) < 0 → hidden stakeholder degrades with more data. cos > 0 → improves. Validated 6/6 across 3 datasets with zero violations.
+
+| Dataset | Hidden | cos | Prediction | Observed | Match |
+|---------|--------|:---:|---|---|:---:|
+| Synthetic | platform | +0.89 | Improve | +3% | ✓ |
+| Synthetic | society | +0.84 | Improve | +67% | ✓ |
+| ML-100K | platform | +0.96 | Improve | +14% | ✓ |
+| ML-100K | diversity | -0.31 | Degrade | -34% | ✓ |
+| ML-1M | platform | +0.93 | Improve | +14% | ✓ |
+| ML-1M | diversity | -0.16 | Degrade | -46% | ✓ |
+
+Gao et al.'s α√d - βd functional form does NOT fit our data — BT on finite content pools shows "sharp Goodhart" (rapid onset, nearly monotonic) vs RLHF's "gradual Goodhart."
+
+### Phase 12: Audit Toolkit
+
+Applied the direction condition to X's open-sourced 18-action algorithm. The Goodhart risk reduces to one observable: **does the platform treat negative signals (blocks, reports) as positive engagement?**
+
+| Platform Objective | cos(platform, society) | Risk |
+|---|:---:|---|
+| Pure engagement (all actions = +1) | -0.31 | GOODHART |
+| 2023 Phoenix (α = 0.3) | +0.51 | Low |
+| User-aligned (α = 1.0) | +0.84 | Low |
+
+### Phase 13: Data Budget Robustness
+
+Increased seed count from 5 to 20. Resolved non-monotonicity at N=50 on ML-1M (was noise). CIs halved. The "25 pairs = ~50% recovery" finding is now robust and publishable.
+
+---
+
+## Cross-Dataset Summary
+
+The complete evidence base across 3 datasets and ~1500 training runs:
+
+| Finding | Synthetic | ML-100K | ML-1M | Status |
+|---------|:---------:|:-------:|:-----:|--------|
+| Labels-not-loss | cos > 0.92 | 0.957-0.987 | 0.955-0.988 | **Strong** |
+| Temporal generalization | N/A | 93-96% | 94-95% | **New** |
+| User-group universality | N/A | 7/7 > 0.989 | N/A | **New** |
+| LOSO ranking | soc > plat > user | div > plat > user | div > plat > user | **Replicates** |
+| Data budget (N=25) | 42% (paper) | 56% [48%, 64%] | 46% [40%, 53%] | **Robust** |
+| Comp/Scalar ratio | 0.999 | 0.939 | 0.989 | **Strong** |
+| Direction condition | 2/2 (all cos > 0) | 2/2 | 2/2 | **6/6 validated** |
+| Goodhart (utility) | None (all cos > 0) | -42% diversity | -46% diversity | **Confirmed** |
+
+**The one novel finding**: cos(w_target, w_hidden) < 0 predicts multi-stakeholder Goodhart. Nobody has stated or validated this before.
+
+**The metric correction**: Hausdorff distance on synthetic was a false positive for Goodhart. Under utility-based metrics, synthetic shows no Goodhart because all stakeholder pairs have cos > 0.
