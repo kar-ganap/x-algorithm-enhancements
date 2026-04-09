@@ -282,43 +282,44 @@ def fig4_audit_threshold():
 def fig5_data_budget():
     fig, ax = plt.subplots(figsize=(5.5, 3.8))
 
+    # Plot raw regret — no >100% confusion
     datasets = [
-        ("ML-100K", "results/ml-100k_deep_analysis.json", C_100K, "s"),
-        ("ML-1M", "results/ml-1m_deep_analysis.json", C_1M, "^"),
+        ("ML-100K", "results/ml-100k_loso.json", C_100K, "s"),
+        ("ML-1M", "results/ml-1m_loso.json", C_1M, "^"),
     ]
 
     for ds_name, path, color, marker in datasets:
         d = json.load(open(ROOT / path))
-        if "bootstrap" not in d:
+        budget = d.get("data_budget", {})
+        sweep = budget.get("sweep", [])
+        if not sweep:
             continue
-        entries = d["bootstrap"]["per_n"]
-        N = np.array([e["n_pairs"] for e in entries])
-        rec = np.array([e["recovery_mean"] * 100 for e in entries])
-        lo = np.array([e["recovery_ci_lo"] * 100 for e in entries])
-        hi = np.array([e["recovery_ci_hi"] * 100 for e in entries])
 
-        # Show up to N=200 where recovery stays below ~100%
-        mask = N <= 200
-        ax.plot(N[mask], rec[mask], color=color,
+        N = np.array([e["n_pairs"] for e in sweep], dtype=float)
+        regret = np.array([e["avg_regret_mean"] for e in sweep])
+        std = np.array([e["avg_regret_std"] for e in sweep])
+
+        # Show up to N=500
+        mask = N <= 500
+        ax.plot(N[mask], regret[mask], color=color,
                 marker=marker, markersize=5.5, linewidth=1.8,
                 label=ds_name, zorder=3)
-        ax.fill_between(N[mask], lo[mask], hi[mask],
+        ax.fill_between(N[mask], (regret - std)[mask], (regret + std)[mask],
                          alpha=0.18, color=color, zorder=2)
 
-    ax.axhline(y=0, color="#999999", linewidth=0.6, linestyle="--", zorder=1)
-    ax.axhline(y=100, color="#888888", linewidth=0.8, linestyle=":",
-               zorder=1, label="Full recovery")
+    # Zero regret line
+    ax.axhline(y=0, color="#888888", linewidth=0.8, linestyle=":",
+               zorder=1, label="Zero regret")
 
-    # No extra annotation — the data points and CI bands tell the story
+    # Subtle shading: regret > 0 = harm zone
+    ax.axhspan(0, 6, alpha=0.02, color="red", zorder=0)
 
-    ax.set_xscale("log")
-    ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
-    ax.set_xticks([25, 50, 100, 200])
-    ax.xaxis.set_minor_formatter(mticker.NullFormatter())
+    # Linear x-axis with evenly spaced ticks at actual N values
+    ax.set_xlim(-10, 520)
+    ax.set_xticks([0, 25, 50, 100, 200, 500])
     ax.set_xlabel("Hidden stakeholder preference pairs (N)")
-    ax.set_ylabel("Recovery of hidden stakeholder harm (%)")
-    ax.set_ylim(-5, 105)
-    ax.legend(loc="lower right", fontsize=9, framealpha=0.95,
+    ax.set_ylabel("Regret on hidden stakeholder")
+    ax.legend(loc="upper right", fontsize=9, framealpha=0.95,
               edgecolor="#CCCCCC", borderpad=0.6)
     ax.grid(True, alpha=0.2, linewidth=0.5)
 
