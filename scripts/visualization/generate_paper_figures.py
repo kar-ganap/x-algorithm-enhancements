@@ -227,11 +227,11 @@ def fig4_audit_threshold():
     # Scenario points — positioned to avoid overlap
     scenarios = [
         (np.ones(D), 1.0, "Pure engagement", C_DIV, "X",
-         (-10, -28), "center"),
-        (make_w(-0.3), -0.3, "2023 Phoenix (α = 0.3)", C_PLAT, "o",
-         (15, -22), "left"),
-        (make_w(-1.0), -1.0, "User-aligned (α = 1.0)", C_USER, "o",
          (15, 15), "left"),
+        (make_w(-0.3), -0.3, "2023 Phoenix (α = 0.3)", C_PLAT, "o",
+         (15, -20), "left"),
+        (make_w(-1.0), -1.0, "User-aligned (α = 1.0)", C_USER, "o",
+         (-15, -20), "right"),
     ]
 
     for w_p, x_pos, label, color, marker, offset, ha in scenarios:
@@ -244,12 +244,10 @@ def fig4_audit_threshold():
                     arrowprops=dict(arrowstyle="->", color="#666666",
                                     lw=0.7, connectionstyle="arc3,rad=0.15"))
 
-    ax.set_xlabel("Platform weight on negative actions\n"
-                  r"(treats blocks as engagement $\longleftarrow$ $\longrightarrow$ treats blocks as harm)",
-                  fontsize=10)
+    ax.set_xlabel("Platform weight on negative actions")
     ax.set_ylabel("cos(platform, society)", fontsize=10)
     ax.set_xlim(1.3, -4.3)
-    ax.set_ylim(-0.42, 1.05)
+    ax.set_ylim(-0.5, 1.08)
     ax.legend(loc="lower right", fontsize=9, framealpha=0.95,
               edgecolor="#CCCCCC", borderpad=0.6)
     ax.grid(True, alpha=0.2, linewidth=0.5)
