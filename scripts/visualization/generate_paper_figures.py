@@ -250,7 +250,7 @@ def fig4_audit_threshold():
     ax.set_ylabel("cos(platform, society)", fontsize=10)
     ax.set_xlim(1.3, -4.3)
     ax.set_ylim(-0.42, 1.05)
-    ax.legend(loc="lower left", fontsize=9, framealpha=0.95,
+    ax.legend(loc="lower right", fontsize=9, framealpha=0.95,
               edgecolor="#CCCCCC", borderpad=0.6)
     ax.grid(True, alpha=0.2, linewidth=0.5)
 
