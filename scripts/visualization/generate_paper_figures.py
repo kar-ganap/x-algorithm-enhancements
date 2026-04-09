@@ -224,25 +224,40 @@ def fig4_audit_threshold():
                      label="Safe zone", zorder=1)
     ax.axhline(y=0, color="#999999", linewidth=0.8, linestyle="--", zorder=2)
 
-    # Scenario points — positioned to avoid overlap
-    scenarios = [
-        (np.ones(D), 1.0, "Pure engagement", C_DIV, "X",
-         (15, 15), "left"),
-        (make_w(-0.3), -0.3, "2023 Phoenix (α = 0.3)", C_PLAT, "o",
-         (15, -20), "left"),
-        (make_w(-1.0), -1.0, "User-aligned (α = 1.0)", C_USER, "o",
-         (-15, -20), "right"),
-    ]
+    # Scenario markers
+    w_pure = np.ones(D)
+    c_pure = cos(w_pure, w_society)
+    ax.scatter(1.0, c_pure, c=C_DIV, marker="X", s=80,
+               edgecolors="black", linewidths=0.8, zorder=5)
 
-    for w_p, x_pos, label, color, marker, offset, ha in scenarios:
-        c = cos(w_p, w_society)
-        ax.scatter(x_pos, c, c=color, marker=marker, s=80,
-                   edgecolors="black", linewidths=0.8, zorder=5)
-        ax.annotate(label, (x_pos, c), fontsize=8,
-                    xytext=offset, textcoords="offset points",
-                    ha=ha, va="center",
-                    arrowprops=dict(arrowstyle="->", color="#666666",
-                                    lw=0.7, connectionstyle="arc3,rad=0.15"))
+    w_2023 = make_w(-0.3)
+    c_2023 = cos(w_2023, w_society)
+    ax.scatter(-0.3, c_2023, c=C_PLAT, marker="o", s=80,
+               edgecolors="black", linewidths=0.8, zorder=5)
+
+    w_ua = make_w(-1.0)
+    c_ua = cos(w_ua, w_society)
+    ax.scatter(-1.0, c_ua, c=C_USER, marker="o", s=80,
+               edgecolors="black", linewidths=0.8, zorder=5)
+
+    # Annotations in the white space, arrows pointing to markers
+    ax.annotate("Pure engagement",
+                xy=(1.0, c_pure), xytext=(-0.8, 0.18),
+                fontsize=9, ha="center",
+                arrowprops=dict(arrowstyle="->", color="#888888", lw=0.8,
+                                connectionstyle="arc3,rad=-0.2"))
+
+    ax.annotate("2023 Phoenix (α = 0.3)",
+                xy=(-0.3, c_2023), xytext=(-2.0, 0.25),
+                fontsize=9, ha="center",
+                arrowprops=dict(arrowstyle="->", color="#888888", lw=0.8,
+                                connectionstyle="arc3,rad=0.2"))
+
+    ax.annotate("User-aligned (α = 1.0)",
+                xy=(-1.0, c_ua), xytext=(-2.8, 0.55),
+                fontsize=9, ha="center",
+                arrowprops=dict(arrowstyle="->", color="#888888", lw=0.8,
+                                connectionstyle="arc3,rad=0.2"))
 
     ax.set_xlabel("Platform weight on negative actions")
     ax.set_ylabel("cos(platform, society)", fontsize=10)
