@@ -92,9 +92,10 @@ def fig2_goodhart_curves():
         ax.grid(True, alpha=0.2, linewidth=0.5)
 
     axes[0].set_ylabel("Change from N = 25 baseline (%)")
-    # Legend outside the plot area, between panels
-    axes[1].legend(loc="lower left", framealpha=0.95, edgecolor="#CCCCCC",
-                   borderpad=0.6)
+    # Each panel gets its own legend with its own cosine values
+    for ax in axes:
+        ax.legend(loc="lower left", framealpha=0.95, edgecolor="#CCCCCC",
+                  borderpad=0.5, fontsize=8.5)
 
     fig.tight_layout(w_pad=2.0)
     for ext in [".pdf", ".png"]:
@@ -150,30 +151,18 @@ def fig3_direction_scatter():
     ax.axhline(y=0, color="#999999", linewidth=0.8, linestyle="--", zorder=1)
     ax.axvline(x=0, color="#999999", linewidth=0.8, linestyle="--", zorder=1)
 
-    # Plot points — larger markers, no per-point text labels
+    # Plot points with distinct markers per stakeholder type
     ds_colors = {"ML-100K": C_100K, "ML-1M": C_1M, "Synthetic": C_SYN}
     ds_plotted = set()
     for cos_val, change, ds, marker, hidden in points:
         color = ds_colors[ds]
         label = ds if ds not in ds_plotted else None
         ds_plotted.add(ds)
-        ax.scatter(cos_val, change, c=color, marker=marker, s=100,
-                   edgecolors="black", linewidths=0.6, zorder=5, label=label)
+        ax.scatter(cos_val, change, c=color, marker=marker, s=110,
+                   edgecolors="black", linewidths=0.7, zorder=5, label=label)
 
-    # Annotate only the two GOODHART points (diversity) — they need identification
-    for cos_val, change, ds, marker, hidden in points:
-        if hidden in ("diversity",):
-            ax.annotate(f"{ds}\n{hidden}",
-                        (cos_val, change),
-                        fontsize=8, color="#555555",
-                        xytext=(12, 6), textcoords="offset points",
-                        ha="left")
-
-    # Subtle quadrant labels along the cos=0 boundary
-    ax.text(0.02, -50, "degrades ←", fontsize=8, color="#C62828",
-            ha="left", va="bottom", style="italic")
-    ax.text(0.02, 70, "→ improves", fontsize=8, color="#2E7D32",
-            ha="left", va="top", style="italic")
+    # No per-point text — legend identifies datasets, quadrant shading
+    # identifies direction. Caption maps points to stakeholders.
 
     # Validation badge
     ax.text(0.97, 0.03, "6/6 validated\n0 violations",
@@ -235,22 +224,23 @@ def fig4_audit_threshold():
                      label="Safe zone", zorder=1)
     ax.axhline(y=0, color="#999999", linewidth=0.8, linestyle="--", zorder=2)
 
-    # Scenario points — spread out with clear arrows
+    # Scenario points — positioned to avoid overlap
     scenarios = [
-        (np.ones(D), 1.0, "Pure engagement", C_DIV, "X", (-45, -20)),
-        (make_w(-0.3), -0.3, "2023 Phoenix (α=0.3)", C_PLAT, "o", (15, 15)),
-        (make_w(-1.0), -1.0, "User-aligned (α=1.0)", C_USER, "o", (15, -20)),
-        (make_w(-2.0), -2.0, "Safety-first (α=2.0)", "#555555", "o", (15, 10)),
+        (np.ones(D), 1.0, "Pure engagement", C_DIV, "X",
+         (-10, -28), "center"),
+        (make_w(-0.3), -0.3, "2023 Phoenix (α = 0.3)", C_PLAT, "o",
+         (15, -22), "left"),
+        (make_w(-1.0), -1.0, "User-aligned (α = 1.0)", C_USER, "o",
+         (15, 15), "left"),
     ]
 
-    for w_p, x_pos, label, color, marker, offset in scenarios:
+    for w_p, x_pos, label, color, marker, offset, ha in scenarios:
         c = cos(w_p, w_society)
         ax.scatter(x_pos, c, c=color, marker=marker, s=80,
                    edgecolors="black", linewidths=0.8, zorder=5)
-        ax.annotate(label, (x_pos, c), fontsize=8.5,
+        ax.annotate(label, (x_pos, c), fontsize=8,
                     xytext=offset, textcoords="offset points",
-                    ha="left" if offset[0] > 0 else "right",
-                    va="center",
+                    ha=ha, va="center",
                     arrowprops=dict(arrowstyle="->", color="#666666",
                                     lw=0.7, connectionstyle="arc3,rad=0.15"))
 
