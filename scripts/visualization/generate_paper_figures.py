@@ -169,11 +169,11 @@ def fig3_direction_scatter():
                         xytext=(12, 6), textcoords="offset points",
                         ha="left")
 
-    # Quadrant labels in empty space
-    ax.text(-0.25, -48, "GOODHART", fontsize=11, fontweight="bold",
-            ha="center", color="#C62828")
-    ax.text(0.65, 58, "SAFE", fontsize=11, fontweight="bold",
-            ha="center", color="#2E7D32")
+    # Subtle quadrant labels along the cos=0 boundary
+    ax.text(0.02, -50, "degrades ←", fontsize=8, color="#C62828",
+            ha="left", va="bottom", style="italic")
+    ax.text(0.02, 70, "→ improves", fontsize=8, color="#2E7D32",
+            ha="left", va="top", style="italic")
 
     # Validation badge
     ax.text(0.97, 0.03, "6/6 validated\n0 violations",
