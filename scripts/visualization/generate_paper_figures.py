@@ -133,31 +133,27 @@ def fig3_direction_scatter():
     ax.axvline(x=-0.2, color="#E0A000", linewidth=0.5, linestyle=":", zorder=1, alpha=0.5)
     ax.axvline(x=0.2, color="#E0A000", linewidth=0.5, linestyle=":", zorder=1, alpha=0.5)
 
-    # Plot points — different shapes for Method A vs B
-    method_styles = {
-        "A": {"marker": "o", "s": 70, "label": "Base stakeholders (Method A)"},
-        "B": {"marker": "D", "s": 50, "label": "Named stakeholders (Method B)"},
+    # 4 legend entries: dataset × method
+    legend_keys = {
+        ("ml-100k", "A"): ("ML-100K, base", "o", C_100K),
+        ("ml-100k", "B"): ("ML-100K, named", "D", C_100K),
+        ("ml-1m", "A"): ("ML-1M, base", "o", C_1M),
+        ("ml-1m", "B"): ("ML-1M, named", "D", C_1M),
     }
-    ds_colors_map = {"ml-100k": C_100K, "ml-1m": C_1M}
-    method_plotted = set()
+    plotted = set()
 
     for p in points:
-        method = p["method"]
-        ds = p["dataset"]
-        cos_val = p["cosine"]
-        change = p["change_pct"]
-        match = p["match"]
+        key = (p["dataset"], p["method"])
+        label_text, marker, color = legend_keys.get(key, ("other", "x", "#888"))
+        label = label_text if key not in plotted else None
+        plotted.add(key)
 
-        style = method_styles[method]
-        color = ds_colors_map.get(ds, "#888888")
-        label = style["label"] if method not in method_plotted else None
-        method_plotted.add(method)
+        edge = "black" if p["match"] else "red"
+        lw = 0.5 if p["match"] else 2.0
+        s = 70 if p["method"] == "A" else 55
 
-        edge = "black" if match else "red"
-        lw = 0.5 if match else 1.5
-
-        ax.scatter(cos_val, change, c=color, marker=style["marker"],
-                   s=style["s"], edgecolors=edge, linewidths=lw,
+        ax.scatter(p["cosine"], p["change_pct"], c=color, marker=marker,
+                   s=s, edgecolors=edge, linewidths=lw,
                    zorder=5, label=label, alpha=0.85)
 
     # No zone text labels — the three-color shading communicates the zones.
@@ -165,8 +161,8 @@ def fig3_direction_scatter():
 
     # Validation badge
     ax.text(0.97, 0.03,
-            "28/28 for |cos| > 0.2\n42 points, 3 datasets",
-            transform=ax.transAxes, fontsize=8, ha="right", va="bottom",
+            "28/28 for |cos| > 0.2\n42 points, 2 datasets\nred outline = violation",
+            transform=ax.transAxes, fontsize=7.5, ha="right", va="bottom",
             bbox=dict(boxstyle="round,pad=0.4", facecolor="#E8F5E9",
                       edgecolor="#66BB6A", alpha=0.9))
 
