@@ -1,4 +1,4 @@
-"""Evidence that the Goodhart effect is extremal, not regressional.
+"""Evidence that the Goodhart effect is extremal, not regressional (registry-driven).
 
 Two experiments:
 1. σ-invariance: Direction condition holds across σ ∈ {0.1, 0.3, 0.5}.
@@ -8,39 +8,40 @@ Two experiments:
 2. Selection concentration: As N increases, top-K selection concentrates
    on fewer unique items/genres — the hallmark of extremal selection pressure.
 
+Note (Phase B refactor): the script now takes one --dataset at a time
+(was previously hardcoded to loop over [ml-100k, ml-1m]).
+
 Usage:
-    uv run python scripts/experiments/run_extremal_evidence.py
+    uv run python scripts/experiments/run_extremal_evidence.py --dataset ml-100k
 """
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
+import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _dataset_registry import REGISTRY, load_dataset  # noqa: E402
 
 
 def _load(name, path):
+    """Load reward-modeling modules via importlib."""
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
-_ml = _load("movielens", ROOT / "enhancements" / "data" / "movielens.py")
-_st = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
 _al = _load("alternative_losses", ROOT / "enhancements" / "reward_modeling" / "alternative_losses.py")
-
-MovieLensDataset = _ml.MovieLensDataset
-build_stakeholder_configs = _st.build_stakeholder_configs
-generate_movielens_content_pool = _st.generate_movielens_content_pool
-generate_movielens_preferences = _st.generate_movielens_preferences
-split_preferences = _st.split_preferences
-NUM_GENRES = _st.NUM_GENRES
 
 LossConfig = _al.LossConfig
 LossType = _al.LossType
@@ -76,12 +77,12 @@ def select_top_k(pool, scorer_weights, k=10):
     return np.argsort(scores)[-k:][::-1]
 
 
-def train_and_select(pool, genres, target_weights, sigma, n_pairs, seed):
+def train_and_select(ds, pool, genres, target_weights, sigma, n_pairs, seed):
     """Train BT model and return learned weights + top-K selection."""
     rng = np.random.default_rng(seed)
     perturbed = perturb_weights(target_weights, sigma, rng)
-    pref, rej = generate_movielens_preferences(pool, perturbed, n_pairs, seed)
-    tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed)
+    pref, rej = ds.generate_preferences(perturbed, n_pairs, seed)
+    tp, tr, ep, er = ds.stakeholders_mod.split_preferences(pref, rej, 0.2, seed)
     config = LossConfig(
         loss_type=LossType.BRADLEY_TERRY,
         stakeholder=StakeholderType.USER,
@@ -109,9 +110,9 @@ def run_sigma_invariance(datasets):
     sigma_values = [0.1, 0.3, 0.5]
     all_results = []
 
-    for ds_name, dataset, pool, genres, configs in datasets:
+    for ds_name, ds, pool, genres, configs in datasets:
         print(f"\n  Dataset: {ds_name}")
-        base_names = ["user", "platform", "diversity"]
+        base_names = list(ds.spec.primary_stakeholder_order)
 
         for sigma in sigma_values:
             print(f"    σ = {sigma}")
@@ -127,8 +128,10 @@ def run_sigma_invariance(datasets):
                         for seed in SEEDS:
                             rng = np.random.default_rng(seed)
                             perturbed = perturb_weights(configs[target_name], sigma, rng)
-                            pref, rej = generate_movielens_preferences(pool, perturbed, n_pairs, seed)
-                            tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed)
+                            pref, rej = ds.generate_preferences(perturbed, n_pairs, seed)
+                            tp, tr, ep, er = ds.stakeholders_mod.split_preferences(
+                                pref, rej, 0.2, seed,
+                            )
                             config = LossConfig(
                                 loss_type=LossType.BRADLEY_TERRY,
                                 stakeholder=StakeholderType.USER,
@@ -197,20 +200,21 @@ def run_selection_concentration(datasets):
     n_values = [25, 50, 100, 200, 500, 2000]
     all_results = []
 
-    for ds_name, dataset, pool, genres, configs in datasets:
-        print(f"\n  Dataset: {ds_name} ({len(pool)} movies)")
-        target_name = "user"
+    for ds_name, ds, pool, genres, configs in datasets:
+        print(f"\n  Dataset: {ds_name} ({len(pool)} items)")
+        target_name = ds.spec.primary_stakeholder_order[0]
+        diversity_name = ds.spec.diversity_stakeholder
         target_w = configs[target_name]
 
         for n_pairs in n_values:
             seed_data = []
             for seed in SEEDS:
-                weights, selected = train_and_select(pool, genres, target_w, sigma, n_pairs, seed)
+                weights, selected = train_and_select(ds, pool, genres, target_w, sigma, n_pairs, seed)
 
                 # Metrics on selected content
                 unique_genres = len(np.unique(genres[selected]))
                 target_util = float(np.sum(pool[selected] @ target_w))
-                div_util = float(np.sum(pool[selected] @ configs["diversity"]))
+                div_util = float(np.sum(pool[selected] @ configs[diversity_name]))
 
                 # Score concentration: std of scores across pool
                 all_scores = pool @ weights
@@ -262,23 +266,39 @@ def run_selection_concentration(datasets):
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    parser = argparse.ArgumentParser(description="Extremal Goodhart evidence")
+    parser.add_argument("--data", default=None,
+                        help="(deprecated) data directory; use --dataset")
+    parser.add_argument("--dataset", default=None, choices=list(REGISTRY.keys()),
+                        help="Dataset name from registry")
+    args = parser.parse_args()
+
+    if args.dataset:
+        dataset_name = args.dataset
+    elif args.data:
+        warnings.warn(
+            "--data is deprecated; use --dataset {ml-100k,ml-1m,mind-small,amazon-kindle}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        dataset_name = Path(args.data).name
+    else:
+        # Backward compat: when invoked without args, default to ml-100k.
+        # Old behavior was to loop over both ml-100k and ml-1m; now it's
+        # one dataset per invocation.
+        dataset_name = "ml-100k"
+
     print("=" * 60)
-    print("Extremal Goodhart Evidence")
+    print(f"Extremal Goodhart Evidence ({dataset_name})")
     print("=" * 60)
 
     t0 = time.time()
 
-    # Load datasets
-    datasets = []
-    for ds_name, ds_path in [("ml-100k", "data/ml-100k"), ("ml-1m", "data/ml-1m")]:
-        ds_dir = ROOT / ds_path
-        if not ds_dir.exists():
-            print(f"  Skipping {ds_name} (data not found)")
-            continue
-        dataset = MovieLensDataset(str(ds_dir))
-        configs = build_stakeholder_configs(dataset)
-        pool, genres = generate_movielens_content_pool(dataset, min_ratings=5, seed=42)
-        datasets.append((ds_name, dataset, pool, genres, configs))
+    # Load dataset (single dataset per invocation now)
+    ds = load_dataset(dataset_name)
+    pool, genres = ds.pool, ds.topics
+    configs = ds.configs
+    datasets = [(dataset_name, ds, pool, genres, configs)]
 
     sigma_results = run_sigma_invariance(datasets)
     concentration_results = run_selection_concentration(datasets)

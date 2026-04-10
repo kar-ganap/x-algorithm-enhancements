@@ -1,12 +1,12 @@
-"""LOSO and data-budget experiments on MovieLens-100K.
+"""LOSO and data-budget experiments (dataset-agnostic via registry).
 
-Exp 1: Geometric LOSO regret per hidden stakeholder (5 seeds)
-Exp 2: Data budget sweep — train diversity BT on N pairs, measure recovery
-Exp 3: Comparison with synthetic results
+Exp 1: Geometric LOSO regret per hidden stakeholder
+Exp 2: Data budget sweep — train hidden-stakeholder BT on N pairs, measure recovery
+Exp 3: Comparison with synthetic results (MovieLens only)
 
 Usage:
     uv run python scripts/experiments/run_movielens_loso.py --all
-    uv run python scripts/experiments/run_movielens_loso.py --exp loso
+    uv run python scripts/experiments/run_movielens_loso.py --dataset mind-small --exp loso
     uv run python scripts/experiments/run_movielens_loso.py --exp budget
 """
 
@@ -17,31 +17,28 @@ import importlib.util
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
 from scipy.stats import spearmanr
 
 ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _dataset_registry import REGISTRY, load_dataset  # noqa: E402
 
 
 def _load(name: str, path: Path):
+    """Load reward-modeling modules via importlib (registry handles dataset modules)."""
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
-_ml = _load("movielens", ROOT / "enhancements" / "data" / "movielens.py")
-_st = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
 _al = _load("alternative_losses", ROOT / "enhancements" / "reward_modeling" / "alternative_losses.py")
 _kf = _load("k_stakeholder_frontier", ROOT / "enhancements" / "reward_modeling" / "k_stakeholder_frontier.py")
-
-MovieLensDataset = _ml.MovieLensDataset
-build_stakeholder_configs = _st.build_stakeholder_configs
-generate_movielens_content_pool = _st.generate_movielens_content_pool
-generate_movielens_preferences = _st.generate_movielens_preferences
-split_preferences = _st.split_preferences
 
 compute_k_frontier = _kf.compute_k_frontier
 compute_scorer_eval_frontier = _kf.compute_scorer_eval_frontier
@@ -75,13 +72,12 @@ class NumpyEncoder(json.JSONEncoder):
 # Exp 1: Geometric LOSO
 # ---------------------------------------------------------------------------
 
-def run_loso(base_probs, genres, configs, scorer):
+def run_loso(base_probs, genres, configs, scorer, stakeholder_names):
     """Geometric LOSO: compute full frontier, project to 2D, measure regret."""
     print("\n" + "=" * 60)
     print("Exp 1: Geometric LOSO Regret")
     print("=" * 60)
 
-    stakeholder_names = ["user", "platform", "diversity"]
     utility_keys = {s: f"{s}_utility" for s in stakeholder_names}
 
     # Compute full 3-stakeholder frontier (seed-independent for geometric LOSO
@@ -127,16 +123,24 @@ def run_loso(base_probs, genres, configs, scorer):
 # Exp 2: Data Budget
 # ---------------------------------------------------------------------------
 
-def run_data_budget(base_probs, genres, pool, configs, scorer, seeds):
+def run_data_budget(ds, base_probs, genres, pool, configs, scorer, seeds):
     """Sweep N diversity preference pairs, measure regret recovery.
 
     Uses compute_scorer_eval_frontier: content selection with a learned
     scorer, utility evaluation with true stakeholder weights. This avoids
     scale mismatch between learned and true weights in the utility space.
+
+    The "hidden" dimension is the diversity-equivalent stakeholder
+    (``ds.spec.diversity_stakeholder``); the LOSO baseline scorer is the
+    mean of the first two canonical stakeholders, which on MovieLens
+    corresponds to (user + platform) / 2.
     """
     print("\n" + "=" * 60)
     print(f"Exp 2: Data Budget ({len(seeds)} seeds × {len(N_PAIRS_SWEEP)} N values)")
     print("=" * 60)
+
+    diversity_name = ds.spec.diversity_stakeholder
+    diversity_key = f"{diversity_name}_utility"
 
     # Full frontier (gold standard) — uses true diversity weights as scorer
     full_frontier = compute_k_frontier(
@@ -144,12 +148,14 @@ def run_data_budget(base_probs, genres, pool, configs, scorer, seeds):
         top_k=TOP_K, scorer_weights=scorer,
     )
 
-    # LOSO baseline: select using mean(user, platform) as scorer, no diversity info
-    loso_scorer = (configs["user"] + configs["platform"]) / 2.0
+    # LOSO baseline: select using mean of the first two canonical stakeholders
+    # (e.g., user + platform on MovieLens), no diversity info
+    canonical = ds.spec.primary_stakeholder_order
+    loso_scorer = (configs[canonical[0]] + configs[canonical[1]]) / 2.0
     loso_frontier = compute_scorer_eval_frontier(
         base_probs, genres, loso_scorer, configs, DIVERSITY_WEIGHTS, top_k=TOP_K,
     )
-    loso_regret = compute_regret_on_dim(loso_frontier, full_frontier, "diversity_utility")
+    loso_regret = compute_regret_on_dim(loso_frontier, full_frontier, diversity_key)
     print(f"  LOSO baseline regret: {loso_regret['avg_regret']:.3f}")
 
     sweep_results = []
@@ -165,10 +171,12 @@ def run_data_budget(base_probs, genres, pool, configs, scorer, seeds):
                 )
             else:
                 # Train diversity BT on N pairs
-                pref, rej = generate_movielens_preferences(
-                    pool, configs["diversity"], n_pairs=n_pairs, seed=seed,
+                pref, rej = ds.generate_preferences(
+                    configs[diversity_name], n_pairs=n_pairs, seed=seed,
                 )
-                tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed=seed)
+                tp, tr, ep, er = ds.stakeholders_mod.split_preferences(
+                    pref, rej, 0.2, seed=seed,
+                )
                 config = LossConfig(
                     loss_type=LossType.BRADLEY_TERRY,
                     stakeholder=StakeholderType.SOCIETY,
@@ -180,17 +188,19 @@ def run_data_budget(base_probs, genres, pool, configs, scorer, seeds):
                                         eval_probs_preferred=ep, eval_probs_rejected=er)
 
                 # Use learned diversity weights as content scorer
-                # Combine with user+platform for a balanced scorer
-                learned_scorer = (configs["user"] + configs["platform"] + model.weights) / 3.0
+                # Combine with first two canonical stakeholders for a balanced scorer
+                learned_scorer = (
+                    configs[canonical[0]] + configs[canonical[1]] + model.weights
+                ) / 3.0
                 frontier = compute_scorer_eval_frontier(
                     base_probs, genres, learned_scorer, configs, DIVERSITY_WEIGHTS, top_k=TOP_K,
                 )
 
                 # Track weight recovery
-                rho, _ = spearmanr(model.weights, configs["diversity"])
+                rho, _ = spearmanr(model.weights, configs[diversity_name])
                 per_seed_spearman.append(float(rho))
 
-            regret = compute_regret_on_dim(frontier, full_frontier, "diversity_utility")
+            regret = compute_regret_on_dim(frontier, full_frontier, diversity_key)
             per_seed_regrets.append(regret["avg_regret"])
 
         mean_regret = float(np.mean(per_seed_regrets))
@@ -228,8 +238,11 @@ def run_data_budget(base_probs, genres, pool, configs, scorer, seeds):
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="MovieLens LOSO + data budget")
-    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
+    parser = argparse.ArgumentParser(description="LOSO + data budget (registry-driven)")
+    parser.add_argument("--data", default=None,
+                        help="(deprecated) data directory; use --dataset")
+    parser.add_argument("--dataset", default=None, choices=list(REGISTRY.keys()),
+                        help="Dataset name from registry")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--exp", type=str, choices=["loso", "budget"])
     args = parser.parse_args()
@@ -237,23 +250,30 @@ def main():
     if not args.all and not args.exp:
         args.all = True
 
-    print("=" * 60)
-    print("MovieLens LOSO + Data Budget Experiments")
-    print("=" * 60)
+    # Resolve dataset name
+    if args.dataset:
+        dataset_name = args.dataset
+    elif args.data:
+        warnings.warn(
+            "--data is deprecated; use --dataset {ml-100k,ml-1m,mind-small,amazon-kindle}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        dataset_name = Path(args.data).name
+    else:
+        dataset_name = "ml-100k"
 
-    data_dir = ROOT / Path(args.data)
-    dataset_name = data_dir.name
-    if not data_dir.exists():
-        print(f"ERROR: MovieLens data not found at {data_dir}")
-        sys.exit(1)
+    print("=" * 60)
+    print(f"LOSO + Data Budget Experiments ({dataset_name})")
+    print("=" * 60)
 
     t0 = time.time()
-    dataset = MovieLensDataset(str(data_dir))
-    configs = build_stakeholder_configs(dataset)
-    pool, genres = generate_movielens_content_pool(dataset, min_ratings=5, seed=42)
-    base_probs = pool[np.newaxis, :, :]  # [1, M, 19]
-    scorer = configs["platform"]  # Platform weights as engagement scorer
-    print(f"Loaded: {pool.shape[0]} movies, {pool.shape[1]} genres")
+    ds = load_dataset(dataset_name)
+    configs = ds.configs
+    pool, genres = ds.pool, ds.topics
+    base_probs = pool[np.newaxis, :, :]  # [1, M, D]
+    scorer = configs[ds.spec.scorer_stakeholder]
+    print(f"Loaded: {pool.shape[0]} items, {pool.shape[1]} features")
 
     results = {
         "config": {
@@ -262,15 +282,20 @@ def main():
             "top_k": TOP_K,
             "diversity_weights": DIVERSITY_WEIGHTS,
             "n_seeds": len(SEEDS),
-            "scorer": "platform_weights",
+            "scorer": f"{ds.spec.scorer_stakeholder}_weights",
         }
     }
 
     if args.all or args.exp == "loso":
-        results["loso_regret"] = run_loso(base_probs, genres, configs, scorer)
+        results["loso_regret"] = run_loso(
+            base_probs, genres, configs, scorer,
+            list(ds.spec.primary_stakeholder_order),
+        )
 
     if args.all or args.exp == "budget":
-        results["data_budget"] = run_data_budget(base_probs, genres, pool, configs, scorer, SEEDS)
+        results["data_budget"] = run_data_budget(
+            ds, base_probs, genres, pool, configs, scorer, SEEDS,
+        )
 
     # Comparison with synthetic
     synthetic_path = ROOT / "results" / "partial_observation.json"
