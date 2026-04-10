@@ -235,31 +235,24 @@ stakeholders. There are no distributional tails to exploit; the
 content pool is fixed. The effect is driven entirely by the angle
 between stakeholder utility directions.
 
-\subsection{Why Synthetic Data Shows No Goodhart}
+\subsection{The Synthetic Null Case}
 
-On the synthetic benchmark built on X's 18-action engagement space,
-all three stakeholder pairs have positive cosine similarity:
-user--platform $= +0.89$, user--society $= +0.84$,
+On the synthetic benchmark built on X's 18-action engagement space
+(\cref{sec:setup}), all three stakeholder pairs have positive cosine
+similarity: user--platform $= +0.89$, user--society $= +0.84$,
 platform--society $= +0.51$. The direction condition predicts no
 Goodhart for any pair---and under utility-based evaluation, this is
 exactly what we observe: society utility \emph{improves} from $3.21$
 ($N = 25$) to $5.34$ ($N = 2{,}000$), a $+67\%$ increase.
 
-This contradicts an earlier analysis of the same synthetic data using
-Hausdorff distance between Pareto frontiers, which showed an apparent
-Goodhart effect (Hausdorff increasing from 2.27 at $N = 100$ to 6.82
-at $N = 500$). The discrepancy arises because Hausdorff distance
-conflates optimization precision with stakeholder harm
-(\cref{sec:hausdorff}). When measured correctly---per-stakeholder
-utility on selected content---synthetic data has no Goodhart, exactly
-as the cosine condition predicts.
-
-The \emph{absence} of Goodhart on synthetic data is itself
-informative: it reveals that the synthetic benchmark's stakeholder
-geometry (all $\cos > 0$) represents a regime where more data is
-universally beneficial. The MovieLens benchmark, where
-user--diversity $\cos \approx -0.3$, represents the opposing regime.
-The direction condition explains both.
+The absence of Goodhart on synthetic data is itself informative: the
+synthetic benchmark's stakeholder geometry (all $\cos > 0$)
+represents a regime where more data is universally beneficial. The
+MovieLens benchmark, where user--diversity $\cos \approx -0.3$,
+represents the opposing regime. The direction condition explains both.
+A standard frontier distance metric (Hausdorff distance) gives a
+different and misleading picture on this data; we address this
+discrepancy in \cref{sec:hausdorff}.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Why the Condition Holds: Low-Rank Weight Space}
