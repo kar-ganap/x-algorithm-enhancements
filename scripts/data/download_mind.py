@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 """Download MIND (Microsoft News Dataset) small release.
 
+Source: Hugging Face mirror maintained by the Recommenders team.
+The original Microsoft Azure blob storage (mind201910small.blob.core.windows.net)
+is no longer publicly accessible (HTTP 409).
+
 MIND-small: 50K users, ~65K news articles, ~230K impressions.
-Total size: ~100 MB compressed, ~450 MB extracted.
+Total size: ~80 MB compressed, ~450 MB extracted.
 
 Usage:
     uv run python scripts/data/download_mind.py
 """
 
 import os
-import urllib.request
 import zipfile
 from pathlib import Path
 
-MIND_TRAIN_URL = "https://mind201910small.blob.core.windows.net/release/MINDsmall_train.zip"
-MIND_DEV_URL = "https://mind201910small.blob.core.windows.net/release/MINDsmall_dev.zip"
+import requests
+
+MIND_TRAIN_URL = "https://huggingface.co/datasets/Recommenders/MIND/resolve/main/MINDsmall_train.zip"
+MIND_DEV_URL = "https://huggingface.co/datasets/Recommenders/MIND/resolve/main/MINDsmall_dev.zip"
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
@@ -27,8 +32,19 @@ def download_and_extract(url: str, target_dir: Path, zip_name: str) -> None:
         return
 
     print(f"  Downloading {url} ...")
-    urllib.request.urlretrieve(url, zip_path)
-    print(f"  Downloaded {zip_path.stat().st_size / 1e6:.1f} MB")
+    with requests.get(url, stream=True, allow_redirects=True, timeout=120) as r:
+        r.raise_for_status()
+        total = int(r.headers.get("content-length", 0))
+        downloaded = 0
+        with open(zip_path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1024 * 1024):
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total:
+                    pct = downloaded / total * 100
+                    print(f"    {downloaded / 1e6:.1f} / {total / 1e6:.1f} MB ({pct:.0f}%)",
+                          end="\r", flush=True)
+    print(f"\n  Downloaded {zip_path.stat().st_size / 1e6:.1f} MB")
 
     print(f"  Extracting to {target_dir} ...")
     with zipfile.ZipFile(zip_path, "r") as zf:
@@ -39,7 +55,7 @@ def download_and_extract(url: str, target_dir: Path, zip_name: str) -> None:
 
 def main():
     mind_dir = DATA_DIR / "mind-small"
-    print("Downloading MIND-small ...")
+    print("Downloading MIND-small (HuggingFace mirror) ...")
     download_and_extract(MIND_TRAIN_URL, mind_dir / "train", "MINDsmall_train.zip")
     download_and_extract(MIND_DEV_URL, mind_dir / "dev", "MINDsmall_dev.zip")
 
@@ -58,6 +74,12 @@ def main():
         with open(news_train, encoding="utf-8") as f:
             train_count = sum(1 for _ in f)
         print(f"\nTrain news articles: {train_count:,}")
+
+    behaviors_train = mind_dir / "train" / "behaviors.tsv"
+    if behaviors_train.exists():
+        with open(behaviors_train, encoding="utf-8") as f:
+            beh_count = sum(1 for _ in f)
+        print(f"Train impressions:   {beh_count:,}")
 
 
 if __name__ == "__main__":

@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-"""Download Amazon Reviews 2018 - Kindle Store 5-core.
+"""Download Amazon Reviews 2023 - Kindle Store subset.
 
-Kindle Store 5-core: ~2.2M reviews, ~140K items (5-core filtered).
-Downloads reviews (~437 MB compressed) and metadata (~310 MB compressed).
-After download, streams through the files to build a subset:
-  - Filter to top-20K items by review count
+Source: McAuley Lab's 2023 release (the 2018 release is no longer available).
+- 5-core pre-filtered ratings CSV from HuggingFace (~932 MB)
+- Item metadata (gzipped JSONL) from UCSD McAuley Lab (~2.27 GB)
+
+After download, streams through files to build a subset:
+  - Filter to top-20K items by rating count
   - Filter to users with ≥5 reviews on those items
   - Target: ~100K reviews, 10K users, 20K items
+
+Schema differences from 2018 release:
+  - reviews: 'rating' (not 'overall'), 'user_id' (not 'reviewerID'),
+    'parent_asin' is the join key to metadata
+  - metadata: includes 'price', hierarchical 'categories', 'average_rating',
+    'rating_number' — richer than 2018
 
 Usage:
     uv run python scripts/data/download_amazon.py
@@ -14,12 +22,19 @@ Usage:
 
 import gzip
 import json
-import urllib.request
 from pathlib import Path
 
-# UCSD McAuley Lab mirror (2018 release)
-REVIEWS_URL = "https://jmcauley.ucsd.edu/data/amazon/amazonReviews/Kindle_Store_5.json.gz"
-META_URL = "https://jmcauley.ucsd.edu/data/amazon/metaFiles/meta_Kindle_Store.json.gz"
+import requests
+
+# McAuley Lab 2023 release. UCSD hosts gzipped metadata; HF hosts pre-filtered 5-core ratings.
+RATINGS_URL = (
+    "https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/"
+    "resolve/main/benchmark/5core/rating_only/Kindle_Store.csv"
+)
+META_URL = (
+    "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/"
+    "raw/meta_categories/meta_Kindle_Store.jsonl.gz"
+)
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 TARGET_DIR = DATA_DIR / "amazon-kindle"
@@ -33,13 +48,39 @@ def download(url: str, dest: Path) -> None:
         return
     print(f"  Downloading {url} ...")
     dest.parent.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, dest)
-    print(f"  Downloaded {dest.stat().st_size / 1e6:.1f} MB")
+    with requests.get(url, stream=True, allow_redirects=True, timeout=600) as r:
+        r.raise_for_status()
+        total = int(r.headers.get("content-length", 0))
+        downloaded = 0
+        with open(dest, "wb") as f:
+            for chunk in r.iter_content(chunk_size=4 * 1024 * 1024):
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total:
+                    pct = downloaded / total * 100
+                    print(f"    {downloaded / 1e6:.0f} / {total / 1e6:.0f} MB ({pct:.0f}%)",
+                          end="\r", flush=True)
+    print(f"\n  Downloaded {dest.stat().st_size / 1e6:.1f} MB")
 
 
-def stream_jsonl_gz(path: Path):
-    """Yield dicts from a gzipped JSON-lines file (Amazon's format uses
-    Python dict literals via eval, not strict JSON). Handle both."""
+def stream_ratings_csv(path: Path):
+    """Yield (user_id, parent_asin, rating, timestamp) tuples from the 5-core CSV.
+    Format: user_id,parent_asin,rating,timestamp (with header row)."""
+    with open(path, encoding="utf-8") as f:
+        header = f.readline().strip()  # consume header
+        del header
+        for line in f:
+            parts = line.strip().split(",")
+            if len(parts) < 4:
+                continue
+            try:
+                yield parts[0], parts[1], float(parts[2]), int(parts[3])
+            except ValueError:
+                continue
+
+
+def stream_meta_jsonl_gz(path: Path):
+    """Yield dicts from gzipped JSONL metadata file."""
     with gzip.open(path, "rt", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -48,16 +89,10 @@ def stream_jsonl_gz(path: Path):
             try:
                 yield json.loads(line)
             except json.JSONDecodeError:
-                # Amazon 2018 release sometimes uses Python-dict-like literals
-                # with single quotes; convert using literal_eval via ast
-                import ast
-                try:
-                    yield ast.literal_eval(line)
-                except (SyntaxError, ValueError):
-                    continue
+                continue
 
 
-def build_subset(reviews_path: Path, meta_path: Path, out_dir: Path) -> None:
+def build_subset(ratings_path: Path, meta_path: Path, out_dir: Path) -> None:
     subset_reviews_path = out_dir / "reviews_subset.jsonl"
     subset_meta_path = out_dir / "meta_subset.jsonl"
 
@@ -65,16 +100,13 @@ def build_subset(reviews_path: Path, meta_path: Path, out_dir: Path) -> None:
         print(f"  Subset already exists at {out_dir}")
         return
 
-    # Pass 1: count reviews per item (streaming)
+    # Pass 1: count reviews per item
     print("  Pass 1: counting reviews per item ...")
     item_counts: dict[str, int] = {}
-    for r in stream_jsonl_gz(reviews_path):
-        asin = r.get("asin")
-        if asin:
-            item_counts[asin] = item_counts.get(asin, 0) + 1
+    for _, parent_asin, _, _ in stream_ratings_csv(ratings_path):
+        item_counts[parent_asin] = item_counts.get(parent_asin, 0) + 1
     print(f"    Total unique items: {len(item_counts):,}")
 
-    # Select top-K items
     top_items = set(
         asin for asin, _ in sorted(item_counts.items(), key=lambda x: -x[1])[:TOP_K_ITEMS]
     )
@@ -83,10 +115,8 @@ def build_subset(reviews_path: Path, meta_path: Path, out_dir: Path) -> None:
     # Pass 2: count reviews per user among top items
     print("  Pass 2: counting reviews per user on top items ...")
     user_counts: dict[str, int] = {}
-    for r in stream_jsonl_gz(reviews_path):
-        asin = r.get("asin")
-        uid = r.get("reviewerID")
-        if asin in top_items and uid:
+    for uid, asin, _, _ in stream_ratings_csv(ratings_path):
+        if asin in top_items:
             user_counts[uid] = user_counts.get(uid, 0) + 1
 
     active_users = {uid for uid, n in user_counts.items() if n >= MIN_USER_REVIEWS}
@@ -96,31 +126,32 @@ def build_subset(reviews_path: Path, meta_path: Path, out_dir: Path) -> None:
     print("  Pass 3: writing subset reviews ...")
     n_written = 0
     with open(subset_reviews_path, "w", encoding="utf-8") as f:
-        for r in stream_jsonl_gz(reviews_path):
-            if r.get("asin") in top_items and r.get("reviewerID") in active_users:
-                minimal = {
-                    "reviewerID": r.get("reviewerID"),
-                    "asin": r.get("asin"),
-                    "overall": r.get("overall"),
-                    "unixReviewTime": r.get("unixReviewTime"),
+        for uid, asin, rating, ts in stream_ratings_csv(ratings_path):
+            if asin in top_items and uid in active_users:
+                record = {
+                    "user_id": uid,
+                    "parent_asin": asin,
+                    "rating": rating,
+                    "timestamp": ts,
                 }
-                f.write(json.dumps(minimal) + "\n")
+                f.write(json.dumps(record) + "\n")
                 n_written += 1
     print(f"    Wrote {n_written:,} reviews to {subset_reviews_path}")
 
-    # Pass 4: write metadata for top items
+    # Pass 4: write metadata for top items (join key is parent_asin)
     print("  Pass 4: writing subset metadata ...")
     n_meta = 0
     with open(subset_meta_path, "w", encoding="utf-8") as f:
-        for m in stream_jsonl_gz(meta_path):
-            if m.get("asin") in top_items:
+        for m in stream_meta_jsonl_gz(meta_path):
+            if m.get("parent_asin") in top_items:
                 minimal = {
-                    "asin": m.get("asin"),
+                    "parent_asin": m.get("parent_asin"),
                     "title": m.get("title", ""),
-                    "category": m.get("category", []),
+                    "categories": m.get("categories", []),
+                    "main_category": m.get("main_category", ""),
                     "price": m.get("price", ""),
-                    "brand": m.get("brand", ""),
-                    "description": m.get("description", []),
+                    "average_rating": m.get("average_rating"),
+                    "rating_number": m.get("rating_number"),
                     "details": m.get("details", {}),
                 }
                 f.write(json.dumps(minimal) + "\n")
@@ -130,15 +161,15 @@ def build_subset(reviews_path: Path, meta_path: Path, out_dir: Path) -> None:
 
 def main():
     TARGET_DIR.mkdir(parents=True, exist_ok=True)
-    reviews_gz = TARGET_DIR / "Kindle_Store_5.json.gz"
-    meta_gz = TARGET_DIR / "meta_Kindle_Store.json.gz"
+    ratings_csv = TARGET_DIR / "Kindle_Store_5core_ratings.csv"
+    meta_gz = TARGET_DIR / "meta_Kindle_Store.jsonl.gz"
 
-    print("Downloading Amazon Kindle Store 5-core (may take several minutes) ...")
-    download(REVIEWS_URL, reviews_gz)
+    print("Downloading Amazon Kindle 5-core ratings + metadata ...")
+    download(RATINGS_URL, ratings_csv)
     download(META_URL, meta_gz)
 
-    print("\nBuilding subset (streaming through raw files) ...")
-    build_subset(reviews_gz, meta_gz, TARGET_DIR)
+    print("\nBuilding subset ...")
+    build_subset(ratings_csv, meta_gz, TARGET_DIR)
 
     print(f"\nAmazon Kindle subset ready at {TARGET_DIR}")
     for f in sorted(TARGET_DIR.iterdir()):
