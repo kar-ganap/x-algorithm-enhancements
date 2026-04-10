@@ -68,7 +68,7 @@ results/*.png
 checkpoints/
 
 # Datasets (large, downloaded separately)
-data/
+/data/
 
 # Training logs
 training*.log
