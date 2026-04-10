@@ -86,8 +86,33 @@
 
 % ══════════════════════════════════════════════════════════════════
 \begin{abstract}\noindent
-% TODO: Write after §4
-\textit{[Abstract placeholder --- write after completing §4.]}
+Multi-stakeholder recommendation systems optimize proxy objectives
+that may harm unobserved stakeholders. We identify a precise
+condition governing when this occurs: in Bradley-Terry preference
+learning with $K$ stakeholders, additional training data degrades a
+hidden stakeholder's utility if and only if the cosine similarity
+between the optimization target and the hidden stakeholder's utility
+direction is negative. We validate this \emph{directional Goodhart
+condition} on 42 data points across 2 datasets (MovieLens-100K and
+MovieLens-1M), 8 stakeholders, and 3 optimization targets, with
+100\% accuracy for $|\cos| > 0.2$ (28/28) and a transition zone near
+$\cos \approx 0$ (10/14). The condition correctly predicts that a
+synthetic benchmark built on X's 18-action engagement space exhibits
+no Goodhart effect (all stakeholder pairs have positive cosine),
+correcting a prior Hausdorff-based analysis that falsely indicated
+otherwise.
+
+The condition arises from the low-rank structure of the
+multi-stakeholder weight space: with $K$ stakeholders, BT-learned
+weight vectors lie in a $K$-dimensional subspace (projection cosine
+$> 0.97$), making convergence direction fully determined by
+stakeholder geometry. Applied to X's open-sourced recommendation
+algorithm, the Goodhart risk reduces to one observable: whether the
+platform treats negative signals (blocks, reports) as positive
+engagement. We provide an audit toolkit, a data budget analysis (25
+preference pairs recover ${\sim}50\%$ of hidden stakeholder harm,
+95\% CI: [40\%, 64\%]), and practical guidance for platform
+transparency under the EU Digital Services Act.
 \end{abstract}
 
 %═══════════════════════════════════════════════════════════════════
