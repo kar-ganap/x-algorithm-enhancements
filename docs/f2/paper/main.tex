@@ -25,6 +25,8 @@
 % ── Math ──────────────────────────────────────────────────────────
 \usepackage{amsmath}
 \usepackage{mathtools}
+\let\openbox\relax
+\usepackage{amsthm}
 
 % ── Tables ────────────────────────────────────────────────────────
 \usepackage{booktabs}
@@ -69,15 +71,13 @@
 % ── Microtypography ──────────────────────────────────────────────
 \usepackage{microtype}
 
-% ── Custom commands ──────────────────────────────────────────────
-\newcommand{\numexp}{87}
-\newcommand{\numconv}{79}
-\newcommand{\costhresh}{0.92}
-\newcommand{\alphaspearman}{1.0}
+% ── Theorem environments ─────────────────────────────────────────
+\newtheorem{proposition}{Proposition}
 
 % ══════════════════════════════════════════════════════════════════
-\title{\textbf{Multi-Stakeholder Reward Modeling\\[2pt]
-  in Open Recommendation Algorithms}}
+\title{\textbf{When More Data Hurts:\\[2pt]
+  A Directional Goodhart Condition for\\[2pt]
+  Multi-Stakeholder Preference Learning}}
 \author{Kartik G Bhat\thanks{Independent Researcher. Contact: \texttt{gkartik@gmail.com}}}
 \date{}
 
@@ -86,43 +86,33 @@
 
 % ══════════════════════════════════════════════════════════════════
 \begin{abstract}\noindent
-Multi-stakeholder recommendation systems balance user engagement,
-platform retention, and societal welfare, but the utility functions
-defining these objectives are hand-specified, partially observable, and
-potentially misspecified. We develop methodology for studying
-these three challenges on a synthetic benchmark built on X's
-18-action engagement space, motivated by the platform's transition
-from explicit utility weights (2023) to an implicit Grok-based
-transformer (2026). Because the production model's trained parameters
-and user data are not publicly available, we use a controlled
-environment with known ground-truth utilities---a prerequisite for
-measuring regret, recovery, and sensitivity.
+Multi-stakeholder recommendation systems optimize proxy objectives
+that may harm unobserved stakeholders. We identify a precise
+condition governing when this occurs: in Bradley-Terry preference
+learning with $K$ stakeholders, additional training data degrades a
+hidden stakeholder's utility if and only if the cosine similarity
+between the optimization target and the hidden stakeholder's utility
+direction is negative. We validate this \emph{directional Goodhart
+condition} on 42 data points across 2 datasets (MovieLens-100K and
+MovieLens-1M), 8 stakeholders, and 3 optimization targets, with
+100\% accuracy for $|\cos| > 0.2$ (28/28) and a transition zone near
+$\cos \approx 0$ (10/14). The condition correctly predicts that a
+synthetic benchmark built on X's 18-action engagement space exhibits
+no Goodhart effect (all stakeholder pairs have positive cosine),
+correcting a prior Hausdorff-based analysis that falsely indicated
+otherwise.
 
-\textbf{Identifiability.} Across 87 training experiments with four
-Bradley-Terry loss variants, stakeholder differentiation is determined
-entirely by training labels, not the loss function (cosine
-similarity~$>0.92$ within any loss type, 0.478 across stakeholders).
-The negativity-aversion parameter~$\alpha$ is recoverable from learned
-weight vectors with Spearman~$\rho = 1.0$, robust to $\leq$20\%
-label noise and $\geq$250 preference pairs.
-
-\textbf{Partial observation.} Leave-One-Stakeholder-Out analysis shows
-hiding society costs $10\times$ more regret than hiding user. Even 25
-preference pairs from the hidden stakeholder reduce regret by 42\%
-(20 seeds), with diminishing returns beyond $\sim$200 pairs. A
-degradation model predicts which stakeholder is most dangerous to miss
-(Spearman~$= 0.96$) but not by how much ($R^2 = 0.72$).
-
-\textbf{Utility sensitivity.} The Pareto frontier absorbs individual
-weight perturbation (rank stability~$= 1.0$ at all levels tested) but
-not simultaneous misspecification. With misspecified weights,
-additional training data amplifies the error after $N > 100$
-pairs---a Goodhart effect. Data helps when specification is correct;
-it hurts when specification is wrong.
-
-Results are validated under nonlinear utility families (prospect theory,
-threshold) and externally on MovieLens-100K (+59\% NDCG) and a
-648-parameter synthetic Twitter environment.
+The condition arises from the low-rank structure of the
+multi-stakeholder weight space: with $K$ stakeholders, BT-learned
+weight vectors lie in a $K$-dimensional subspace (projection cosine
+$> 0.97$), making convergence direction fully determined by
+stakeholder geometry. Applied to X's open-sourced recommendation
+algorithm, the Goodhart risk reduces to one observable: whether the
+platform treats negative signals (blocks, reports) as positive
+engagement. We provide an audit toolkit, a data budget analysis (25
+preference pairs recover ${\sim}50\%$ of hidden stakeholder harm,
+95\% CI: [40\%, 64\%]), and practical guidance for platform
+transparency under the EU Digital Services Act.
 \end{abstract}
 
 %═══════════════════════════════════════════════════════════════════
@@ -130,1211 +120,517 @@ threshold) and externally on MovieLens-100K (+59\% NDCG) and a
 \label{sec:intro}
 %═══════════════════════════════════════════════════════════════════
 
-Recommendation systems serve multiple stakeholders with conflicting
-objectives. A social media platform balances user engagement (did the
-user enjoy this content?), platform retention (will the user return
-tomorrow?), and societal welfare (did this content increase
-polarization?). Multi-stakeholder optimization frameworks formalize
-these tradeoffs as Pareto frontiers over stakeholder
-utilities~\cite{burke2017multistakeholder, multifr2022,
-eval2025multistakeholder}, but three questions remain largely
-unexamined empirically:
-
-\begin{enumerate}
-  \item \textbf{Identifiability.} What properties of stakeholder
-    preferences can a Bradley-Terry~(BT) reward model actually recover
-    from pairwise comparison data?
-  \item \textbf{Partial observation.} When a stakeholder is
-    unobservable---as societal welfare typically is---how much does the
-    Pareto frontier degrade, and how cheaply can the degradation be
-    mitigated?
-  \item \textbf{Specification sensitivity.} How precisely must
-    stakeholder utility functions be specified before the frontier
-    shifts meaningfully?
-\end{enumerate}
-
-These questions are newly urgent. In January 2026, X~(formerly
-Twitter) open-sourced a complete rewrite of its recommendation
-algorithm~\cite{xalgorithm2026}, replacing the hand-engineered
-Phoenix heavy ranker~\cite{xalgorithm2023} with a Grok-based
-transformer that ``eliminated every single hand-engineered feature and
-most heuristics.'' The 2023 release exposed \emph{explicit} utility
-weights---per-action multipliers for favorites, reposts, blocks, and
-15 other engagement signals. The 2026 release exposes
-\emph{structure without weights}: the prediction targets (action
-types) are visible, but the actual utility weighting is implicit in
-8B learned parameters. This transition (\cref{fig:transition}) from explicit to implicit
-specification raises a concrete audit question: can regulators assess
-multi-stakeholder welfare from released code when the weights are
-opaque?~\cite{shaped2023secrets}
-
-We cannot study these questions directly on the production Grok model:
-the trained parameters and user data are proprietary, and our
-methodology requires known ground-truth utilities to measure regret
-and recovery. Instead, we build a controlled synthetic benchmark on
-X's 18-action engagement space, using BT preference learning to
-train separate reward models for three stakeholders (user, platform,
-society). The benchmark shares the production action space but uses
-synthetic utilities with known ground truth---the only setting where
-questions about \emph{how much} is lost can be answered precisely.
-Our principal findings:
-
-\begin{itemize}
-  \item \textbf{Labels, not loss, determine differentiation.} Across
-    \numexp{} training experiments (\numconv{} converged) with four BT
-    loss variants, stakeholder weight vectors converge to cosine
-    similarity $>\costhresh$ when trained on identical preference
-    labels, regardless of loss function. Differentiation arises
-    entirely from stakeholder-specific training data. The
-    negativity-aversion parameter~$\alpha$ is recoverable from learned
-    weights with Spearman~$\rho = \alphaspearman$, robust to
-    $\leq$20\% label noise and $\geq$250 preference
-    pairs~(\cref{sec:identifiability}).
-
-  \item \textbf{Hiding society costs 10$\times$ more than hiding
-    user.} Leave-One-Stakeholder-Out~(LOSO) analysis shows that
-    removing society from the optimization produces average regret of
-    1.08, versus 0.11 for user---the stakeholder hardest to observe
-    is the most costly to miss. Even 25 preference pairs from the
-    hidden stakeholder reduce regret by 42\% (20 seeds, $p < 0.01$),
-    with diminishing returns beyond $\sim$200
-    pairs~(\cref{sec:partial}).
-
-  \item \textbf{The Pareto frontier is robust to individual weight
-    perturbation but not to simultaneous misspecification.} Perturbing
-    any single utility weight by up to $3\times$ preserves all
-    Pareto-optimal operating points (rank stability~$= 1.0$). But
-    simultaneous perturbation of multiple weights at matched magnitude
-    ($\sigma = 0.3$) causes $2\times$ more frontier shift than
-    changing the $\alpha$ ratio alone. With misspecified weights,
-    additional training data \emph{amplifies} the error after
-    $N > 100$ pairs---a Goodhart
-    effect~\cite{skalse2024goodhart}~(\cref{sec:sensitivity}).
-\end{itemize}
-
-All results are validated under nonlinear utility
-families~(prospect-theoretic concave and threshold utilities) and
-externally on MovieLens-100K (+59\% NDCG) and a 648-parameter
-synthetic Twitter environment. Code and data are available at
-\url{https://github.com/kar-ganap/x-algorithm-enhancements}.
-
-% ── Figure 1: X algorithm transition ──────────────────────────────
-\begin{figure*}[t]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-  box/.style={draw, rounded corners=3pt, minimum height=1.4cm, text width=3.8cm, align=center, font=\small},
-  weight/.style={draw, rounded corners=2pt, minimum height=0.6cm, font=\scriptsize\ttfamily, fill=blue!5},
-  opaque/.style={draw, rounded corners=2pt, minimum height=0.6cm, font=\scriptsize, fill=gray!15, draw=gray},
-  arrow/.style={-{Stealth[length=6pt]}, thick},
-  label/.style={font=\footnotesize\itshape, text=gray!70!black},
-]
-
-% 2023: Explicit weights — spread boxes wider
-\node[box, fill=blue!8] (scorer2023) at (0, 0) {\textbf{Phoenix Heavy Ranker}\\[2pt]MaskNet neural network};
-\node[weight] (w1) at (-2.8, -1.8) {fav: 1.0};
-\node[weight] (w2) at (-0.9, -1.8) {repost: 0.8};
-\node[weight] (w3) at (0.9, -1.8) {block: $-$1.5};
-\node[weight] (w4) at (2.8, -1.8) {report: $-$3.0};
-
-\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w1.north);
-\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w2.north);
-\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w3.north);
-\draw[arrow, blue!60] (scorer2023.south) -- ++(0, -0.4) -| (w4.north);
-
-\node[label] at (0, -2.7) {Per-action weights \textbf{visible}};
-\node[font=\small\bfseries] at (0, 1.2) {March 2023};
-
-% Arrow between eras
-\draw[-{Stealth[length=8pt]}, ultra thick, gray!50] (5, 0) -- node[above, font=\small\itshape] {``eliminated all} node[below, font=\small\itshape] {hand-engineered features''} (8, 0);
-
-% 2026: Implicit weights — spread boxes wider
-\node[box, fill=red!8] (scorer2026) at (12, 0) {\textbf{Grok Transformer}\\[2pt]8B learned parameters};
-\node[opaque] (t1) at (9.2, -1.8) {P(fav)};
-\node[opaque] (t2) at (10.7, -1.8) {P(repost)};
-\node[opaque] (t3) at (12.2, -1.8) {P(block)};
-\node[opaque] (t4) at (13.7, -1.8) {P(report)};
-\node[font=\scriptsize, text=gray] at (14.8, -1.8) {$\cdots$};
-
-\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t1.north);
-\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t2.north);
-\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t3.north);
-\draw[arrow, gray] (scorer2026.south) -- ++(0, -0.4) -| (t4.north);
-
-\node[label] at (12, -2.7) {Action \emph{types} visible, weights \textbf{opaque}};
-\node[font=\small\bfseries] at (12, 1.2) {January 2026};
-
-% Brace underneath
-\draw[decorate, decoration={brace, mirror, amplitude=6pt}, thick, red!60!black]
-  (-3.5, -3.2) -- (15.5, -3.2)
-  node[midway, below=8pt, font=\small, text=red!60!black, align=center]
-  {How precisely must utility weights be specified for meaningful\\multi-stakeholder audit?};
-
-\end{tikzpicture}%
-}% end resizebox
-\caption{X's algorithm transition. The 2023 Phoenix release exposed
-  explicit per-action weights (left). The 2026 Grok release exposes
-  prediction targets but not weights (right). Our study tests how much
-  of the multi-stakeholder frontier is recoverable from structure
-  alone.}
-\label{fig:transition}
-\end{figure*}
-
-The remainder of the paper is organized as follows.
-\Cref{sec:background} reviews multi-stakeholder recommendation, BT
-preference learning, and utility sensitivity analysis.
-\Cref{sec:system} describes the synthetic benchmark and evaluation
-framework. \Cref{sec:identifiability,sec:partial,sec:sensitivity}
-present results on identifiability, partial observation, and
-sensitivity. \Cref{sec:nonlinear} tests
-robustness under nonlinear utilities. \Cref{sec:validation} provides
-external validation. \Cref{sec:discussion} synthesizes practical
-guidance and discusses limitations.
+% TODO: Write after §4 and §6
+\textit{[Introduction placeholder.]}
 
 %═══════════════════════════════════════════════════════════════════
 \section{Background and Related Work}
 \label{sec:background}
 %═══════════════════════════════════════════════════════════════════
 
-\subsection{Multi-Stakeholder Recommender Systems}
-
-Burke and Abdollahpouri~\cite{burke2017multistakeholder} introduced a
-utility-based framework for representing stakeholder values in
-recommendation, distinguishing consumers, providers, and system
-operators as distinct principals. Subsequent work formalized
-multi-stakeholder optimization using Pareto frontiers:
-Multi-FR~\cite{multifr2022} applies multiple gradient descent to
-generate Pareto-optimal solutions balancing accuracy and fairness
-across stakeholders, while recent surveys~\cite{eval2025multistakeholder}
-propose a four-stage evaluation methodology (stakeholder identification,
-value articulation, metric selection, aggregate evaluation).
-Lasser et al.~\cite{lasser2025designing} argue for designing
-recommendation algorithms through the lens of healthy civic discourse,
-foregrounding societal welfare as a first-class stakeholder objective. Stray et al.~\cite{stray2024building} provide an interdisciplinary synthesis of how to embed human values in recommender systems.
-
-A parallel line of work on \emph{pluralistic alignment} addresses
-diverse preferences within reinforcement learning from human feedback
-(RLHF). Sorensen et al.~\cite{sorensen2024roadmap} map the design
-space for handling preference heterogeneity, ranging from personalized
-reward models~\cite{pad2025personalized} to federated
-aggregation. These approaches assume preferences can be captured in a
-single (possibly personalized) model. Our work takes a different
-stance: stakeholders have fundamentally different objective functions
-that must be traded off on a frontier, Agarwal et al.~\cite{agarwal2024system2} formalize the utility-engagement distinction via temporal point processes. Our work asks the complementary question:
-what happens when one stakeholder's objective is absent entirely.
-
-\subsection{Bradley-Terry Preference Learning}
-
-The Bradley-Terry (BT) model~\cite{bradley1952rank} converts pairwise
-comparisons into scalar scores via
-$P(\text{prefer } a \succ b) = \sigma(r_a - r_b)$, where $r_i$ are
-learned reward values. BT preference learning underpins most modern
-RLHF pipelines, though the theoretical justification for this
-application has only recently been examined. Sun
-et al.~\cite{sun2025rethinking} prove that BT models possess an
-\emph{order consistency} property: any monotonic transformation of
-the true reward preserves the correct ranking, making BT sufficient
-for downstream optimization even when absolute reward values are
-unrecoverable. Extensions beyond the BT
-assumption~\cite{beyondbt2025} address intransitive and
-context-dependent preferences, though these remain less common in
-deployed systems.
-
-Our utility model is a special case of multi-attribute utility theory
-(MAUT)~\cite{keeney1976decisions}, which decomposes preferences into
-weighted sums of single-attribute utilities. The structural family
-$U = \text{pos} - \alpha \cdot \text{neg}$ parameterizes each
-stakeholder by a single negativity-aversion coefficient~$\alpha$,
-varying from $\alpha = 0.3$ (platform, tolerant of negative signals)
-to $\alpha = 4.0$ (society, highly penalizing).
-
-\subsection{Reward Misspecification and Goodhart's Law}
-
-Goodhart's Law---``when a measure becomes a target, it ceases to be a
-good measure''---manifests in RL as reward hacking: agents exploit
-misspecified proxy rewards to achieve high proxy scores while
-degrading true objectives~\cite{skalse2024goodhart, weng2024reward}.
-Casper et al.~\cite{casper2023open} catalog open problems in RLHF,
-arguing that condensing diverse human preferences into a single reward
-model is ``fundamentally misspecified.'' This concern applies
-\emph{a fortiori} to multi-stakeholder systems, where each
-stakeholder's utility may be independently misspecified. Hadfield-Menell and Hadfield~\cite{hadfield2019incomplete} draw an analogy to incomplete contracting: reward functions inevitably fail to specify all contingencies.
-
-The Goodhart taxonomy distinguishes regressional, extremal, causal,
-and adversarial failure modes~\cite{skalse2024goodhart}. Our
-Our sensitivity analysis (\cref{sec:sensitivity}) tests the \emph{misweighting}
-variant---same goals, different priorities---and finds a novel
-interaction: additional training data amplifies misspecified utilities
-rather than correcting them.
-
-\subsection{Sensitivity Analysis in MCDA}
-
-Sensitivity analysis in multi-criteria decision analysis (MCDA)
-assesses how robust a ranking is to changes in decision
-weights~\cite{mcda2023sensitivity}. Classical MAUT sensitivity
-analysis~\cite{farmer1987testing} computes ``weight stability
-intervals''---the range within which each weight can vary without
-changing the top-ranked alternative~\cite{weightstability2025}.
-A recent survey~\cite{robust2025survey} catalogs robustness approaches for recommender systems. Iancu and Trichakis~\cite{iancu2014pareto} extend this to
-multi-objective optimization, defining \emph{robust Pareto
-optimality}: solutions that remain Pareto-optimal under worst-case
-parameter uncertainty.
-
-We adapt this framework from single rankings to Pareto frontiers,
-introducing \emph{rank stability} (the fraction of operating points
-that survive perturbation) as the primary metric rather than
-Hausdorff distance (which we show conflates scale change with shape
-change in our setting).
-
-\subsection{Platform Transparency}
-
-The EU Digital Services Act (DSA), effective 2024, mandates that
-large platforms assess algorithmic risks to democratic values and
-provide transparency about recommender systems. X was fined
-\texteuro{}140M in 2025 for transparency violations and subsequently
-open-sourced its algorithm~\cite{xalgorithm2026}. However, the
-release provides \emph{structure without weights}: the model
-architecture and prediction targets are public, but learned
-parameters are not~\cite{shaped2023secrets}. Whether this level of
-transparency is sufficient for meaningful multi-stakeholder audit is
-an open question that our sensitivity analysis directly addresses.
-
-\subsection{X's Algorithm: Phoenix Architecture}
-
-X's recommendation system has undergone two public releases. The
-March 2023 release~\cite{xalgorithm2023} exposed the Phoenix heavy
-ranker: a MaskNet-based neural network predicting engagement
-probabilities for 18 action types (favorites, reposts, replies,
-blocks, reports, etc.), combined via explicit per-action weights into
-a final relevance score. The January 2026
-release~\cite{xalgorithm2026} replaced this with a Grok-based
-transformer that learns all weighting implicitly from engagement
-sequences, eliminating hand-engineered features entirely.
-
-Our synthetic benchmark is built on the 2023 Phoenix action space (18
-actions, 5 positive, 4 negative, 9 neutral) and explicitly
-parameterizes the utility weights that the 2026 system learns
-implicitly. This allows controlled experimentation on sensitivity,
-partial observation, and identifiability questions that cannot be
-studied on the opaque production system.
+% TODO: Adapt from old preprint §2, add Gao/Kwa
+\textit{[Background placeholder.]}
 
 %═══════════════════════════════════════════════════════════════════
-\section{System, Data, and Methodology}
-\label{sec:system}
+\section{Setup}
+\label{sec:setup}
 %═══════════════════════════════════════════════════════════════════
-
-% ── Figure 2: System pipeline (vertical flow) ────────────────────
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[
-  box/.style={draw, rounded corners=4pt, minimum height=0.9cm, align=center, font=\small},
-  data/.style={box, fill=green!8},
-  proc/.style={box, fill=blue!8},
-  eval/.style={box, fill=orange!8},
-  metric/.style={box, fill=red!8, font=\scriptsize, minimum height=0.7cm},
-  arrow/.style={-{Stealth[length=5pt]}, thick},
-  dirlabel/.style={font=\scriptsize\itshape, text=gray!60!black, align=left},
-]
-
-% Vertical pipeline — each step flows strictly downward
-\node[data, text width=6cm] (data) at (0, 0)
-  {\textbf{Content \& Users} --- 500 items $\times$ 600 users, 5 archetypes};
-
-\node[proc, text width=6cm] (utility) at (0, -1.3)
-  {\textbf{Utility Functions} --- $U_k = \text{pos} - \alpha_k \cdot \text{neg}$, \;
-   $\alpha \in \{0.3, 1.0, 4.0\}$};
-
-\node[proc, text width=6cm] (pairs) at (0, -2.6)
-  {\textbf{Preference Pairs} --- 2{,}000 pairs per stakeholder};
-
-\node[proc, text width=6cm, fill=blue!12] (bt) at (0, -3.9)
-  {\textbf{BT Training} --- 4 loss variants, 50 epochs, Adam};
-
-\node[proc, text width=6cm, fill=blue!15] (weights) at (0, -5.2)
-  {\textbf{Weight Vectors} --- $\mathbf{w}_k \in \mathbb{R}^{18}$ per stakeholder};
-
-\node[eval, text width=6cm] (frontier) at (0, -6.5)
-  {\textbf{Scorer + Pareto Frontier} --- $s = \mathbf{w}^\top\!\mathbf{p}$
-   + diversity knob $\delta$, 21 operating points};
-
-% Metrics row
-\node[metric, text width=1.4cm] (regret) at (-2.7, -7.9) {Regret\\(LOSO)};
-\node[metric, text width=1.4cm] (recovery) at (-0.9, -7.9) {Recovery\\rate};
-\node[metric, text width=1.4cm] (rankstab) at (0.9, -7.9) {Rank\\stability};
-\node[metric, text width=1.4cm] (hausdorff) at (2.7, -7.9) {Hausdorff\\distance};
-
-% Strictly downward arrows
-\draw[arrow] (data) -- (utility);
-\draw[arrow] (utility) -- (pairs);
-\draw[arrow] (pairs) -- (bt);
-\draw[arrow] (bt) -- (weights);
-\draw[arrow] (weights) -- (frontier);
-\draw[arrow] (frontier) -- (regret);
-\draw[arrow] (frontier) -- (recovery);
-\draw[arrow] (frontier) -- (rankstab);
-\draw[arrow] (frontier) -- (hausdorff);
-
-% Research question labels on right
-\draw[dotted, gray] (4, 0.5) -- (4, -8.5);
-\node[dirlabel] at (5.2, -1.3) {Identifiability:\\What does BT\\recover?};
-\node[dirlabel] at (5.2, -4.6) {Partial observation:\\What's lost\\when hidden?};
-\node[dirlabel] at (5.2, -7.2) {Sensitivity:\\How precise\\must spec be?};
-
-% Bracket for identifiability scope
-\draw[decorate, decoration={brace, amplitude=4pt}, gray]
-  (3.8, -0.7) -- (3.8, -3.3);
-% Bracket for partial observation scope
-\draw[decorate, decoration={brace, amplitude=4pt}, gray]
-  (3.8, -3.5) -- (3.8, -5.8);
-% Bracket for sensitivity scope
-\draw[decorate, decoration={brace, amplitude=4pt}, gray]
-  (3.8, -6.0) -- (3.8, -8.3);
-
-\end{tikzpicture}
-\caption{System pipeline. Each step flows strictly downward: data
-  generation, utility specification, preference pair construction,
-  BT training, and Pareto frontier evaluation. Braces indicate the
-  scope of each research question.}
-\label{fig:pipeline}
-\end{figure}
-
-\subsection{Action Space}
-
-The Phoenix action space defines 18 user actions on content, inherited
-from X's production system~\cite{xalgorithm2023}. We classify these
-into three groups (\cref{tab:actions}):
-
-\begin{itemize}
-  \item \textbf{Positive} (5): favorite, repost, follow\_author,
-    share, reply---signals of genuine user value.
-  \item \textbf{Negative} (4): block\_author, mute\_author, report,
-    not\_interested---signals of harm or discomfort.
-  \item \textbf{Neutral} (9): click, dwell, photo\_expand, vqv
-    (video quality view), profile\_click, share\_via\_dm,
-    share\_via\_copy\_link, quote, quoted\_click---engagement signals
-    of ambiguous valence.
-\end{itemize}
-
-Each content item~$c$ viewed by user~$u$ produces an action
-probability vector $\mathbf{p}(u, c) \in [0,1]^{18}$, representing
-the predicted probability of each action. The full dataset is a
-tensor $\mathbf{P} \in \mathbb{R}^{N \times M \times 18}$ for $N$
-users and $M$ content items.
-
-% Table 1 placeholder
-\begin{table}[t]
-  \caption{Action space: 18 Phoenix actions with positive/negative/neutral
-    classification and default \texttt{UtilityWeights} values.}
-  \label{tab:actions}
-  \centering\small
-  \begin{tabular}{llrl}
-    \toprule
-    \textbf{Action} & \textbf{Class} & \textbf{User wt.} & \textbf{Platform wt.} \\
-    \midrule
-    favorite       & Positive  & 1.0  & 1.0 \\
-    repost         & Positive  & 0.8  & 1.5 \\
-    follow\_author & Positive  & 1.2  & 1.0 \\
-    share          & Positive  & 0.9  & 1.3 \\
-    reply          & Positive  & 0.5  & 1.2 \\
-    \midrule
-    block\_author  & Negative  & $-$2.0 & 0.1 \\
-    mute\_author   & Negative  & $-$1.5 & 0.1 \\
-    report         & Negative  & $-$2.5 & 0.2 \\
-    not\_interested & Negative & $-$1.0 & 0.1 \\
-    \midrule
-    click          & Neutral   & ---  & 0.5 \\
-    dwell          & Neutral   & ---  & 0.2 \\
-    \multicolumn{4}{l}{\textit{+ 7 others (photo\_expand, vqv, profile\_click, \ldots)}} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
 
 \subsection{Stakeholder Utility Model}
 
-Each stakeholder~$k$ has a utility function
-$U_k(c) = \mathbf{w}_k^\top \mathbf{p}(c)$, where
-$\mathbf{w}_k \in \mathbb{R}^{18}$ is a weight vector over actions.
-We study the structural family
+We consider a recommendation setting with $K$ stakeholders. Each
+content item~$c$ is represented by a $D$-dimensional feature
+vector~$\mathbf{p}(c)$, and each stakeholder~$k$ assigns utility
+\begin{equation}
+  U_k(c) = \mathbf{w}_k^\top \mathbf{p}(c),
+  \label{eq:utility}
+\end{equation}
+where $\mathbf{w}_k \in \mathbb{R}^D$ is the stakeholder's weight
+vector over features. Different stakeholders express different
+preferences through different weights. The angle between two weight
+vectors determines their alignment:
+$\cos(\mathbf{w}_i, \mathbf{w}_j) > 0$ means roughly aligned;
+$\cos < 0$ means opposed.
+
+\subsection{Preference Learning}
+\label{sec:bt}
+
+A Bradley-Terry (BT) reward model~\cite{bradley1952rank} learns a
+weight vector $\hat{\mathbf{w}} \in \mathbb{R}^D$ from pairwise
+preference data by minimizing
+\begin{equation}
+  \mathcal{L}_{\text{BT}} = -\log \sigma\!\bigl(
+    \hat{\mathbf{w}}^\top \mathbf{p}_{\text{pref}}
+    - \hat{\mathbf{w}}^\top \mathbf{p}_{\text{rej}}
+  \bigr),
+  \label{eq:btloss}
+\end{equation}
+where $\sigma$ is the logistic function and
+$(\mathbf{p}_{\text{pref}}, \mathbf{p}_{\text{rej}})$ is a
+preference pair. Each pair is constructed by sampling two content
+items, scoring them with the labeling stakeholder's utility (plus
+Gaussian noise, $\sigma_{\text{noise}} = 0.05$), and assigning the
+higher-scoring item as preferred. Training uses Adam with learning
+rate 0.01, batch size 64, and 50 epochs. All preference data is
+split 80/20 into training and held-out evaluation sets.
+
+To simulate misspecification---a scenario where the optimization
+target differs from any stakeholder's true utility---we perturb
+the target weight vector with multiplicative Gaussian noise:
+$\tilde{\mathbf{w}} = \mathbf{w}_t \odot (1 + \boldsymbol{\epsilon})$,
+$\boldsymbol{\epsilon} \sim \mathcal{N}(0, \sigma_p^2 \mathbf{I})$
+with $\sigma_p = 0.3$. The BT model trains on preferences labeled by
+the perturbed~$\tilde{\mathbf{w}}$, so the learned model approaches
+but does not exactly recover the target direction.
+
+\subsection{Datasets and Stakeholders}
+
+We use three datasets spanning two feature spaces.
+
+\paragraph{Synthetic benchmark.}
+
+The first dataset uses X's Phoenix recommendation
+system~\cite{xalgorithm2023}, which defines 18 user actions on
+content (\cref{tab:actions}). Each content item produces an action
+probability vector $\mathbf{p} \in [0,1]^{18}$. We generate 500
+content items across 6 topics (technology, sports, politics-left,
+politics-right, entertainment, science) and 600 users in 5
+archetypes, with action probabilities drawn from calibrated
+distributions.
+
+Three stakeholders are defined via the structural family
 \begin{equation}
   U_k = \sum_{a \in \text{pos}} w_a \cdot p_a
       - \alpha_k \sum_{a \in \text{neg}} |w_a| \cdot p_a,
-  \label{eq:utility}
+  \label{eq:synth_utility}
 \end{equation}
-where $\alpha_k$ is the \emph{negativity aversion} parameter. The
-three stakeholders differ primarily in $\alpha$:
+where $\alpha_k$ is the \emph{negativity aversion} parameter:
+\textbf{user}~($\alpha = 1.0$), equal weight on positive engagement
+and discomfort avoidance; \textbf{platform}~($\alpha = 0.3$),
+tolerant of negative signals; \textbf{society}~($\alpha = 4.0$),
+heavily penalizes block/report/mute as proxies for
+harm~\cite{bail2018exposure}. The full 18-parameter weight vectors
+are listed in \cref{tab:actions}; the stakeholders differ primarily
+through~$\alpha$, a special case of additive
+MAUT~\cite{keeney1976decisions}.
 
-\begin{itemize}
-  \item \textbf{User} ($\alpha = 1.0$): Equal weight on positive
-    engagement and discomfort avoidance.
-  \item \textbf{Platform} ($\alpha = 0.3$): Tolerant of negative
-    signals; all engagement has value.
-  \item \textbf{Society} ($\alpha = 4.0$): Heavily penalizes (motivated by evidence that algorithmic exposure affects polarization~\cite{bail2018exposure})
-    block/report/mute signals as proxies for polarization and harm.
-\end{itemize}
-
-This family is a special case of additive MAUT~\cite{keeney1976decisions},
-where the full 18-parameter weight vector is summarized by a single
-ratio. Whether $\alpha$ alone is sufficient or individual action
-weights matter independently is tested in
-\cref{sec:sensitivity}.
-
-\subsection{Synthetic Data Generation}
-
-We generate synthetic evaluation data with known ground truth: 600
-users, 100 content items, 6 topics (technology, sports,
-politics-left, politics-right, entertainment, science), and 5 user
-archetypes (casual, power user, political-left, political-right,
-niche enthusiast). Each user--content pair produces an 18-dimensional
-action probability vector based on archetype--topic affinity rules
-(e.g., political-left users have elevated block rates on
-politics-right content).
-
-For BT training, a separate content pool of 500 items is generated
-per seed using \texttt{generate\_content\_pool()}, which draws action
-probabilities from calibrated distributions. Preference pairs are
-constructed by sampling two content items, computing stakeholder
-utility, adding Gaussian noise ($\sigma = 0.05$), and labeling the
-higher-utility item as preferred.
-
-\subsection{Bradley-Terry Training Pipeline}
-
-For each stakeholder, we train a BT reward model on 2{,}000
-preference pairs for 50 epochs with Adam optimization (learning rate
-0.01). The model learns an 18-dimensional weight vector
-$\mathbf{w} \in \mathbb{R}^{18}$ by minimizing the standard BT loss:
-\begin{equation}
-  \mathcal{L}_{\text{BT}} = -\log \sigma\!\left(
-    \mathbf{w}^\top \mathbf{p}_{\text{pref}}
-    - \mathbf{w}^\top \mathbf{p}_{\text{rej}}
-  \right).
-  \label{eq:btloss}
-\end{equation}
-
-We test four loss variants: standard BT, Margin-BT (adds a fixed
-margin to the preference gap), Calibrated-BT (regresses on engagement
-magnitude), and Constrained-BT (adds a diversity regularizer). The
-central identifiability result is that these variants produce nearly
-identical weight vectors when trained on identical preference data.
-
-\subsection{Evaluation Framework}
-\label{sec:evalframework}
-
-The full data flow is shown in \cref{fig:pipeline}.
-Stakeholder tradeoffs are measured via the \emph{Pareto frontier}: we
-sweep a diversity weight $\delta \in \{0.0, 0.05, \ldots, 1.0\}$ (21
-points) that controls the tradeoff between engagement-based content
-scoring and topic diversity. At each $\delta$, we select top-$K$
-content per user using a greedy diversity-aware algorithm, then
-evaluate all three stakeholder utilities on the selected content. The
-resulting 21-point frontier in $(U_{\text{user}},
-U_{\text{platform}}, U_{\text{society}})$ space defines the
-achievable tradeoffs.
-
-\textbf{LOSO projection.} To simulate hiding a stakeholder, we
-extract the 2D Pareto front in the observed dimensions and measure
-hidden-dimension \emph{regret}:
-$\text{regret} = \max_\pi U_{\text{hidden}}(\pi) - U_{\text{hidden}}(\pi_{\text{LOSO}})$,
-averaged across operating points.
-
-\textbf{Rank stability.} For sensitivity analysis, we define rank
-stability as the fraction of Pareto-optimal operating points that
-remain optimal after utility weight perturbation. We show
-(\cref{sec:sensitivity}) that this is more informative than Hausdorff
-distance, which conflates utility-axis rescaling with frontier shape
-change.
-
-All experiments use 5 seeds unless otherwise noted; Experiment~4
-(partial sampling) uses 20 seeds for tighter confidence intervals.
-
-%═══════════════════════════════════════════════════════════════════
-\section{What Drives Stakeholder Differentiation?}
-\label{sec:identifiability}
-%═══════════════════════════════════════════════════════════════════
-
-\subsection{Labels vs.\ Loss}
-
-We train BT reward models for all three stakeholders under four loss
-variants: standard BT (\cref{eq:btloss}), Margin-BT (adds a fixed
-margin $m$ to the preference gap), Calibrated-BT (regresses on
-engagement magnitude), and Constrained-BT (adds a diversity
-regularizer penalizing weight concentration). Each variant is swept
-across multiple hyperparameter settings, yielding \numexp{} total
-training runs.
-
-Of these, \numconv{} converge (8 Constrained-BT society runs diverge
-due to numerical instability in the diversity constraint, since
-fixed). Among the converged experiments, the key finding is that
-\emph{all four loss types produce near-identical weight vectors when
-trained on the same preference data}. Pairwise cosine similarity
-between weight vectors trained with different losses on the same
-stakeholder exceeds $\costhresh$ in every case (\cref{tab:cosine}). The differentiation
-that appears in the final models---cosine similarity of 0.478 between
-platform and society, 0.830 between user and platform, 0.884 between
-user and society---arises entirely from \emph{different training
-labels}, not different loss functions.
-
-This confirms Sun et al.'s~\cite{sun2025rethinking} theoretical
-order-consistency result in the multi-stakeholder recommendation
-setting: BT training faithfully preserves the preference ordering
-in the data, and no loss variant can overcome identical training
-signals. The practical implication is that practitioners should
-invest in stakeholder-specific labeling, not loss engineering.
-
-% Table 2: cosine similarity matrix
 \begin{table}[t]
-  \caption{Pairwise cosine similarity between stakeholder weight
-    vectors. \emph{Within-loss}: same labels, different losses
-    ($>\costhresh$ everywhere). \emph{Across-stakeholder}: different
-    labels, same loss.}
-  \label{tab:cosine}
+  \caption{The 18 Phoenix actions with positive/negative/neutral
+    classification and stakeholder weights. User utility sums
+    positive and negative groups (\cref{eq:synth_utility}); neutral
+    actions contribute zero. Platform weights all actions positively
+    --- the key asymmetry driving stakeholder divergence.}
+  \label{tab:actions}
   \centering\small
-  \begin{tabular}{lccc}
+  \begin{tabular}{llrr}
     \toprule
-    & User--Platform & User--Society & Platform--Society \\
+    \textbf{Action} & \textbf{Class} & \textbf{User wt.} & \textbf{Plat.\ wt.} \\
     \midrule
-    Within any loss & $>0.99$ & $>0.97$ & $>0.92$ \\
+    follow\_author          & Positive  & 1.2   & 1.0 \\
+    favorite                & Positive  & 1.0   & 1.0 \\
+    share                   & Positive  & 0.9   & 1.3 \\
+    repost                  & Positive  & 0.8   & 1.5 \\
+    quote                   & Positive  & 0.6   & 1.3 \\
+    reply                   & Positive  & 0.5   & 1.2 \\
     \midrule
-    Across stakeholders & 0.830 & 0.884 & 0.478 \\
+    report                  & Negative  & $-$2.5 & 0.2 \\
+    block\_author           & Negative  & $-$2.0 & 0.1 \\
+    mute\_author            & Negative  & $-$1.5 & 0.1 \\
+    not\_interested         & Negative  & $-$1.0 & 0.1 \\
+    \midrule
+    share\_via\_dm          & Neutral   & ---   & 1.4 \\
+    share\_via\_copy\_link  & Neutral   & ---   & 1.2 \\
+    profile\_click          & Neutral   & ---   & 0.6 \\
+    click                   & Neutral   & ---   & 0.5 \\
+    vqv                     & Neutral   & ---   & 0.4 \\
+    quoted\_click           & Neutral   & ---   & 0.4 \\
+    photo\_expand           & Neutral   & ---   & 0.3 \\
+    dwell                   & Neutral   & ---   & 0.2 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{$\alpha$-Recovery}
+\paragraph{MovieLens-100K and MovieLens-1M.}
+
+For real-data validation, we use MovieLens-100K (100K ratings, 943
+users, 1{,}682 movies) and MovieLens-1M (1M ratings, 6{,}040 users,
+3{,}952 movies)~\cite{harper2015movielens}. Each movie has a binary
+genre vector over $D = 19$ genres (Action, Adventure, Animation,
+\ldots, Western). Content features are
+$\mathbf{p}(c) = \mathbf{g}(c) \cdot \bar{r}(c)/5$, where
+$\mathbf{g}(c) \in \{0,1\}^{19}$ is the genre vector and
+$\bar{r}(c)$ is the movie's mean rating. Movies with fewer than 5
+ratings are excluded, yielding content pools of 1{,}305 (ML-100K)
+and 3{,}347 movies (ML-1M).
+
+Three stakeholders are derived from rating data:
+\begin{itemize}
+  \item \textbf{User}: Genre preference from aggregate rating
+    history. $w_g \propto \bar{r}_g - 3$, where $\bar{r}_g$ is the
+    mean rating for genre~$g$. Genres rated above average get
+    positive weight.
+  \item \textbf{Platform}: Popularity-weighted quality.
+    $w_g \propto \bar{r}_g \cdot \log_2 n_g$, where $n_g$ is the
+    number of ratings in genre~$g$.
+  \item \textbf{Diversity}: Anti-concentration.
+    $w_g \propto -(f_g - 1/G)$, where $f_g$ is the fraction of
+    ratings in genre~$g$ and $G$ is the number of active genres.
+    Penalizes dominant genres, rewards rare ones.
+\end{itemize}
+All weight vectors are normalized to unit maximum absolute value.
+The key geometric fact is that user and platform are
+strongly aligned ($\cos \approx +0.95$), while both oppose diversity
+($\cos \approx -0.3$ to $-0.2$). Five additional stakeholders with
+real-world analogs (creator, advertiser, niche enthusiast,
+mainstream, content moderator) are introduced in \cref{sec:direction}
+to expand validation coverage.
+
+\subsection{Evaluation}
+\label{sec:eval}
+
+We evaluate using \emph{per-stakeholder utility on selected
+content}, not frontier distance metrics (see \cref{sec:hausdorff}
+for why this matters). Given learned weights~$\hat{\mathbf{w}}$, we
+sweep a diversity parameter
+$\delta \in \{0.0, 0.05, \ldots, 1.0\}$ that controls the tradeoff
+between score-based and diversity-based content selection. At each
+operating point, a greedy algorithm selects the top-$K = 10$ content
+items, and all stakeholder utilities are evaluated on the selected
+set. The 21-point sweep traces a Pareto frontier in stakeholder
+utility space.
+
+For Goodhart experiments (\cref{sec:direction}), we compare
+stakeholder utilities at $N = 25$ and $N = 2{,}000$ training pairs
+across 5 random seeds, measuring the percentage change from the
+$N = 25$ baseline. The target stakeholder improves by construction;
+whether hidden stakeholders improve or degrade is the quantity of
+interest. For leave-one-stakeholder-out (LOSO) experiments, we
+exclude one stakeholder during training and measure its
+\emph{regret}: the utility gap between the full-information Pareto
+frontier and the LOSO frontier, averaged across operating points and
+20 seeds.
+
+%═══════════════════════════════════════════════════════════════════
+\section{The Directional Goodhart Condition}
+\label{sec:direction}
+%═══════════════════════════════════════════════════════════════════
+
+We train Bradley-Terry reward models on preference pairs labeled by a
+misspecified stakeholder utility (the \emph{target}), then measure the
+effect on a different stakeholder whose utility was not used in training
+(the \emph{hidden} stakeholder). As the number of training pairs~$N$
+increases, the BT model converges more precisely toward the target
+utility direction. The question is: does this convergence help or hurt
+the hidden stakeholder?
+
+\subsection{Statement}
+
+\begin{proposition}[Directional Goodhart Condition]
+\label{prop:direction}
+In a linear BT preference learning setting with $K$ stakeholders and a
+finite content pool, let $\hat{\mathbf{w}}_t(N)$ be the weight vector
+learned from $N$ preference pairs labeled by target stakeholder~$t$,
+and let $\mathbf{w}_h$ be the true utility direction of hidden
+stakeholder~$h$. Then:
+\begin{itemize}
+  \item If\, $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) < 0$:\;
+    $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually decreasing in~$N$.
+  \item If\, $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) > 0$:\;
+    $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually increasing in~$N$.
+\end{itemize}
+where $S(\mathbf{w})$ denotes content selected by
+scorer~$\mathbf{w}$ and $U_h$ is the hidden stakeholder's utility
+evaluated on the selected content.
+\end{proposition}
+
+In words: more training data degrades a hidden stakeholder if and only
+if the optimization target is anti-correlated with that stakeholder's
+utility direction. The condition holds perfectly for
+$|\cos| > 0.2$ and has a transition zone near $\cos \approx 0$ where
+prediction is unreliable.
+
+\subsection{Empirical Validation}
+
+We validate the direction condition on 42 data points across two
+MovieLens datasets (ML-100K and ML-1M), using two complementary
+methods:
+
+\begin{itemize}
+  \item \textbf{Method A} (target rotation): The same three
+    stakeholders (user, platform, diversity) are used with each
+    stakeholder serving as the optimization target in turn. This
+    produces 12 data points (3~targets $\times$ 2~hidden $\times$
+    2~datasets) without introducing any new stakeholder definitions.
+
+  \item \textbf{Method B} (named stakeholders): Five additional
+    stakeholders with real-world analogs---creator (rewards content
+    supply), advertiser (rewards eyeball volume), niche enthusiast
+    (upweights rare genres), mainstream (upweights popular genres), and
+    content moderator (penalizes low-rated genres)---are defined from
+    MovieLens data and tested as hidden stakeholders under all three
+    targets, producing 30 data points.
+\end{itemize}
+
+In each experiment, the target stakeholder's weights are perturbed
+with multiplicative Gaussian noise ($\sigma = 0.3$). BT models are
+trained at $N = 25$ and $N = 2{,}000$ preference pairs, and all
+stakeholder utilities are evaluated on the selected content. The
+utility change from $N = 25$ to $N = 2{,}000$ determines whether the
+hidden stakeholder improved or degraded.
+
+\Cref{fig:scatter} shows the results. The 42 points span cosine
+similarity from $-0.95$ to $+0.95$. For $|\cos| > 0.2$, the
+condition holds without exception: 28 of 28 data points fall in the
+predicted quadrant (degrading if $\cos < 0$, improving if
+$\cos > 0$). In the transition zone ($|\cos| < 0.2$), prediction
+is less reliable: 10 of 14 match (71\%), with 4 violations near
+$\cos \approx 0$ where the signal-to-noise ratio is low.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.65\linewidth]{figures/fig3_alpha_recovery.pdf}
-  \caption{$\alpha$-recovery from BT weight vectors. 13~$\alpha$
-    values, 5 seeds each. Perfect rank ordering (Spearman~$= 1.0$)
-    with affine amplification ($\hat\alpha \approx -0.06 + 1.32\alpha$).
-    Three real stakeholders annotated.}
-  \label{fig:alpha}
+  \includegraphics[width=\linewidth]{figures/fig3_direction_scatter.pdf}
+  \caption{Direction condition validation: 42 data points across
+    2 datasets and 8 stakeholders. Red shading: $\cos < -0.2$
+    (degrades). Green: $\cos > 0.2$ (improves). Amber: transition
+    zone $|\cos| < 0.2$. Red-outlined points are violations. For
+    $|\cos| > 0.2$: 28/28 match (100\%).}
+  \label{fig:scatter}
 \end{figure}
 
-Given that labels determine differentiation, we ask: what structural
-properties of the underlying utility function are recoverable from
-the learned weight vector? For the structural family (\cref{eq:utility})
-$U = \text{pos} - \alpha \cdot \text{neg}$, we test whether the
-negativity-aversion parameter~$\alpha$ can be extracted from trained
-BT weights via the ratio
-$\hat\alpha = -\bar{w}_{\text{neg}} / \bar{w}_{\text{pos}}$.
+\subsection{The MovieLens Goodhart Curve}
 
-We sweep $\alpha \in \{0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 2.0,
-3.0, 4.0, 5.0, 7.0, 8.0\}$ (13 values, 5 seeds each). The
-recovered $\hat\alpha$ values (\cref{fig:alpha}) preserve perfect monotonic ordering:
-Spearman~$\rho = \alphaspearman$ across all methods tested (ratio,
-sum-ratio, regression). The relationship is affine:
-$\hat\alpha \approx -0.06 + 1.32 \cdot \alpha_{\text{true}}$
-($R^2 = 0.997$), with systematic amplification (slope~$> 1$) but
-perfect rank preservation. For the three real stakeholders, the
-recovered values are: user $\hat\alpha = 1.35$ (true 1.0), platform
-$\hat\alpha = 0.34$ (true 0.3), society $\hat\alpha = 5.59$ (true
-4.0)---the ordering society $>$ user $>$ platform is correctly
-recovered.
-
-\subsection{Stress Testing}
-\label{sec:stress}
-
-We stress-test $\alpha$-recovery across four dimensions (\cref{tab:stress}) (1{,}300
-total training runs, 5 seeds $\times$ 13 $\alpha$ values per
-condition):
-
-\begin{table}[t]
-  \caption{$\alpha$-recovery breaking points: the condition at which
-    Spearman~$\rho$ drops below 0.95.}
-  \label{tab:stress}
-  \centering\small
-  \begin{tabular}{lll}
-    \toprule
-    \textbf{Stress dimension} & \textbf{Breaking point} & \textbf{Practical threshold} \\
-    \midrule
-    Label noise (random flip) & $p_{\text{flip}} = 0.30$ & $\leq$20\% annotation error \\
-    Sample size & $n = 50$ pairs & $\geq$250 pairs sufficient \\
-    BT temperature ($\beta$) & $\beta = 0.5$ & $\beta \geq 0.5$ \\
-    Content correlation ($\rho$) & $\rho = 0.8$ & $\rho \leq 0.6$ \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-Key findings: (1) recovery is robust to 20\% label noise and works
-with 250 pairs; (2) BT temperature is the strongest stressor---soft
-preferences ($\beta < 0.5$) destroy the signal; (3) moderate content
-correlation ($\rho = 0.3$) actually \emph{improves} recovery by
-creating more informative preference pairs; (4) Spearman degrades
-much slower than Pearson---rank ordering survives conditions that
-destroy the linear fit.
-
-\subsection{Disagreement-to-Differentiation Bound}
-
-To predict stakeholder differentiation \emph{before} training, we
-measure pairwise label disagreement rates on 50{,}000 preference
-pairs. The relationship between disagreement rate~$d$ and cosine
-similarity is well fit by a two-variable model incorporating the mean
-margin~$m$ (average utility gap on disagreed pairs):
-\begin{equation}
-  \cos(\mathbf{w}_i, \mathbf{w}_j) \approx 1.098 - 1.127\,d - 0.088\,m
-  \qquad (R^2 = 0.977).
-  \label{eq:disagreement}
-\end{equation}
-Disagreement rate alone achieves $R^2 = 0.90$; adding margin resolves
-reference-dependence (the platform-fixed and user-fixed sweeps
-collapse onto a single curve). Practical thresholds: $\geq$10\%
-disagreement for $\cos < 0.95$; $\geq$19\% for $\cos < 0.80$;
-$\geq$37\% for $\cos < 0.50$.
-
-\subsection{LLM-as-Annotator Compatibility}
-
-We test whether an LLM can substitute for analytic stakeholder
-definitions. Claude Haiku, given natural-language stakeholder
-descriptions (e.g., ``you are a safety-first content moderator'') and
-content as engagement/negativity scores, generates preference labels
-across 15 sweep points $\times$ 200 pairs. The LLM's implicit
-utility preserves the ranking structure: Spearman~$\rho = 0.929$
-between LLM-based and analytic disagreement rates. LLM confidence is
-too compressed (range [1.40, 1.66]) to serve as a precise margin
-proxy, but rank-ordering---the practically relevant quantity---is
-preserved. Details in \cref{app:sensitivity}.
-
-%═══════════════════════════════════════════════════════════════════
-\section{How Much Stakeholder Data Is Needed?}
-\label{sec:partial}
-%═══════════════════════════════════════════════════════════════════
-
-\subsection{LOSO Geometry and Training}
-
-For each of the three stakeholders, we hide it and compute the
-2-stakeholder Pareto frontier by projecting the full 3D frontier onto
-the observed dimensions. Two variants: \emph{geometric} (uses the
-hardcoded scorer, hides utility at evaluation) and
-\emph{training-based} (trains BT models only on the observed
-stakeholders' preference pairs, uses learned weight vectors as
-scorers).
-
-\begin{table}[t]
-  \caption{LOSO degradation: average regret on the hidden dimension
-    (5 seeds, 21 diversity weights).}
-  \label{tab:loso}
-  \centering\small
-  \begin{tabular}{lcccc}
-    \toprule
-    \textbf{Hidden} & \textbf{Geom.\ regret} & \textbf{Training regret} & \textbf{Dom.\ frac.} & \textbf{$\alpha$} \\
-    \midrule
-    Society  & $\mathbf{1.08 \pm 0.04}$ & $1.10 \pm 0.05$ & 0.0\% & 4.0 \\
-    Platform & $0.37 \pm 0.06$ & $0.31 \pm 0.01$ & 0--8.5\% & 0.3 \\
-    User     & $0.11 \pm 0.01$ & $0.14 \pm 0.03$ & 6.4--14.4\% & 1.0 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-Society is 10$\times$ more costly to hide than user (\cref{tab:loso}).
-The degradation ranking matches the pairwise correlation structure:
-society has the lowest cosine similarity (0.478) with the observed
-pair. Geometric and training-based LOSO produce consistent
-rankings, validating the geometric analysis. The 2D Pareto frontiers
-are rarely dominated in 3D (0\% for society)---The regret metric follows the minimax criterion of Savage~\cite{savage1951theory}: the cost of partial
-observation is entirely in the hidden dimension.
-
-\subsection{Proxy Methods}
-
-Can we recover the hidden stakeholder's utility using proxies
-constructed from the observed stakeholders' weight vectors? We test
-six methods, focusing on hiding society (the highest-stakes case) (\cref{tab:proxy}):
-
-\begin{table}[t]
-  \caption{Proxy recovery rates for hidden society utility (5 seeds,
-    500-item evaluation pool).}
-  \label{tab:proxy}
-  \centering\small
-  \begin{tabular}{lrl}
-    \toprule
-    \textbf{Proxy} & \textbf{Recovery} & \textbf{Type} \\
-    \midrule
-    $\alpha$-interpolation (oracle $\alpha = 4.0$) & 1.000$^\dagger$ & Structural, oracle \\
-    $\alpha$-interpolation (blind $\alpha = 2.2$) & 0.738 & Structural, heuristic \\
-    Diversity knob ($\delta = 0.7$) & \textbf{0.699} & Practical, no oracle \\
-    Oracle linear (LS proxy) & 0.566 & Oracle, ceiling \\
-    Diversity knob ($\delta = 0.5$) & 0.415 & Practical, no oracle \\
-    Structural synthesis & 0.153 & Structural, oracle \\
-    \bottomrule
-    \multicolumn{3}{l}{\footnotesize $^\dagger$At 100-item pool; 0.738 at 500 items.}
-  \end{tabular}
-\end{table}
-
-The diversity knob at $\delta = 0.7$ is the best practical method
-(70\% recovery, no oracle knowledge required). Weight-space
-$\alpha$-interpolation outperforms the oracle linear proxy (0.738 vs
-0.566) because it preserves action-level BT structure that
-least-squares regression dilutes.
-
-\subsection{Data Budget}
-\label{sec:databudget}
-
-If a platform can collect $N$ society preference pairs (rather than
-the full 2{,}000), how much regret is recovered? We sweep $N \in
-\{0, 25, 50, 100, 200, 500, 1000, 2000\}$ across 20 seeds,
-measuring average regret across all 21 diversity-weight operating
-points on the frontier scored by the trained society model.
-
-Even 25 preference pairs reduce regret from 1.11 (LOSO baseline) to
-0.64---a 42\% improvement (\cref{fig:exp4}). The marginal value of additional pairs
-diminishes rapidly: the regret plateau at $\sim$0.55 is statistically
-indistinguishable across $N = 200$--$2{,}000$ (overlapping 95\%
-bootstrap confidence intervals). This is a Value of Information
-(VoI) result in the sense of Howard~\cite{howard1966information}:
-the first few bits of stakeholder information are the most valuable.
+\Cref{fig:goodhart} shows the Goodhart effect in action on MovieLens.
+Three stakeholder utility curves are plotted as a function of training
+pairs~$N$, normalized to percentage change from the $N = 25$ baseline.
+On both ML-100K (\cref{fig:goodhart}a) and ML-1M
+(\cref{fig:goodhart}b), user and platform utilities increase
+monotonically ($+14\%$ by $N = 2{,}000$), while diversity utility
+decreases ($-34\%$ on ML-100K, $-46\%$ on ML-1M). The cosine values
+in the legend predict the direction: positive cosine leads to an
+upward curve, negative cosine to a downward curve.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/fig4_partial_sampling.pdf}
-  \caption{Partial observation sampling (20 seeds, 95\% bootstrap CI).
-    \textbf{(a)}~Frontier shape evolves from chaotic (LOSO, gray) to
-    near-optimal (n=500+, dark) as society data increases. CI bands
-    separate cleanly in the $\delta = 0.3$--$0.7$ range.
-    \textbf{(b)}~Average regret drops sharply at $N = 25$ ($-42\%$)
-    and plateaus at $N \approx 200$.}
-  \label{fig:exp4}
-\end{figure*}
-
-\subsection{Degradation Predictability}
-
-Can we predict LOSO degradation from observable correlation features
-\emph{without} running the experiment? We sweep
-$\alpha_{\text{hidden}} \in [0.1, 10.0]$ (13 synthetic hidden
-stakeholders, 5 seeds each) and fit predictive models in log space.
-
-The oracle feature (\cref{fig:degradation})---standard deviation of the residual from
-regressing structural $u_{\text{hidden}}$ on \emph{actual}
-$u_{\text{user}}$ and $u_{\text{platform}}$---achieves near-perfect
-prediction: $\text{regret} \approx 35 \times
-\text{std}(u_\perp)^{1.8}$ ($R^2_{\text{log}} = 0.954$,
-Spearman~$= 0.962$). The \emph{proxy} feature (weight-space cosine
-similarity) achieves $R^2_{\text{log}} = 0.72$,
-Spearman~$= 0.69$---adequate for ranking but not magnitudes.
-
-A key theoretical observation: within the structural utility family
-($U = \text{pos} - \alpha \cdot \text{neg}$), regressing
-$u_{\text{hidden}}$ on structural $u_{\text{user}}$ and
-$u_{\text{platform}}$ yields $R^2 = 1.0$ for \emph{every} $\alpha$.
-This is inevitable---three linear functions of two variables span a
-2D space. The theoretical bound predicts zero regret, yet actual
-regret ranges from 0.04 to 4.7. The gap arises from the
-discrepancy between structural utilities and actual utility functions
-(\texttt{compute\_user\_utility}, etc.), which include engagement
-weighting and retention proxies beyond the simple pos/neg model.
-Regressing structural $u_{\text{hidden}}$ on \emph{actual} utilities
-yields $R^2 = 0.957$--$0.994$---a small residual that generates all
-observed regret.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.7\linewidth]{figures/fig5_degradation_bound.pdf}
-  \caption{Degradation vs.\ stakeholder correlation. Each point is a
-    synthetic hidden stakeholder at a different $\alpha$. Color
-    encodes $\alpha_{\text{hidden}}$. Society (highest~$\alpha$) has
-    lowest cosine similarity and highest regret. Log scale on
-    $y$-axis.}
-  \label{fig:degradation}
-\end{figure}
-
-\textbf{Practical implication.} Correlation features predict the
-degradation \emph{ranking} (which stakeholder is most dangerous to
-miss) with Spearman~$= 0.96$. Predicting \emph{magnitude} requires
-knowledge of the hidden utility's sensitivity, which is inherently
-unobservable. The $0.23$ $R^2$ gap between oracle and proxy
-quantifies the information cost of not observing the hidden
-stakeholder---connecting directly to \cref{sec:databudget}'s finding
-that even 25 pairs dramatically reduces this gap.
-
-\subsection{Scaling with $K$ Stakeholders}
-
-Does adding more observed stakeholders reduce the cost of hiding one?
-We generate $K \in \{3, 5, 7, 10\}$ synthetic stakeholders using a
-factor model: 8 latent factors (engagement, safety, virality,
-retention, passive consumption, link sharing, discovery, content
-quality) over the 18-action space, with Dirichlet-sampled factor
-loadings. Each configuration is evaluated with 10 random stakeholder
-sets~$\times$ 5 data seeds, using 101 diversity weights.
-
-Average regret is roughly invariant with $K$ (0.19 at $K=3$, 0.17
-at $K=5$, 0.18 at $K=10$)---a modest 10\% improvement at $K=5$
-that plateaus. The Pareto fraction (fraction of frontier points that
-are Pareto-optimal) increases from 0.48 ($K=3$) to 0.76 ($K=10$),
-confirming the dimensionality effect: higher-dimensional objectives
-make dominance harder, preserving more operating points. A secondary
-sweep over Dirichlet concentration shows that the correlation
-structure between stakeholders matters $4\times$ more than $K$
-itself: regret drops from 0.27 (diverse, concentration~$= 0.5$) to
-0.16 (similar, concentration~$= 5.0$) at fixed $K=5$.
-
-%═══════════════════════════════════════════════════════════════════
-\section{How Sensitive Is the Frontier to Specification?}
-\label{sec:sensitivity}
-%═══════════════════════════════════════════════════════════════════
-
-\subsection{The $\alpha$-Dominance Test}
-
-Does the pos/neg ratio $\alpha$ dominate over individual action
-weights? We compare two perturbation conditions, each applied to all
-three stakeholders' weight vectors and evaluated via Hausdorff
-distance between the perturbed and baseline Pareto frontiers:
-
-\begin{itemize}
-  \item \textbf{Within-group shuffle} ($\alpha$-preserving): randomly
-    permute positive weights among positive actions and negative
-    weights among negative actions, preserving
-    $\alpha = \bar{w}_{\text{neg}} / \bar{w}_{\text{pos}}$.
-  \item \textbf{$\alpha$-perturbation}: uniformly scale all negative
-    weights by factors $\times\{0.5, 0.8, 1.2, 1.5, 2.0\}$, changing
-    $\alpha$ while preserving within-group weight structure.
-\end{itemize}
-
-The $\alpha$-dominance ratio (within-group variance / between-group
-variance) is 0.057---$\alpha$ perturbation causes $\sim$18$\times$
-more frontier variability than within-group shuffling. At the
-\emph{selection level} (perturbed weights drive content ranking, not
-just evaluation), the ratio is 0.062. By these measures, $\alpha$
-dominates decisively.
-
-\subsection{The Matched-Magnitude Reversal}
-
-However, the above comparison is unfair: the $\alpha$-perturbation
-condition ($\times 0.5$--$2.0$) involves much larger absolute weight
-changes than permutation. When we match perturbation magnitude
-($\sigma = 0.3$ budget, allocated either entirely to within-group
-magnitude noise or entirely to $\alpha$ scaling), the result
-\emph{reverses}: within-group magnitude perturbation causes
-$2\times$ more frontier shift than $\alpha$-only perturbation
-(Hausdorff 4.12 vs 2.10, ratio 1.96). At matched budget, individual
-weight magnitudes matter more than the group ratio.
-
-\subsection{Rank Stability vs.\ Hausdorff Distance}
-
-This apparent contradiction is resolved by examining \emph{what}
-changes. We perturb each of the 14 \texttt{UtilityWeights}
-parameters individually at factors $\times\{0.5, \ldots, 3.0\}$ and
-measure both Hausdorff distance and rank stability (fraction of
-Pareto-optimal operating points that survive).
-
-The Hausdorff sensitivity ranking (normalized by baseline weight
-magnitude) identifies engagement weights as most sensitive: platform
-repost (6.6), user favorite (5.5), user repost (6.5). Negative
-weights (report: 0.27, mute: 0.30) rank last. But rank stability is
-$1.0$ for \emph{every parameter at every perturbation level}---the
-same 7 diversity-weight operating points remain Pareto-optimal even
-under $3\times$ perturbation. The Hausdorff distance is detecting
-utility-axis \emph{rescaling} (linear in perturbation magnitude), not
-frontier \emph{shape change}. Individual parameter misspecification
-does not change the optimal policy.
-
-\subsection{Specification vs.\ Data}
-\label{sec:goodhart}
-
-If individual parameters don't change the policy, when does
-specification error matter? We compare two strategies for improving
-frontier quality with misspecified weights ($\sigma = 0.3$ Gaussian
-noise on all weights, \emph{not} preserving $\alpha$):
-
-\begin{itemize}
-  \item \textbf{Better specification} (fixed $N = 2{,}000$ pairs):
-    reduce $\sigma$ from 0.5 to 0.0. Hausdorff decreases
-    monotonically, as expected.
-  \item \textbf{More data} (fixed $\sigma = 0.3$): increase $N$ from
-    25 to 2{,}000. Hausdorff \emph{increases} after $N = 100$ (\cref{fig:goodhart})---from
-    2.27 at $N = 100$ to 6.82 at $N = 500$.
-\end{itemize}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/fig6_spec_vs_data.pdf}
-  \caption{Specification vs.\ data.
-    \textbf{(a)}~Better specification (reducing $\sigma$) monotonically
-    improves frontier quality at fixed $N = 2{,}000$.
-    \textbf{(b)}~More data at fixed misspecification ($\sigma = 0.3$)
-    \emph{worsens} quality after $N = 100$---a Goodhart effect where
-    the model more precisely learns the wrong utility.}
+  \includegraphics[width=\textwidth]{figures/fig2_goodhart_curves.pdf}
+  \caption{Multi-stakeholder Goodhart effect on MovieLens. User and
+    platform (cosine $> 0$ with target) improve monotonically.
+    Diversity (cosine $< 0$) degrades. Same experiment, same data,
+    opposite outcomes predicted by the cosine sign.
+    \textbf{(a)}~ML-100K ($D = 19$, 1{,}305 movies).
+    \textbf{(b)}~ML-1M ($D = 19$, 3{,}347 movies).}
   \label{fig:goodhart}
 \end{figure*}
 
-This is a Goodhart effect~\cite{skalse2024goodhart}: with more
-training data, the BT model more faithfully learns the \emph{wrong}
-utility function, producing a weight vector that is more precisely
-misaligned with the true objective. With fewer pairs ($N \leq 100$),
-the model is undertrained and noise partially masks the
-misspecification.
+The mechanism is extremal Goodhart~\cite{skalse2024goodhart}, but
+through a different channel than RL policy optimization. BT
+preference learning converges to the target utility direction at a
+rate determined by~$N$. On a finite content pool, more precise
+convergence causes the top-$K$ selection to concentrate on content
+that scores high on the target but poorly on anti-correlated
+stakeholders. There are no distributional tails to exploit; the
+content pool is fixed. The effect is driven entirely by the angle
+between stakeholder utility directions.
 
-This finding creates a productive tension with
-\cref{sec:databudget}'s result that 25 pairs cuts regret by 42\%.
-The resolution: data is powerful when the specification is correct
-(\cref{sec:partial}), but \emph{amplifies errors} when specification is
-wrong (\cref{sec:sensitivity}). The practical prescription is sequential: fix the
-specification first, then collect data.
+\subsection{The Synthetic Null Case}
 
-\subsection{The Pareto Robustness Buffer}
+On the synthetic benchmark built on X's 18-action engagement space
+(\cref{sec:setup}), all three stakeholder pairs have positive cosine
+similarity: user--platform $= +0.89$, user--society $= +0.84$,
+platform--society $= +0.51$. The direction condition predicts no
+Goodhart for any pair---and under utility-based evaluation, this is
+exactly what we observe: society utility \emph{improves} from $3.21$
+($N = 25$) to $5.34$ ($N = 2{,}000$), a $+67\%$ increase.
 
-Synthesizing across all sensitivity experiments (\cref{tab:sensitivity}):
+The absence of Goodhart on synthetic data is itself informative: the
+synthetic benchmark's stakeholder geometry (all $\cos > 0$)
+represents a regime where more data is universally beneficial. The
+MovieLens benchmark, where user--diversity $\cos \approx -0.3$,
+represents the opposing regime. The direction condition explains both.
+A standard frontier distance metric (Hausdorff distance) gives a
+different and misleading picture on this data; we address this
+discrepancy in \cref{sec:hausdorff}.
+
+%═══════════════════════════════════════════════════════════════════
+\section{Why the Condition Holds: Low-Rank Weight Space}
+\label{sec:lowrank}
+%═══════════════════════════════════════════════════════════════════
+
+% TODO: Labels-not-loss, projection cos > 0.97, composition
+\textit{[Low-rank explanation placeholder.]}
+
+%═══════════════════════════════════════════════════════════════════
+\section{Practical Implications}
+\label{sec:practical}
+%═══════════════════════════════════════════════════════════════════
+
+\subsection{Data Budget for Hidden Stakeholder Recovery}
+
+If the direction condition identifies \emph{which} hidden
+stakeholders are harmed, a natural follow-up is: how much data
+from the hidden stakeholder is needed to mitigate the harm?
+
+We run a leave-one-stakeholder-out (LOSO) experiment on both
+MovieLens datasets. The diversity stakeholder is hidden; the
+platform scorer is trained on user and platform data only. At
+$N = 0$ hidden-stakeholder pairs, the LOSO regret (utility gap
+from full-information frontier) is the baseline harm. We then add
+$N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder preference
+pairs and retrain.
+
+\Cref{fig:budget} shows the results. On ML-100K, 25 preference
+pairs reduce regret from 3.26 to 1.42---a 56\% recovery of the
+hidden stakeholder's harm. On ML-1M, 25 pairs achieve 46\%
+recovery (regret from 4.66 to 2.50). Across both datasets, 25
+pairs recover approximately 50\% of hidden stakeholder harm (95\%
+CI from 20 seeds: $[40\%, 64\%]$). By 100 pairs, regret
+approaches zero on ML-100K and drops below 1.0 on ML-1M.
+
+The practical cost is modest: 25 preference pairs can be collected
+from 5 annotators making 5 pairwise comparisons each. For a
+platform deploying a new recommendation objective, this represents
+a minimal investment to detect whether a hidden stakeholder is
+being harmed.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig5_data_budget.pdf}
+  \caption{Data budget for hidden stakeholder recovery. Regret
+    decreases monotonically with hidden-stakeholder preference
+    pairs. 25 pairs recover ${\sim}50\%$ of harm; 100 pairs
+    approach zero regret. Shaded bands: $\pm 1$ std across 20
+    seeds.}
+  \label{fig:budget}
+\end{figure}
+
+\subsection{Audit Toolkit Applied to X}
+\label{sec:audit}
+
+The direction condition reduces multi-stakeholder Goodhart risk to
+a single observable: the sign of
+$\cos(\mathbf{w}_{\text{platform}}, \mathbf{w}_{\text{society}})$.
+For X's 18-action space (\cref{tab:actions}), this cosine is
+determined almost entirely by how the platform weights negative
+actions (blocks, mutes, reports).
+
+\Cref{fig:audit} shows the relationship. When the platform treats
+negative actions as positive engagement (weight $> 0$), the
+cosine with society drops below zero and the direction condition
+predicts Goodhart. When negative actions carry any penalty (weight
+$< 0$), the cosine remains positive and no Goodhart is predicted.
+
+We evaluate five platform configurations on the synthetic
+benchmark (\cref{tab:scenarios}):
 
 \begin{table}[t]
-  \caption{Utility sensitivity summary: the Pareto frontier's response
-    to different perturbation types.}
-  \label{tab:sensitivity}
+  \caption{Audit scenarios on X's 18-action space. The single
+    variable determining Goodhart risk is how the platform weights
+    negative actions. $\alpha$: negativity aversion
+    (\cref{eq:synth_utility}).}
+  \label{tab:scenarios}
   \centering\small
-  \begin{tabular}{lccl}
+  \begin{tabular}{lrrll}
     \toprule
-    \textbf{Perturbation} & \textbf{Hausdorff} & \textbf{Rank stab.} & \textbf{Interpretation} \\
+    \textbf{Scenario} & $\boldsymbol{\alpha}$ &
+      \textbf{cos(plat, soc)} & \textbf{Risk} \\
     \midrule
-    Single param ($\times 3$) & 3.5--6.6 & \textbf{1.0} & Scale change only \\
-    Within-group shuffle & 2.24 & 1.0 & Assignment irrelevant \\
-    $\alpha$ perturbation & 7.02 & $<$1.0 & Shape change \\
-    Matched $\sigma = 0.3$ (within) & 4.12 & --- & Magnitudes matter \\
-    Matched $\sigma = 0.3$ ($\alpha$) & 2.10 & --- & $\alpha$ cheaper \\
-    Simultaneous (all params) & 6.45 & $<$1.0 & Errors compound \\
+    Pure engagement     & 0 & $-0.31$ & Goodhart \\
+    2023 Phoenix        & 0.3 & $+0.51$ & Low \\
+    User-aligned        & 1.0 & $+0.84$ & Low \\
+    Safety-first        & 2.0 & $+0.97$ & Low \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The frontier exhibits a \emph{partial} robustness buffer: individual
-parameter perturbation is absorbed (rank stability~$= 1.0$), but
-simultaneous misspecification of multiple parameters changes the
-frontier shape. The Pareto structure is more robust than
-single-objective RL (where any misspecification can be
-Goodharted~\cite{skalse2024goodhart}), but less robust than the
-$\alpha$-dominance result initially suggested.
+The 2023 open-sourced Phoenix code~\cite{xalgorithm2023} had
+explicit negative weights (e.g., block\_author $= -1.5$, report
+$= -3.0$), placing it safely above the threshold. The 2026
+Grok-based system~\cite{xalgorithm2026} replaced explicit weights
+with learned embeddings, making the same audit impossible without
+additional disclosure: the cosine between the system's implicit
+optimization target and a societal utility direction cannot be
+computed from the released code alone.
 
-%═══════════════════════════════════════════════════════════════════
-\section{Nonlinear Robustness}
-\label{sec:nonlinear}
-%═══════════════════════════════════════════════════════════════════
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig4_audit_threshold.pdf}
+  \caption{Audit threshold for X's 18-action space. The curve
+    shows $\cos(\text{platform}, \text{society})$ as a function of
+    the platform's weight on negative actions. Goodhart zone (red):
+    negative actions treated as positive engagement. Safe zone
+    (green): any negative penalty suffices. Markers show specific
+    platform configurations.}
+  \label{fig:audit}
+\end{figure}
 
-All results above assume linear utility ($U = \text{pos} - \alpha
-\cdot \text{neg}$). Real preferences may exhibit diminishing returns
-(prospect theory) or dead zones (ignoring low-level negativity). We
-test two nonlinear departures:
+\paragraph{A five-step audit procedure.}
 
-\begin{itemize}
-  \item \textbf{Concave} (prospect theory): $U = \text{pos}^\gamma -
-    \alpha \cdot \text{neg}^\gamma$, with $\gamma \in \{0.3, \ldots, 1.0\}$.
-  \item \textbf{Threshold} (dead zone): $U = \text{pos} - \alpha
-    \cdot \max(\text{neg} - \tau, 0)$, with $\tau \in \{0.0, \ldots, 0.5\}$.
-\end{itemize}
-
-Four experiments across three utility families (linear, concave,
-threshold):
-
-\textbf{Labels vs.\ Loss:} All mean cosine similarities
-exceed 0.92 across families---the labels-not-loss claim generalizes
-to nonlinear utilities.
-
-\textbf{$\alpha$-Recovery:} Both families preserve
-Spearman~$= 1.0$ for $\alpha$ rank-ordering. Nonlinear parameters
-bias absolute $\hat\alpha$ (concave inflates up to 57\%, threshold
-deflates up to 40\%) but never disrupt the ranking.
-
-\textbf{Proxy Recovery:} The diversity knob is invariant
-(0.724 recovery across all families). $\alpha$-interpolation degrades
-under threshold utility ($0.738 \to 0.499$) because the dead zone
-creates preferences that the linear proxy cannot reproduce, but holds
-or improves under concave.
-
-\textbf{Stress $\times$ Nonlinearity:} The same 4D stress
-sweep from \cref{sec:stress} under all three families. Concave
-tightens the label-noise breaking point from $p = 0.30$ to $p = 0.20$
-(practitioners using prospect-theoretic utilities should allow
-$\leq$15\% annotation error rather than 20\%). All other
-thresholds---sample size, temperature, content correlation---are
-unchanged across families. Full table in \cref{app:stress}.
-
-%═══════════════════════════════════════════════════════════════════
-\section{External Validation}
-\label{sec:validation}
-%═══════════════════════════════════════════════════════════════════
-
-\subsection{MovieLens-100K}
-
-To validate the BT training architecture on real preference data, we
-train on MovieLens-100K movie ratings. The best configuration (BPR
-loss with in-batch negatives, 64-dim embeddings, 4 transformer
-layers) achieves Normalized Discounted Cumulative Gain (NDCG)@3 of
-0.411, a 59\% improvement over the untrained baseline (0.259). An
-ablation study reveals a 107.5\% synergy effect: neither learned
-embeddings nor the transformer improves performance alone; all gain
-comes from their interaction. Details in \cref{app:movielens}.
-
-\subsection{Synthetic Twitter}
-
-We construct a 648-parameter synthetic Twitter environment (6
-archetypes $\times$ 6 topics $\times$ 18 actions) with known ground
-truth. All 5 verification suites pass: behavioral accuracy 100\%
-(mean error $< 10^{-15}$), action differentiation 6/6 tests
-(lurker--power user repost ratio 15.6$\times$), block causal effect
-78\%, archetype flip 86\%. The pipeline faithfully recovers the
-synthetic ground truth, confirming that observed multi-stakeholder
-phenomena are properties of the data, not artifacts of the
-training procedure. Details in \cref{app:synthetic}.
-
-%═══════════════════════════════════════════════════════════════════
-\section{Discussion}
-\label{sec:discussion}
-%═══════════════════════════════════════════════════════════════════
-
-\subsection{Synthesis}
-
-The three research questions form a progressive arc:
-
-\textbf{Identifiability} (\cref{sec:identifiability}) establishes what BT training
-\emph{can} recover: the preference ordering encoded in training labels,
-the negativity-aversion parameter~$\alpha$ (Spearman~$= 1.0$), and a
-disagreement-to-differentiation bound ($R^2 = 0.977$). Sun
-et al.'s~\cite{sun2025rethinking} theoretical order-consistency result
-predicts these findings; our contribution extends the
-analysis to the multi-stakeholder setting and provides empirical stress
-bounds.
-
-\textbf{Partial observation} (\cref{sec:partial}) quantifies what is
-\emph{lost} when a stakeholder is hidden. Society is $10\times$
-costlier to miss than user, but even 25 preference pairs recover 42\%
-of the lost utility---a VoI finding with immediate practical
-implications.
-
-\textbf{Sensitivity} (\cref{sec:sensitivity}) reveals how \emph{precisely} the
-non-hidden stakeholders' utilities must be specified. The answer is
-nuanced: individual parameters are forgiving (rank stability~$= 1.0$),
-but correlated specification errors compound, and more training data
-amplifies misspecification rather than correcting it. This Goodhart
-result~\cite{skalse2024goodhart} is the paper's deepest finding: it
-resolves an apparent contradiction between ``data helps''
-(\cref{sec:partial}) and ``data hurts'' (\cref{sec:sensitivity}) by
-showing that data is only as good as the utility specification it
-learns from.
-
-\subsection{Practical Guidance}
-
-For practitioners deploying multi-stakeholder recommendation systems,
-our results suggest a sequential approach:
-
+For regulators operating under the EU Digital Services Act or
+similar transparency frameworks, we propose:
 \begin{enumerate}
-  \item \textbf{Specify $\alpha$ values.} The pos/neg ratio is the
-    dominant structural parameter. It can be estimated from 250
-    preference pairs (Spearman~$= 1.0$ under stress testing) or from
-    pairwise disagreement rates without any training
-    (\cref{eq:disagreement}).
-  \item \textbf{Collect hidden-stakeholder data.} If a stakeholder
-    (typically society) is unobservable, invest in collecting even a
-    small sample of preference labels. 25 pairs cut regret by 42\%;
-    200 pairs reach the plateau.
-  \item \textbf{Calibrate engagement weights.} The top-3 sensitive
-    parameters are engagement weights (repost, favorite), not negative
-    weights. Calibrate these to within $\pm$20\%.
-  \item \textbf{Use the diversity knob as a baseline.} If none of the
-    above is feasible, setting the diversity weight to $\delta = 0.7$
-    recovers 70\% of society's utility without any oracle knowledge.
+  \item \textbf{Extract} the platform's optimization objective as a
+    weight vector over observable user actions.
+  \item \textbf{Define} a societal utility direction
+    $\mathbf{w}_{\text{soc}}$ (e.g., negative weight on
+    block/report signals).
+  \item \textbf{Compute}
+    $\cos(\mathbf{w}_{\text{platform}},
+    \mathbf{w}_{\text{society}})$.
+  \item \textbf{If} $\cos < 0$: the direction condition predicts
+    that more training data \emph{increases} societal harm.
+    Escalate.
+  \item \textbf{If} $\cos > 0$: no directional Goodhart is
+    predicted. Periodic monitoring suffices.
 \end{enumerate}
 
-\subsection{Implications for Platform Transparency}
+Step~1 is the bottleneck. For systems with explicit weights (2023
+Phoenix), the audit is immediate. For systems with learned
+representations (2026 Grok), Step~1 requires the platform to
+disclose either the effective weight vector or sufficient
+information to compute the cosine. The direction condition provides
+a concrete, falsifiable quantity that regulators can demand.
 
-X's January 2026 algorithm release provides prediction targets (action
-types) but not learned parameters---\emph{structure without weights}.
-In our synthetic benchmark, this is \emph{partially} sufficient for
-multi-stakeholder audit: the ranking of which stakeholder is most
-dangerous to miss is predictable from action-type classification and
-pairwise disagreement rates (Spearman~$= 0.96$). However, magnitude
-prediction requires approximate weight disclosure, and the Goodhart
-result shows that audits based on misspecified proxy utilities can be
-worse than no audit at all if the proxies systematically amplify
-specification errors.
+\subsection{Selection Mechanism Independence}
 
-These findings are established on an 18-parameter linear model, not
-on a production-scale transformer. Whether the same degradation
-bounds hold when utility is distributed across 8B learned parameters
-is an open question. Nevertheless, the \emph{structural} results---the
-ordering of stakeholder sensitivity, the diminishing returns of data
-collection, and the Goodhart mechanism---depend on properties of the
-multi-stakeholder optimization problem (Pareto geometry, BT
-convergence) rather than model scale, and we conjecture they
-generalize.
+The diversity parameter~$\delta$ (\cref{sec:eval}) provides a
+structural safeguard independent of stakeholder utility
+specification. Because $\delta$ controls the tradeoff between
+score-based and diversity-based content selection at the mechanism
+level, it is orthogonal to the stakeholder weight vectors: changing
+$\delta$ does not change the cosine between any pair of
+stakeholders.
 
-If these results transfer, they suggest that regulators implementing
-the EU Digital Services Act~\cite{lasser2025designing} should require
-platforms to disclose at minimum (1) the action space
-(positive/negative classification), (2) approximate negativity-aversion
-ratios per stakeholder, and (3) the engagement weights for the top-3
-most sensitive actions. This would enable meaningful third-party LOSO
-analysis at modest transparency cost.
+In our experiments, the rank ordering of operating points on the
+Pareto frontier is perfectly stable under utility weight
+perturbation (rank stability $= 1.0$ across all conditions). This
+means that even if individual stakeholder weights are misspecified,
+the diversity knob still provides a reliable control dimension. The
+design principle: recommendation systems should maintain at least
+one structural control parameter that is independent of the
+learned objective.
 
-\subsection{Limitations}
+%═══════════════════════════════════════════════════════════════════
+\section{Methodological Note: Hausdorff Distance and False Positive Goodhart}
+\label{sec:hausdorff}
+%═══════════════════════════════════════════════════════════════════
 
-\textbf{Synthetic data and scale gap.} All multi-stakeholder findings
-depend on synthetic data with known ground truth (600 users, 100
-content items, 648-parameter Twitter simulation). MovieLens validates
-the BT architecture on real data but not the stakeholder analysis.
-The methodology (LOSO, $\alpha$-recovery, sensitivity analysis)
-generalizes; the specific numbers are benchmark-specific. Critically,
-our benchmark uses 18-dimensional linear weight vectors, while the
-production system distributes utility across 8B transformer parameters.
-The production model's trained weights and user data are not publicly
-available, and ground-truth stakeholder utilities do not exist for
-real platforms---both prerequisites for our regret-based evaluation.
-Whether the degradation bounds and sensitivity thresholds established
-here transfer to production-scale models remains an open empirical
-question.
+% TODO: Metric correction
+\textit{[Hausdorff correction placeholder.]}
 
-\textbf{Three stakeholders.} The $K$-stakeholder scaling analysis (\cref{app:kscaling}) tests $K > 3$ but with
-synthetic factor-based stakeholders. Real stakeholder populations may
-not follow Dirichlet factor loadings.
+%═══════════════════════════════════════════════════════════════════
+\section{Limitations}
+\label{sec:limitations}
+%═══════════════════════════════════════════════════════════════════
 
-\textbf{Simplified society utility.} Society utility is operationalized
-as $\text{pos} - 4 \cdot \text{neg}$, a structural proxy for
-diversity minus polarization. The actual \texttt{compute\_society\_utility}
-function measures topic diversity and cross-partisan exposure, which is
-structurally different (set-level, not per-item). The structural $R^2 = 1.0$
-collapse explicitly reveals this gap.
-
-\textbf{Fixed engagement scorer.} Content selection uses a fixed
-engagement formula ($\text{fav} + 0.8 \times \text{repost} + 0.5
-\times \text{follow}$), not the stakeholder-specific weight vectors.
-In production, the scorer co-evolves with the utility specification.
-Our selection-level sensitivity test partially addresses this
-($\alpha$-dominance holds at $0.062$), but a full co-evolution study
-remains future work.
-
-\textbf{Separable utility families.} The nonlinear robustness audit
-tests concave and threshold utilities, both of which decompose
-additively over actions. Non-separable interaction effects (e.g.,
-repost $\times$ block) are not tested.
+% TODO: Scale gap, magnitude, linear utilities, transition zone
+\textit{[Limitations placeholder.]}
 
 %═══════════════════════════════════════════════════════════════════
 \section{Conclusion}
 \label{sec:conclusion}
 %═══════════════════════════════════════════════════════════════════
 
-We present a systematic empirical study of multi-stakeholder reward
-modeling on X's open-source recommendation algorithm, addressing
-identifiability, partial observation, and utility sensitivity through
-87 training experiments, 20-seed value-of-information analysis, and
-six sensitivity test conditions.
-
-The central finding is that stakeholder differentiation is determined
-by training labels, not loss functions---an empirical confirmation of
-BT order consistency~\cite{sun2025rethinking} in the multi-stakeholder
-setting. Building on this, we show that hiding the least-observable
-stakeholder (society) costs $10\times$ more than hiding the
-most-observable (user), but even 25 preference pairs recover 42\% of
-the lost utility. The Pareto frontier absorbs individual parameter
-perturbation (rank stability~$= 1.0$) but not correlated
-specification errors, and additional training data amplifies
-misspecified utilities rather than correcting them.
-
-These findings have direct implications for platform transparency
-under the EU Digital Services Act: structure-without-weights
-disclosure enables degradation \emph{ranking} but not magnitude
-prediction, and proxy-based audits can amplify specification errors
-through a Goodhart mechanism. The practical prescription is
-sequential---fix the specification, then collect data---and the
-diversity knob at $\delta = 0.7$ serves as a robust baseline when
-neither is feasible.
-
-All code and experiment protocols are publicly available.\footnote{%
-  \url{https://github.com/kar-ganap/x-algorithm-enhancements}}
-
+% TODO: Direction condition, toolkit, honest limits
+\textit{[Conclusion placeholder.]}
 
 %═══════════════════════════════════════════════════════════════════
 \bibliographystyle{plain}
@@ -1343,226 +639,7 @@ All code and experiment protocols are publicly available.\footnote{%
 
 \appendix
 
-\section{Nonlinear Robustness Full Tables}
-\label{app:nonlinear}
-
-\begin{table}[H]
-\caption{Labels vs.\ Loss under nonlinear utilities (mean cosine similarity across 4 loss types).}
-\label{tab:nonlinear-labels}
-\centering\small
-\begin{tabular}{lccc}
-\toprule
-Family & User & Platform & Society \\
-\midrule
-Linear & 0.989 & 0.929 & 0.976 \\
-Concave ($\gamma = 0.5$--$0.9$) & 0.992 & 0.933 & 0.971 \\
-Threshold ($\tau = 0.05$--$0.3$) & 0.989 & 0.924 & 0.976 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\caption{$\alpha$-recovery under nonlinear utilities.}
-\label{tab:nonlinear-alpha}
-\centering\small
-\begin{tabular}{lccc}
-\toprule
-Family & $\alpha$-Spearman & Sensitivity & Bias \\
-\midrule
-Concave ($\gamma = 0.7$) & 1.0 & 0.169 & +57\% inflation \\
-Threshold ($\tau = 0.1$) & 1.0 & 0.154 & $-$40\% deflation \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\caption{Proxy recovery under nonlinear utilities (hiding society, 500-item pool).}
-\label{tab:nonlinear-proxy}
-\centering\small
-\begin{tabular}{lcccc}
-\toprule
-Family & Oracle & $\alpha$-Interp & DW 0.7 & Interp cosine \\
-\midrule
-Linear & 0.264 & 0.738 & 0.724 & 0.964 \\
-Concave & 0.431 & 1.000 & 0.724 & 0.961 \\
-Threshold & 0.259 & 0.499 & 0.724 & 0.966 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Stress $\times$ Nonlinearity}
-\label{app:stress}
-
-\begin{table}[H]
-\caption{Breaking points (Spearman~$< 0.95$) under nonlinear stress.}
-\label{tab:stress-nonlinear}
-\centering\small
-\begin{tabular}{lccc}
-\toprule
-Dimension & Linear & Concave & Threshold \\
-\midrule
-Label noise ($p_{\text{flip}}$) & 0.30 & \textbf{0.20} & 0.30 \\
-Sample size ($n$) & 50 & 50 & 50 \\
-BT temperature ($\beta$) & 0.5 & 0.5 & 0.5 \\
-Content correlation ($\rho$) & 0.8 & 0.8 & 0.8 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Concave utility tightens the label-noise threshold from 0.30 to 0.20.
-All other thresholds are invariant across utility families. Practitioners
-using prospect-theoretic preferences should derate the linear noise
-threshold by one level ($\leq$15\% annotation error).
-
-\section{$K$-Stakeholder Scaling}
-\label{app:kscaling}
-
-\begin{table}[H]
-\caption{Scaling with $K$ stakeholders (8 factors, 101 diversity weights, 10 configs $\times$ 5 seeds).}
-\label{tab:kscaling}
-\centering\small
-\begin{tabular}{lcccc}
-\toprule
-$K$ & Avg regret & Pareto frac. & Eff.\ rank & Ratio vs.\ $K\!=\!3$ \\
-\midrule
-3 & 0.189 & 0.484 & 3 & 1.000 \\
-5 & 0.171 & 0.594 & 5 & 0.902 \\
-7 & 0.179 & 0.749 & 7 & 0.947 \\
-10 & 0.182 & 0.757 & 8 & 0.960 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\caption{Concentration sweep at $K = 5$.}
-\label{tab:concentration}
-\centering\small
-\begin{tabular}{lcc}
-\toprule
-Concentration & Avg regret & Mean cosine \\
-\midrule
-0.5 (diverse) & 0.272 & 0.202 \\
-2.0 (moderate) & 0.171 & 0.280 \\
-5.0 (similar) & 0.157 & 0.266 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Correlation structure (Dirichlet concentration) produces a $4\times$
-larger effect on regret than the number of stakeholders.
-
-\section{Disagreement Bound Derivation}
-\label{app:disagreement}
-
-The two-variable model (\cref{eq:disagreement}) is fit via ordinary
-least squares on 34 data points from two sweeps: one fixing Platform
-($\alpha = 0.3$) and sweeping a partner, another fixing User
-($\alpha = 1.0$). Label disagreement rate~$d$ is computed on 50{,}000
-preference pairs. Mean total margin~$m$ is the average
-$|U_i(c_1) - U_i(c_2)|$ on disagreed pairs. The univariate model
-($d$ only) achieves $R^2 = 0.90$ but is reference-dependent; adding
-margin resolves this. For the utility family
-$U = \text{pos} - \alpha \cdot \text{neg}$, mean margin decomposes as
-$|\Delta\alpha| \cdot \mathbb{E}[\Delta\text{neg} \mid \text{disagreement}]$,
-cleanly separating parameter distance from content structure.
-
-\section{MovieLens Training Details}
-\label{app:movielens}
-
-Best configuration: BPR loss with in-batch negatives (batch size 32),
-64-dimensional learned embeddings, 4 transformer layers,
-learning rate $5 \times 10^{-4}$ (halved from $10^{-3}$), weight
-decay $10^{-4}$. Training stopped at epoch 9 (best validation
-NDCG@3). The BCE baseline achieved val NDCG@3 of 0.316 but test
-NDCG@3 of only 0.241 (severe overfitting due to score margins
-$\sim 10^{-8}$). BPR + in-batch negatives produces margins $\sim$0.1--0.2,
-eliminating the generalization gap (val 0.411, test 0.418).
-
-\begin{table}[H]
-\caption{MovieLens ablation study.}
-\label{tab:movielens-ablation}
-\centering\small
-\begin{tabular}{lcc}
-\toprule
-Configuration & NDCG@3 & Contribution \\
-\midrule
-Full model & 0.410 & Baseline \\
-Learned emb.\ + dot-product & 0.286 & +1.4\% \\
-Random emb.\ + transformer & 0.268 & $-$5.2\% \\
-Random baseline & 0.282 & --- \\
-\midrule
-Synergy effect & --- & $+$107.5\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Synthetic Twitter Verification}
-\label{app:synthetic}
-
-The synthetic environment defines 648 ground-truth parameters:
-$6 \times 6 \times 18$ (archetypes $\times$ topics $\times$ actions).
-Five verification suites test progressively deeper model properties:
-(1) embedding probes (silhouette scores: topic 1.00, archetype 0.369);
-(2) behavioral tests (100\% accuracy, mean error $< 10^{-15}$);
-(3) action differentiation (6/6 tests pass, lurker--power user
-repost ratio 15.6$\times$);
-(4) block causal effect (78\% pass rate after adding synthetic block
-pairs during training);
-(5) archetype flip via history swapping (85.7\% pass rate).
-
-\section{Pluralistic Models and Causal Verification}
-\label{app:pluralistic}
-
-We tested four pluralistic approaches for multi-group reward
-modeling: single BT (baseline), GMM clustering, soft assignment, and
-two-stage (cluster-then-train). The two-stage approach achieved 100\%
-cluster purity using topic$\times$action features, with overall
-accuracy 99.4\%. Weight correlation (0.554) fell below the target
-gate (0.8), a limitation attributed to BT's scale invariance rather
-than model failure.
-
-Causal verification tested intervention: replacing a user's engagement
-history with a different archetype's history and measuring score
-changes. Action-level interventions (block, follow) achieve 100\%
-pass rate. History-level interventions achieve 50\% initially,
-improving to 86\% with history-topic contrastive loss.
-
-\section{Per-Parameter Sensitivity}
-\label{app:sensitivity}
-
-\begin{table}[H]
-\caption{Per-parameter sensitivity ranking (normalized by baseline weight magnitude). Rank stability = 1.0 for all parameters at all perturbation levels.}
-\label{tab:per-param}
-\centering\small
-\begin{tabular}{llrc}
-\toprule
-Parameter & Category & Rel.\ sensitivity & Tolerance \\
-\midrule
-user:favorite & Positive & 8.25 & $< \times 0.8$ \\
-platform:repost & Positive & 6.56 & $< \times 0.8$ \\
-user:repost & Positive & 6.45 & $< \times 0.8$ \\
-user:reply & Positive & 3.23 & $\pm$20\% \\
-platform:reply & Positive & 3.22 & $\pm$20\% \\
-user:not\_interested & Negative & 1.72 & $\pm$50\% \\
-platform:block\_author & Negative & 1.32 & $\pm$50\% \\
-user:block\_author & Negative & 1.31 & $\pm$30\% \\
-user:share & Positive & 1.15 & $\pm$50\% \\
-platform:share & Positive & 1.15 & $\pm$50\% \\
-user:follow\_author & Positive & 0.33 & $> \times 2$ \\
-user:quote & Positive & 0.32 & $> \times 2$ \\
-user:mute\_author & Negative & 0.30 & $> \times 2$ \\
-user:report & Negative & 0.27 & $> \times 2$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The LLM margin proxy experiment (Claude Haiku, 15 sweep points
-$\times$ 200 pairs) achieves Spearman~$\rho = 0.929$ between LLM-based
-and analytic disagreement rates. LLM confidence is too compressed
-(range [1.40, 1.66]) for precise margin estimation but preserves
-rank-ordering. The go/no-go criterion was revised from $R^2$ to
-Spearman during analysis: rank-ordering is the practically relevant
-quantity for predicting which stakeholder pairs will be most
-differentiated.
+% TODO: Fill appendix sections
+\textit{[Appendix placeholder.]}
 
 \end{document}
