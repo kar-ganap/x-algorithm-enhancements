@@ -15,14 +15,18 @@ Stakeholders (domain-native to news recommendation):
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import numpy as np
 
 # Load MINDDataset via importlib to avoid any Phoenix import chain.
+# Register in sys.modules BEFORE exec_module so dataclass type
+# introspection works under Python 3.11 with PEP-604 unions.
 _mind_path = Path(__file__).parent / "mind.py"
 _spec = importlib.util.spec_from_file_location("_mind", _mind_path)
 _mod = importlib.util.module_from_spec(_spec)
+sys.modules["_mind"] = _mod
 _spec.loader.exec_module(_mod)
 MINDDataset = _mod.MINDDataset
 NUM_FEATURES = _mod.NUM_FEATURES
