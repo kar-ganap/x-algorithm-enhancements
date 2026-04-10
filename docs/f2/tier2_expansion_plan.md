@@ -1,6 +1,6 @@
 # Tier 2 Dataset Expansion: MIND + Amazon Reviews
 
-**Status**: Phase A (dry run) not yet started
+**Status**: Phase A complete (both datasets PASS). Phase B not yet started.
 **Last updated**: 2026-04-10
 
 ## Context
@@ -24,8 +24,8 @@ To claim meaningful generalizability, we need to reproduce all paper results on 
 
 | Phase | What | Duration | Status |
 |---|---|---|---|
-| **A** | Dry run: download, load, define stakeholders, verify cosine geometry. **Gate before Phase B.** | 4 hours | Not started |
-| **B** | Refactor 3 existing scripts to be dataset-agnostic; regression-test on MovieLens | 1.5 days | Deferred (flesh out after A) |
+| **A** | Dry run: download, load, define stakeholders, verify cosine geometry. **Gate before Phase B.** | ~4 hours actual | **Complete 2026-04-10, both datasets PASS** |
+| **B** | Refactor 3 existing scripts to be dataset-agnostic; regression-test on MovieLens | 1.5 days | Not started |
 | **C** | Run all experiments on MIND | 2 days | Deferred |
 | **D** | Run all experiments on Amazon Kindle | 2 days | Deferred |
 | **E** | Cross-dataset analysis and figure/table updates | 1 day | Deferred |
@@ -166,6 +166,103 @@ The script prints explicit PASS/FAIL for each:
 
 ---
 
+## Phase A Results (2026-04-10)
+
+Both datasets **PASS** the blocking criteria (G1, G2, G3, G5, G6). Only G4 (informational) fails on both. Detailed JSON results in `results/phase_a_geometry.json`.
+
+### MIND-small
+
+- **Pool**: 65,238 articles, 12,261-item content pool (after min-5-impressions filter)
+- **Feature dim**: 35 (17 top categories + 14 top subcategories + 4 quality signals)
+- **Top categories observed**: news, sports, finance, foodanddrink, travel, lifestyle, video, weather, health, autos, tv, music, entertainment, movies, kids, middleeast, northamerica
+- **5 stakeholders**: reader, publisher, advertiser, journalist, civic_diversity
+
+**Cosine matrix** (sorted):
+
+| Pair | cos |
+|---|---|
+| publisher ↔ civic_diversity | **-0.839** |
+| advertiser ↔ journalist | **-0.308** |
+| reader ↔ journalist | -0.152 |
+| journalist ↔ civic_diversity | -0.116 |
+| publisher ↔ advertiser | -0.057 |
+| publisher ↔ journalist | -0.038 |
+| reader ↔ civic_diversity | +0.012 |
+| reader ↔ advertiser | +0.396 |
+| advertiser ↔ civic_diversity | +0.401 |
+| reader ↔ publisher | +0.482 |
+
+**Criteria**:
+- G1 (≥1 pair cos < -0.1): **PASS** (4 pairs)
+- G2 (range ≥ 0.5): **PASS** (1.321)
+- G3 (≥1 pair \|cos\| < 0.2): **PASS** (5 pairs in transition zone)
+- G4 (≥2 pairs cos > 0.5): **FAIL** (0 pairs; max is reader-publisher at +0.482)
+- G5 (no label imbalance > 90/10): **PASS** (worst: advertiser at frac_first=0.348)
+- G6 (no cos > 0.95): **PASS** (max +0.482)
+
+### Amazon Kindle
+
+- **Pool**: 20,000 books (top-20K by review count), 17,425-item content pool
+- **Feature dim**: 32 (20 genres + 4 price + 3 volume + 3 sentiment + 2 length)
+- **Top categories observed**: Literature & Fiction, Romance, Mystery/Thriller/Suspense, Science Fiction & Fantasy, Teen/YA, Religion/Spirituality, Biographies/Memoirs, Children's, History, Humor/Entertainment, Kindle Unlimited, Politics, Business, Arts/Photography, Science/Math, Sports/Outdoors, Travel, Crafts/Hobbies, Cookbooks, Health/Fitness
+- **5 stakeholders**: reader, publisher, indie_author, premium_seller, diversity
+
+**Cosine matrix** (sorted):
+
+| Pair | cos |
+|---|---|
+| publisher ↔ diversity | **-0.761** |
+| publisher ↔ indie_author | **-0.578** |
+| reader ↔ diversity | -0.008 |
+| publisher ↔ premium_seller | +0.000 |
+| indie_author ↔ premium_seller | +0.000 |
+| premium_seller ↔ diversity | +0.000 |
+| reader ↔ premium_seller | +0.104 |
+| reader ↔ indie_author | +0.154 |
+| reader ↔ publisher | +0.311 |
+| indie_author ↔ diversity | **+0.654** |
+
+**Criteria**:
+- G1 (≥1 pair cos < -0.1): **PASS** (2 pairs)
+- G2 (range ≥ 0.5): **PASS** (1.415)
+- G3 (≥1 pair \|cos\| < 0.2): **PASS** (6 pairs in transition zone)
+- G4 (≥2 pairs cos > 0.5): **FAIL** (only 1 pair: indie_author-diversity at +0.654)
+- G5 (no label imbalance > 90/10): **PASS** (worst: indie_author at frac_first=0.197; expected — see below)
+- G6 (no cos > 0.95): **PASS** (max +0.654)
+
+### G4 Failure: Decision to Accept (Option A)
+
+Both datasets fail G4 (≥2 pairs with cos > 0.5). Decision: **accept the failure, proceed to Phase B unchanged**.
+
+**Why G4 fails**: The domain-native stakeholder definitions deliberately create tension between roles. There are no "twin" stakeholders — no "mainstream editor" or "bestseller chaser" that's trivially aligned with another. Each role is distinct by design, which is the point of going domain-native.
+
+**Why accepting is correct**:
+
+1. **Positive controls already come from MovieLens.** G4 is a positive-control sanity check. MovieLens ML-100K and ML-1M both have user-platform cos ≈ +0.95, plus named stakeholders (user-creator, user-advertiser) in the +0.6 to +0.8 range. The direction condition's "improve" side is already thoroughly tested.
+
+2. **The new datasets contribute different evidence types.** MIND and Amazon don't need to replicate MovieLens's positive-control regime. What they contribute is precisely what MovieLens lacks:
+   - **Stronger negative extremes**: publisher-civic_diversity on MIND is **-0.84**, publisher-diversity on Amazon is **-0.76**. Stronger than any MovieLens pair.
+   - **Exact-zero orthogonal pairs**: Amazon's premium_seller has cos = **0.000** with publisher, indie_author, and diversity (because it operates entirely on the price/sentiment/length feature slots while the others operate on category slots). No MovieLens pair comes this close to the theoretical cos=0 boundary. This gives us a unique test case for the direction condition at its exact decision threshold.
+   - **Transition-zone density**: 5 pairs with \|cos\| < 0.2 on MIND, 6 on Amazon. Much denser coverage of the ambiguous region than MovieLens.
+
+3. **Alternatives muddle the story**:
+   - Option B (add contrived "twin" stakeholders like `mainstream_editor`) satisfies G4 but adds roles a reviewer would correctly identify as ad-hoc. The question "what real-world role does `mainstream_editor` play?" has no good answer.
+   - Option C (modify existing stakeholders to be more aligned) preserves realism but weakens the roles we care about — losing the advertiser-journalist conflict on MIND or the reader-quality-focus on Amazon.
+
+4. **The Phase B regression test catches direction-condition bugs on the positive side.** Phase B reruns all experiments on MovieLens and diffs against existing results. If a refactoring bug breaks the "improve" side of the direction condition, the MovieLens regression will catch it at cos ≈ +0.95.
+
+**What we need to watch for in Phase C/D**: Since MIND and Amazon lack strong positive pairs, a dataset-specific bug that only affects the "improve" side would be harder to detect. Phase B's MovieLens regression test mitigates this, but we should also explicitly check that at least the one strong positive pair we do have (Amazon indie_author-diversity +0.65) behaves as expected.
+
+### Minor Observation: indie_author Label Balance
+
+Amazon's `indie_author` shows `frac_first = 0.197` (imbalance = 0.303) — much below 0.5. This looks alarming but is an artifact of the label-balance metric, not a problem with the stakeholder.
+
+Indie_author assigns weight -1.0 to items in the top-3 populated categories (which is where most items live). Random pairs sampled from the pool therefore have a high probability of both items being popular-category → both get utility ≈ -1 → **ties**. The label-balance check computes `utility[c1] > utility[c2]` strictly, without noise, so ties aren't counted. In the non-tie cases (mixed pairs with one popular + one niche item), the niche item always wins — which happens to be at position c1 only 50% of the time, giving a biased-looking 20% frac_first.
+
+**This is not a problem for BT training**: preference generation adds noise (σ=0.05) that breaks ties 50/50, so the actual training labels will be balanced. The G5 threshold (0.4) still passes at 0.303. Just a metric quirk to be aware of. If we want a cleaner check in a future run, add noise to the label-balance computation to match the preference generator.
+
+---
+
 ## Phases B–F (Summary — flesh out after Phase A results)
 
 Intentionally kept light. Detailed specs to be added incrementally after Phase A results inform decisions.
@@ -291,3 +388,4 @@ After Phase F:
 ## Changelog
 
 - **2026-04-10**: Initial plan created. Phase A not yet started.
+- **2026-04-10**: Phase A complete. Both MIND and Amazon PASS all blocking criteria (G1, G2, G3, G5, G6). G4 (informational) fails on both due to domain-native stakeholder design; decision is **Option A** (accept and proceed) — reasoning captured in Phase A Results section. Phase B greenlit.
