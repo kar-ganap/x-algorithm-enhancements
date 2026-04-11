@@ -357,7 +357,7 @@ def main():
         "fraction": round(direction_consistent / direction_total, 3) if direction_total > 0 else 0,
     }
 
-    out_path = ROOT / "results" / "extremal_evidence.json"
+    out_path = ROOT / "results" / f"{dataset_name}_extremal_evidence.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
     print(f"\nResults saved to {out_path}")

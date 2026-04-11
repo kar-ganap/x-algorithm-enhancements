@@ -1,0 +1,345 @@
+{
+  "sigma_invariance": {
+    "config": {
+      "sigma_values": [
+        0.1,
+        0.3,
+        0.5
+      ],
+      "n_values": [
+        25,
+        2000
+      ],
+      "n_seeds": 5,
+      "method": "A (target rotation)"
+    },
+    "points": [
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.1,
+        "target": "user",
+        "hidden": "platform",
+        "cosine": 0.9295,
+        "utility_n25": 31.4494,
+        "utility_n2000": 31.8858,
+        "change_pct": 1.4,
+        "improving": true,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.1,
+        "target": "user",
+        "hidden": "diversity",
+        "cosine": -0.0872,
+        "utility_n25": -9.0382,
+        "utility_n2000": -10.4037,
+        "change_pct": -15.1,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.1,
+        "target": "platform",
+        "hidden": "user",
+        "cosine": 0.9295,
+        "utility_n25": 21.6527,
+        "utility_n2000": 22.3802,
+        "change_pct": 3.4,
+        "improving": true,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.1,
+        "target": "platform",
+        "hidden": "diversity",
+        "cosine": -0.1535,
+        "utility_n25": -7.8124,
+        "utility_n2000": -10.3449,
+        "change_pct": -32.4,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.1,
+        "target": "diversity",
+        "hidden": "user",
+        "cosine": -0.0872,
+        "utility_n25": 13.1362,
+        "utility_n2000": 11.7167,
+        "change_pct": -10.8,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.1,
+        "target": "diversity",
+        "hidden": "platform",
+        "cosine": -0.1535,
+        "utility_n25": 20.2453,
+        "utility_n2000": 16.4451,
+        "change_pct": -18.8,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.3,
+        "target": "user",
+        "hidden": "platform",
+        "cosine": 0.9295,
+        "utility_n25": 30.3656,
+        "utility_n2000": 31.4483,
+        "change_pct": 3.6,
+        "improving": true,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.3,
+        "target": "user",
+        "hidden": "diversity",
+        "cosine": -0.0872,
+        "utility_n25": -9.1933,
+        "utility_n2000": -10.5353,
+        "change_pct": -14.6,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.3,
+        "target": "platform",
+        "hidden": "user",
+        "cosine": 0.9295,
+        "utility_n25": 20.6972,
+        "utility_n2000": 22.1232,
+        "change_pct": 6.9,
+        "improving": true,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.3,
+        "target": "platform",
+        "hidden": "diversity",
+        "cosine": -0.1535,
+        "utility_n25": -8.8691,
+        "utility_n2000": -10.3579,
+        "change_pct": -16.8,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.3,
+        "target": "diversity",
+        "hidden": "user",
+        "cosine": -0.0872,
+        "utility_n25": 13.3477,
+        "utility_n2000": 11.8241,
+        "change_pct": -11.4,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.3,
+        "target": "diversity",
+        "hidden": "platform",
+        "cosine": -0.1535,
+        "utility_n25": 20.7882,
+        "utility_n2000": 16.3056,
+        "change_pct": -21.6,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.5,
+        "target": "user",
+        "hidden": "platform",
+        "cosine": 0.9295,
+        "utility_n25": 30.4389,
+        "utility_n2000": 30.2811,
+        "change_pct": -0.5,
+        "improving": false,
+        "match": false
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.5,
+        "target": "user",
+        "hidden": "diversity",
+        "cosine": -0.0872,
+        "utility_n25": -9.7956,
+        "utility_n2000": -10.5504,
+        "change_pct": -7.7,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.5,
+        "target": "platform",
+        "hidden": "user",
+        "cosine": 0.9295,
+        "utility_n25": 21.0996,
+        "utility_n2000": 21.3441,
+        "change_pct": 1.2,
+        "improving": true,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.5,
+        "target": "platform",
+        "hidden": "diversity",
+        "cosine": -0.1535,
+        "utility_n25": -9.3349,
+        "utility_n2000": -10.8213,
+        "change_pct": -15.9,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.5,
+        "target": "diversity",
+        "hidden": "user",
+        "cosine": -0.0872,
+        "utility_n25": 13.1487,
+        "utility_n2000": 11.8368,
+        "change_pct": -10.0,
+        "improving": false,
+        "match": true
+      },
+      {
+        "dataset": "ml-100k",
+        "sigma": 0.5,
+        "target": "diversity",
+        "hidden": "platform",
+        "cosine": -0.1535,
+        "utility_n25": 20.407,
+        "utility_n2000": 16.6722,
+        "change_pct": -18.3,
+        "improving": false,
+        "match": true
+      }
+    ],
+    "summary": {
+      "sigma_0.1": {
+        "total": 6,
+        "matches": 6,
+        "strong_total": 2,
+        "strong_matches": 2
+      },
+      "sigma_0.3": {
+        "total": 6,
+        "matches": 6,
+        "strong_total": 2,
+        "strong_matches": 2
+      },
+      "sigma_0.5": {
+        "total": 6,
+        "matches": 5,
+        "strong_total": 2,
+        "strong_matches": 1
+      },
+      "direction_consistency": {
+        "consistent": 5,
+        "total": 6,
+        "fraction": 0.833
+      }
+    }
+  },
+  "selection_concentration": {
+    "config": {
+      "sigma": 0.3,
+      "n_values": [
+        25,
+        50,
+        100,
+        200,
+        500,
+        2000
+      ],
+      "n_seeds": 5,
+      "top_k": 10,
+      "target": "user"
+    },
+    "points": [
+      {
+        "dataset": "ml-100k",
+        "n_pairs": 25,
+        "mean_unique_genres": 2.6,
+        "mean_target_utility": 21.0644,
+        "mean_diversity_utility": -9.1933,
+        "mean_score_percentile": 99.6,
+        "cross_seed_intersection": 1,
+        "cross_seed_union": 26,
+        "pool_size": 1305
+      },
+      {
+        "dataset": "ml-100k",
+        "n_pairs": 50,
+        "mean_unique_genres": 3.4,
+        "mean_target_utility": 22.0328,
+        "mean_diversity_utility": -8.4891,
+        "mean_score_percentile": 99.6,
+        "cross_seed_intersection": 4,
+        "cross_seed_union": 21,
+        "pool_size": 1305
+      },
+      {
+        "dataset": "ml-100k",
+        "n_pairs": 100,
+        "mean_unique_genres": 3.4,
+        "mean_target_utility": 22.1455,
+        "mean_diversity_utility": -8.6275,
+        "mean_score_percentile": 99.6,
+        "cross_seed_intersection": 2,
+        "cross_seed_union": 21,
+        "pool_size": 1305
+      },
+      {
+        "dataset": "ml-100k",
+        "n_pairs": 200,
+        "mean_unique_genres": 3.2,
+        "mean_target_utility": 22.5676,
+        "mean_diversity_utility": -9.0391,
+        "mean_score_percentile": 99.6,
+        "cross_seed_intersection": 4,
+        "cross_seed_union": 19,
+        "pool_size": 1305
+      },
+      {
+        "dataset": "ml-100k",
+        "n_pairs": 500,
+        "mean_unique_genres": 3.4,
+        "mean_target_utility": 22.5579,
+        "mean_diversity_utility": -10.4128,
+        "mean_score_percentile": 99.6,
+        "cross_seed_intersection": 6,
+        "cross_seed_union": 17,
+        "pool_size": 1305
+      },
+      {
+        "dataset": "ml-100k",
+        "n_pairs": 2000,
+        "mean_unique_genres": 3.4,
+        "mean_target_utility": 22.6333,
+        "mean_diversity_utility": -10.5353,
+        "mean_score_percentile": 99.6,
+        "cross_seed_intersection": 5,
+        "cross_seed_union": 16,
+        "pool_size": 1305
+      }
+    ]
+  },
+  "total_time_seconds": 812.8
+}
