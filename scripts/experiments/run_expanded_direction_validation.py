@@ -1,44 +1,49 @@
-"""Expanded direction condition validation.
+"""Expanded direction condition validation (registry-driven).
 
-Method A: 3 targets × 2 hidden × 2 MovieLens datasets = 12 points
-Method B: 5 named stakeholders × 3 targets × 2 datasets = 30 points
-Total: ~42 data points spanning cos ≈ -0.9 to +0.9
+Method A: target rotation over the dataset's primary stakeholders
+Method B: named interpretable stakeholders (MovieLens-only —
+          gated by hasattr(stakeholders_mod, "build_named_stakeholder_configs"))
+
+Total points per dataset depend on the primary stakeholder count
+(K base stakeholders → K(K-1) Method A points; +5×K named pairs
+on MovieLens for Method B).
+
+Note (Phase B refactor): the script now takes one --dataset at a time
+(was previously hardcoded to loop over [ml-100k, ml-1m]). Output
+filename is dataset-prefixed.
 
 Usage:
-    uv run python scripts/experiments/run_expanded_direction_validation.py
+    uv run python scripts/experiments/run_expanded_direction_validation.py --dataset ml-100k
 """
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _dataset_registry import REGISTRY, load_dataset  # noqa: E402
 
 
 def _load(name, path):
+    """Load reward-modeling modules via importlib."""
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
-_ml = _load("movielens", ROOT / "enhancements" / "data" / "movielens.py")
-_st = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
 _al = _load("alternative_losses", ROOT / "enhancements" / "reward_modeling" / "alternative_losses.py")
 _kf = _load("k_stakeholder_frontier", ROOT / "enhancements" / "reward_modeling" / "k_stakeholder_frontier.py")
-
-MovieLensDataset = _ml.MovieLensDataset
-build_stakeholder_configs = _st.build_stakeholder_configs
-generate_movielens_content_pool = _st.generate_movielens_content_pool
-generate_movielens_preferences = _st.generate_movielens_preferences
-split_preferences = _st.split_preferences
-NUM_GENRES = _st.NUM_GENRES
 
 compute_scorer_eval_frontier = _kf.compute_scorer_eval_frontier
 LossConfig = _al.LossConfig
@@ -71,79 +76,12 @@ def perturb_weights(w, sigma, rng):
     return w * (1 + rng.normal(0, sigma, len(w)))
 
 
-# ── Named stakeholder definitions ──
-
-def compute_creator_weights(dataset):
-    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
-    for movie in dataset.movies.values():
-        genre_counts += movie.genres
-    mx = np.max(genre_counts)
-    return (genre_counts / mx).astype(np.float32) if mx > 0 else genre_counts.astype(np.float32)
+# Named stakeholder definitions moved to enhancements/data/movielens_stakeholders.py
+# in Phase B Commit 1 (build_named_stakeholder_configs). MIND/Amazon do not
+# implement this function — Method B is feature-flagged via hasattr below.
 
 
-def compute_advertiser_weights(dataset):
-    genre_ratings = np.zeros(NUM_GENRES, dtype=np.float64)
-    for rating in dataset.train_ratings:
-        movie = dataset.movies.get(rating.movie_id)
-        if movie is not None:
-            genre_ratings += movie.genres
-    mx = np.max(genre_ratings)
-    return (genre_ratings / mx).astype(np.float32) if mx > 0 else genre_ratings.astype(np.float32)
-
-
-def compute_niche_weights(dataset):
-    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
-    for movie in dataset.movies.values():
-        genre_counts += movie.genres
-    active = genre_counts > 0
-    median_count = np.median(genre_counts[active]) if np.any(active) else 1.0
-    weights = np.zeros(NUM_GENRES, dtype=np.float32)
-    weights[active & (genre_counts < median_count)] = 1.0
-    weights[active & (genre_counts >= median_count)] = -1.0
-    mx = np.max(np.abs(weights))
-    return weights / mx if mx > 0 else weights
-
-
-def compute_mainstream_weights(dataset):
-    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
-    for movie in dataset.movies.values():
-        genre_counts += movie.genres
-    top3 = np.argsort(genre_counts)[-3:]
-    weights = np.zeros(NUM_GENRES, dtype=np.float32)
-    weights[top3] = 1.0
-    return weights
-
-
-def compute_moderator_weights(dataset):
-    genre_low = np.zeros(NUM_GENRES, dtype=np.float64)
-    genre_total = np.zeros(NUM_GENRES, dtype=np.float64)
-    for rating in dataset.train_ratings:
-        movie = dataset.movies.get(rating.movie_id)
-        if movie is None:
-            continue
-        for g in range(NUM_GENRES):
-            if movie.genres[g] > 0:
-                genre_total[g] += 1
-                if rating.rating <= 2:
-                    genre_low[g] += 1
-    active = genre_total > 0
-    frac = np.zeros(NUM_GENRES, dtype=np.float32)
-    frac[active] = (genre_low[active] / genre_total[active]).astype(np.float32)
-    weights = -frac
-    mx = np.max(np.abs(weights))
-    return weights / mx if mx > 0 else weights
-
-
-NAMED_FNS = {
-    "creator": compute_creator_weights,
-    "advertiser": compute_advertiser_weights,
-    "niche": compute_niche_weights,
-    "mainstream": compute_mainstream_weights,
-    "moderator": compute_moderator_weights,
-}
-
-
-def run_goodhart_pair(pool, genres, base_probs, target_weights, eval_weights,
+def run_goodhart_pair(ds, pool, genres, base_probs, target_weights, eval_weights,
                       target_name, hidden_name, hidden_weights, seeds):
     """Run abbreviated Goodhart: N=25 and N=2000, return utility change."""
     cos_val = cosine_sim(target_weights, hidden_weights)
@@ -153,8 +91,8 @@ def run_goodhart_pair(pool, genres, base_probs, target_weights, eval_weights,
         for seed in seeds:
             rng = np.random.default_rng(seed)
             perturbed = perturb_weights(target_weights, SIGMA, rng)
-            pref, rej = generate_movielens_preferences(pool, perturbed, n_pairs, seed)
-            tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed)
+            pref, rej = ds.generate_preferences(perturbed, n_pairs, seed)
+            tp, tr, ep, er = ds.stakeholders_mod.split_preferences(pref, rej, 0.2, seed)
             config = LossConfig(
                 loss_type=LossType.BRADLEY_TERRY,
                 stakeholder=StakeholderType.USER,
@@ -189,72 +127,96 @@ def run_goodhart_pair(pool, genres, base_probs, target_weights, eval_weights,
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Expanded direction validation (registry-driven)")
+    parser.add_argument("--data", default=None,
+                        help="(deprecated) data directory; use --dataset")
+    parser.add_argument("--dataset", default=None, choices=list(REGISTRY.keys()),
+                        help="Dataset name from registry")
+    args = parser.parse_args()
+
+    if args.dataset:
+        dataset_name = args.dataset
+    elif args.data:
+        warnings.warn(
+            "--data is deprecated; use --dataset {ml-100k,ml-1m,mind-small,amazon-kindle}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        dataset_name = Path(args.data).name
+    else:
+        # Backward compat: when invoked without args, default to ml-100k.
+        dataset_name = "ml-100k"
+
     print("=" * 65)
-    print("Phase 14: Expanded Direction Condition Validation")
+    print(f"Expanded Direction Condition Validation ({dataset_name})")
     print("=" * 65)
 
     t0 = time.time()
     all_points = []
 
-    for ds_name, ds_path in [("ml-100k", "data/ml-100k"), ("ml-1m", "data/ml-1m")]:
-        ds_dir = ROOT / ds_path
-        if not ds_dir.exists():
-            print(f"  Skipping {ds_name} (data not found)")
-            continue
+    print(f"\n{'─' * 50}")
+    print(f"Dataset: {dataset_name}")
+    print(f"{'─' * 50}")
 
-        print(f"\n{'─' * 50}")
-        print(f"Dataset: {ds_name}")
-        print(f"{'─' * 50}")
+    ds = load_dataset(dataset_name)
+    base_configs = ds.configs
+    pool, genres = ds.pool, ds.topics
+    base_probs = pool[np.newaxis, :, :]
 
-        dataset = MovieLensDataset(str(ds_dir))
-        base_configs = build_stakeholder_configs(dataset)
-        pool, genres = generate_movielens_content_pool(dataset, min_ratings=5, seed=42)
-        base_probs = pool[np.newaxis, :, :]
+    # Method B (named stakeholders) is feature-flagged: only MovieLens
+    # implements build_named_stakeholder_configs (see Phase B Commit 1).
+    has_named = hasattr(ds.stakeholders_mod, "build_named_stakeholder_configs")
+    named_configs: dict = {}
+    if has_named:
+        named_configs = ds.stakeholders_mod.build_named_stakeholder_configs(ds.dataset)
 
-        # Build all stakeholder weights (base + named)
-        all_weights = dict(base_configs)
-        for name, fn in NAMED_FNS.items():
-            all_weights[name] = fn(dataset)
+    # Build all stakeholder weights (base + named)
+    all_weights = dict(base_configs)
+    for name, w in named_configs.items():
+        all_weights[name] = w
 
-        # Method A: 3 targets × remaining hidden
-        print("\n  Method A: Different optimization targets")
-        base_names = ["user", "platform", "diversity"]
-        for target_name in base_names:
-            for hidden_name in base_names:
-                if target_name == hidden_name:
-                    continue
-                eval_w = {n: all_weights[n] for n in base_names}
-                result = run_goodhart_pair(
-                    pool, genres, base_probs,
-                    all_weights[target_name], eval_w,
-                    target_name, hidden_name, all_weights[hidden_name],
-                    SEEDS,
-                )
-                result["dataset"] = ds_name
-                result["method"] = "A"
-                status = "✓" if result["match"] else "✗"
-                print(f"    {status} target={target_name:>10}, hidden={hidden_name:>10}: "
-                      f"cos={result['cosine']:+.3f}, change={result['change_pct']:+.1f}%")
-                all_points.append(result)
+    # Method A: target rotation over base stakeholders
+    print("\n  Method A: Different optimization targets")
+    base_names = list(ds.spec.primary_stakeholder_order)
+    for target_name in base_names:
+        for hidden_name in base_names:
+            if target_name == hidden_name:
+                continue
+            eval_w = {n: all_weights[n] for n in base_names}
+            result = run_goodhart_pair(
+                ds, pool, genres, base_probs,
+                all_weights[target_name], eval_w,
+                target_name, hidden_name, all_weights[hidden_name],
+                SEEDS,
+            )
+            result["dataset"] = dataset_name
+            result["method"] = "A"
+            status = "✓" if result["match"] else "✗"
+            print(f"    {status} target={target_name:>10}, hidden={hidden_name:>10}: "
+                  f"cos={result['cosine']:+.3f}, change={result['change_pct']:+.1f}%")
+            all_points.append(result)
 
-        # Method B: Named stakeholders as hidden, each target
+    # Method B: Named stakeholders as hidden, each target (MovieLens only)
+    if has_named:
         print("\n  Method B: Named interpretable stakeholders")
-        for named in NAMED_FNS:
+        for named in named_configs:
             for target_name in base_names:
                 eval_w = {n: all_weights[n] for n in base_names}
                 eval_w[named] = all_weights[named]
                 result = run_goodhart_pair(
-                    pool, genres, base_probs,
+                    ds, pool, genres, base_probs,
                     all_weights[target_name], eval_w,
                     target_name, named, all_weights[named],
                     SEEDS,
                 )
-                result["dataset"] = ds_name
+                result["dataset"] = dataset_name
                 result["method"] = "B"
                 status = "✓" if result["match"] else "✗"
                 print(f"    {status} target={target_name:>10}, hidden={named:>12}: "
                       f"cos={result['cosine']:+.3f}, change={result['change_pct']:+.1f}%")
                 all_points.append(result)
+    else:
+        print(f"\n  Method B: skipped (not supported for {dataset_name})")
 
     elapsed = time.time() - t0
 
@@ -286,7 +248,7 @@ def main():
             "sigma": SIGMA,
             "n_seeds": len(SEEDS),
             "n_values": [25, 2000],
-            "named_stakeholders": list(NAMED_FNS.keys()),
+            "named_stakeholders": list(named_configs.keys()),
         },
         "points": all_points,
         "summary": {
@@ -298,7 +260,7 @@ def main():
         "total_time_seconds": round(elapsed, 1),
     }
 
-    out_path = ROOT / "results" / "expanded_direction_validation.json"
+    out_path = ROOT / "results" / f"{dataset_name}_expanded_direction_validation.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
     print(f"\nResults saved to {out_path}")

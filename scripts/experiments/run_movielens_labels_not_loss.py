@@ -1,23 +1,27 @@
-"""Labels-Not-Loss experiment on MovieLens-100K.
+"""Labels-Not-Loss experiment (registry-driven).
 
 Replicates the paper's central claim on real data and extends with
-four MovieLens-specific tests (temporal, downstream, user-groups, genre correlation).
+MovieLens-specific tests (temporal, downstream, user-groups, genre correlation).
 
 Groups:
-  A: Core labels-not-loss replication (3 losses × 3 stakeholders × 5 seeds)
-  B: Hyperparameter robustness
-  C: Temporal generalization (train on early, eval on late)
-  D: Downstream rating prediction (BT weights predict actual ratings?)
-  E: User-group preference heterogeneity (per-genre-group convergence)
-  F: Genre correlation matrix (informational)
+  A: Core labels-not-loss replication — DATASET-AGNOSTIC
+  B: Hyperparameter robustness — DATASET-AGNOSTIC
+  C: Temporal generalization — MovieLens only
+  D: Downstream rating prediction — MovieLens only (Spearman over 1-5 scale)
+  E: User-group heterogeneity — MovieLens only (genre-group clustering)
+  F: Genre correlation matrix — MovieLens only
+
+Note (Phase B refactor): Groups C/D/E/F are MovieLens-specific. Running
+the script on MIND or Amazon will only execute Groups A and B by default;
+attempting to run C/D/E/F on a non-MovieLens dataset returns an error.
 
 Usage:
     uv run python scripts/experiments/run_movielens_labels_not_loss.py --all
     uv run python scripts/experiments/run_movielens_labels_not_loss.py --group A
-    uv run python scripts/experiments/run_movielens_labels_not_loss.py --group C
+    uv run python scripts/experiments/run_movielens_labels_not_loss.py --dataset mind-small --groups A,B
 
 Output:
-    results/movielens_labels_not_loss.json
+    results/{dataset}_labels_not_loss.json
 """
 
 from __future__ import annotations
@@ -27,6 +31,7 @@ import importlib.util
 import json
 import sys
 import time
+import warnings
 from itertools import combinations
 from pathlib import Path
 
@@ -34,28 +39,20 @@ import numpy as np
 from scipy.stats import spearmanr
 
 ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _dataset_registry import REGISTRY, load_dataset  # noqa: E402
 
 
 def _load(name: str, path: Path):
+    """Load reward-modeling modules via importlib."""
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
-_ml = _load("movielens", ROOT / "enhancements" / "data" / "movielens.py")
-_st = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
 _al = _load("alternative_losses", ROOT / "enhancements" / "reward_modeling" / "alternative_losses.py")
-
-MovieLensDataset = _ml.MovieLensDataset
-build_stakeholder_configs = _st.build_stakeholder_configs
-generate_movielens_content_pool = _st.generate_movielens_content_pool
-generate_movielens_content_pool_temporal = _st.generate_movielens_content_pool_temporal
-generate_movielens_preferences = _st.generate_movielens_preferences
-split_preferences = _st.split_preferences
-compute_user_genre_weights_for_group = _st.compute_user_genre_weights_for_group
-get_user_genre_groups = _st.get_user_genre_groups
-NUM_GENRES = _st.NUM_GENRES
 
 LossConfig = _al.LossConfig
 LossType = _al.LossType
@@ -71,11 +68,16 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
 
 
-STAKEHOLDER_MAP = {
-    "user": StakeholderType.USER,
-    "platform": StakeholderType.PLATFORM,
-    "diversity": StakeholderType.SOCIETY,
-}
+# Stakeholder name → StakeholderType enum mapping. The enum is only used
+# as a label inside LossConfig (no semantic dispatch — confirmed by the
+# comment in run_data_budget_all_hidden.py:118). Returns USER as a fallback
+# for non-MovieLens stakeholder names.
+def _stakeholder_type(name: str) -> "StakeholderType":
+    return {
+        "user": StakeholderType.USER,
+        "platform": StakeholderType.PLATFORM,
+        "diversity": StakeholderType.SOCIETY,
+    }.get(name, StakeholderType.USER)
 
 LOSS_CONFIGS = {
     "bradley_terry": {"loss_type": LossType.BRADLEY_TERRY},
@@ -86,11 +88,18 @@ LOSS_CONFIGS = {
 SEEDS = [42, 142, 242, 342, 442]
 
 
-def _train(features, stakeholder_weights, stakeholder_name, loss_name, loss_kwargs,
+def _train(ds, features, stakeholder_weights, stakeholder_name, loss_name, loss_kwargs,
            n_pairs=2500, seed=42, epochs=50):
-    """Train a single model and return results dict."""
-    pref, rej = generate_movielens_preferences(features, stakeholder_weights, n_pairs, seed)
-    tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed)
+    """Train a single model and return results dict.
+
+    Note: calls the dataset's preferences function directly with the
+    explicit ``features`` parameter rather than ``ds.generate_preferences``
+    (which uses ``ds.pool``). Group C of this script trains on a temporal
+    subset of the pool, so we cannot rely on ``ds.pool`` here.
+    """
+    pref_fn = getattr(ds.stakeholders_mod, ds.spec.preferences_fn)
+    pref, rej = pref_fn(features, stakeholder_weights, n_pairs, seed)
+    tp, tr, ep, er = ds.stakeholders_mod.split_preferences(pref, rej, 0.2, seed)
 
     eng_kw = {}
     if loss_kwargs.get("loss_type") == LossType.CALIBRATED_BT:
@@ -98,7 +107,7 @@ def _train(features, stakeholder_weights, stakeholder_name, loss_name, loss_kwar
         eng_kw["target_engagement_rej"] = np.clip(tr @ stakeholder_weights, 0, 1)
 
     config = LossConfig(
-        stakeholder=STAKEHOLDER_MAP[stakeholder_name],
+        stakeholder=_stakeholder_type(stakeholder_name),
         learning_rate=0.01,
         num_epochs=epochs,
         batch_size=64,
@@ -121,25 +130,27 @@ def _train(features, stakeholder_weights, stakeholder_name, loss_name, loss_kwar
 # Group A: Core replication
 # ---------------------------------------------------------------------------
 
-def run_group_a(pool, configs):
+def run_group_a(ds, pool, configs):
+    stakeholder_names = list(ds.spec.primary_stakeholder_order)
     print("\n" + "=" * 60)
     print("Group A: Core Labels-Not-Loss Replication")
-    print(f"  3 losses × 3 stakeholders × {len(SEEDS)} seeds = {3*3*len(SEEDS)} runs")
+    print(f"  3 losses × {len(stakeholder_names)} stakeholders × {len(SEEDS)} seeds "
+          f"= {3*len(stakeholder_names)*len(SEEDS)} runs")
     print("=" * 60)
 
     features, _ = pool
     models = []
     for seed in SEEDS:
-        for s_name in ["user", "platform", "diversity"]:
+        for s_name in stakeholder_names:
             for l_name, l_kwargs in LOSS_CONFIGS.items():
-                m = _train(features, configs[s_name], s_name, l_name, l_kwargs, seed=seed)
+                m = _train(ds, features, configs[s_name], s_name, l_name, l_kwargs, seed=seed)
                 models.append(m)
                 print(f"  {s_name}/{l_name}/seed={seed}: "
                       f"train={m['train_accuracy']:.1%}, eval={m['eval_accuracy']:.1%}")
 
     # Within-loss similarity: for each stakeholder+seed, cosine sim across losses
     within_loss = {}
-    for s_name in ["user", "platform", "diversity"]:
+    for s_name in stakeholder_names:
         per_seed_sims = []
         for seed in SEEDS:
             seed_models = [m for m in models if m["stakeholder"] == s_name and m["seed"] == seed]
@@ -162,7 +173,10 @@ def run_group_a(pool, configs):
 
     # Across-stakeholder similarity: for each loss+seed, cosine sim across stakeholders
     across_stakeholder = {}
-    pairs = [("user", "platform"), ("user", "diversity"), ("platform", "diversity")]
+    # Generate all pairs from canonical order (preserves byte-equivalence on
+    # MovieLens because the order is ("user", "platform", "diversity") and
+    # combinations(2) yields exactly the same 3 pairs in the same order).
+    pairs = list(combinations(stakeholder_names, 2))
     for l_name in LOSS_CONFIGS:
         across_stakeholder[l_name] = {}
         for s_a, s_b in pairs:
@@ -201,7 +215,7 @@ def run_group_a(pool, configs):
 # Group B: Hyperparameter robustness
 # ---------------------------------------------------------------------------
 
-def run_group_b(pool, configs):
+def run_group_b(ds, pool, configs):
     print("\n" + "=" * 60)
     print("Group B: Hyperparameter Robustness")
     print("=" * 60)
@@ -220,13 +234,14 @@ def run_group_b(pool, configs):
         ],
     }
 
+    stakeholder_names = list(ds.spec.primary_stakeholder_order)
     results = {}
     for loss_family, variants in hp_configs.items():
         results[loss_family] = {}
-        for s_name in ["user", "platform", "diversity"]:
+        for s_name in stakeholder_names:
             models = []
             for hp_name, hp_kwargs in variants:
-                m = _train(features, configs[s_name], s_name, hp_name, hp_kwargs, seed=42)
+                m = _train(ds, features, configs[s_name], s_name, hp_name, hp_kwargs, seed=42)
                 models.append(m)
 
             # Pairwise cosine similarity across hyperparams
@@ -251,7 +266,8 @@ def run_group_b(pool, configs):
 # Group C: Temporal generalization
 # ---------------------------------------------------------------------------
 
-def run_group_c(dataset, configs):
+def run_group_c(ds, dataset, configs):
+    """MovieLens-only: temporal generalization."""
     print("\n" + "=" * 60)
     print("Group C: Temporal Generalization")
     print("=" * 60)
@@ -260,6 +276,7 @@ def run_group_c(dataset, configs):
     median_ts = int(np.median(timestamps))
     print(f"  Median timestamp: {median_ts}")
 
+    generate_movielens_content_pool_temporal = ds.stakeholders_mod.generate_movielens_content_pool_temporal
     early_pool, early_genres = generate_movielens_content_pool_temporal(
         dataset, before_timestamp=median_ts, min_ratings=3, seed=42
     )
@@ -278,6 +295,8 @@ def run_group_c(dataset, configs):
 
     # Build stakeholder weights from early data only
     from copy import deepcopy
+    build_stakeholder_configs = ds.stakeholders_mod.build_stakeholder_configs
+    generate_movielens_preferences = ds.stakeholders_mod.generate_movielens_preferences
     early_dataset = deepcopy(dataset)
     early_dataset.train_ratings = [r for r in dataset.train_ratings if r.timestamp < median_ts]
     early_configs = build_stakeholder_configs(early_dataset)
@@ -285,11 +304,12 @@ def run_group_c(dataset, configs):
     within_loss_temporal = {}
     temporal_eval = {}
 
-    for s_name in ["user", "platform", "diversity"]:
+    stakeholder_names = list(ds.spec.primary_stakeholder_order)
+    for s_name in stakeholder_names:
         # Train on early preferences
         models = {}
         for l_name, l_kwargs in LOSS_CONFIGS.items():
-            m = _train(early_pool, early_configs[s_name], s_name, l_name, l_kwargs, seed=42)
+            m = _train(ds, early_pool, early_configs[s_name], s_name, l_name, l_kwargs, seed=42)
             models[l_name] = m
 
         # Within-loss convergence on early data
@@ -323,17 +343,19 @@ def run_group_c(dataset, configs):
 # Group D: Downstream rating prediction
 # ---------------------------------------------------------------------------
 
-def run_group_d(dataset, pool, configs):
+def run_group_d(ds, dataset, pool, configs):
+    """MovieLens-only: downstream rating prediction (Spearman over 1-5 scale)."""
     print("\n" + "=" * 60)
     print("Group D: Downstream Rating Prediction")
     print("=" * 60)
 
+    NUM_GENRES_LOCAL = 19  # MovieLens-only group; safe to hardcode
     features, _ = pool
     results = {}
 
     # Train BT for each stakeholder
-    for s_name in ["user", "platform", "diversity"]:
-        m = _train(features, configs[s_name], s_name, "bradley_terry",
+    for s_name in list(ds.spec.primary_stakeholder_order):
+        m = _train(ds, features, configs[s_name], s_name, "bradley_terry",
                    {"loss_type": LossType.BRADLEY_TERRY}, seed=42)
         w = np.array(m["weights"])
 
@@ -354,7 +376,7 @@ def run_group_d(dataset, pool, configs):
 
     # Random baseline
     rng = np.random.default_rng(42)
-    random_w = rng.normal(0, 1, NUM_GENRES).astype(np.float32)
+    random_w = rng.normal(0, 1, NUM_GENRES_LOCAL).astype(np.float32)
     scores_rand = []
     ratings_rand = []
     for rating in dataset.test_ratings:
@@ -390,10 +412,16 @@ def run_group_d(dataset, pool, configs):
 # Group E: User-group heterogeneity
 # ---------------------------------------------------------------------------
 
-def run_group_e(dataset, pool):
+def run_group_e(ds, dataset, pool):
+    """MovieLens-only: user grouping by top-rated genre."""
     print("\n" + "=" * 60)
     print("Group E: User-Group Preference Heterogeneity")
     print("=" * 60)
+
+    get_user_genre_groups = ds.stakeholders_mod.get_user_genre_groups
+    compute_user_genre_weights_for_group = ds.stakeholders_mod.compute_user_genre_weights_for_group
+    generate_movielens_preferences = ds.stakeholders_mod.generate_movielens_preferences
+    split_preferences = ds.stakeholders_mod.split_preferences
 
     features, _ = pool
     groups = get_user_genre_groups(dataset, min_group_size=50)
@@ -438,19 +466,21 @@ def run_group_e(dataset, pool):
 # ---------------------------------------------------------------------------
 
 def run_group_f(pool, dataset):
+    """MovieLens-only: genre correlation matrix."""
     print("\n" + "=" * 60)
     print("Group F: Genre Correlation Matrix")
     print("=" * 60)
 
+    NUM_GENRES_LOCAL = 19  # MovieLens-only group
     features, _ = pool
     # Correlation between genre columns
     corr = np.corrcoef(features.T)
-    genre_names = dataset.genres if dataset.genres else [f"g{i}" for i in range(NUM_GENRES)]
+    genre_names = dataset.genres if dataset.genres else [f"g{i}" for i in range(NUM_GENRES_LOCAL)]
 
     # Top correlated pairs (excluding self-correlation)
     pairs = []
-    for i in range(NUM_GENRES):
-        for j in range(i + 1, NUM_GENRES):
+    for i in range(NUM_GENRES_LOCAL):
+        for j in range(i + 1, NUM_GENRES_LOCAL):
             if not np.isnan(corr[i, j]):
                 pairs.append((genre_names[i], genre_names[j], float(corr[i, j])))
 
@@ -487,37 +517,62 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MovieLens labels-not-loss experiment")
-    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
-    parser.add_argument("--all", action="store_true", help="Run all groups")
-    parser.add_argument("--group", type=str, help="Run specific group (A-F)")
+    parser = argparse.ArgumentParser(description="Labels-not-loss experiment (registry-driven)")
+    parser.add_argument("--data", default=None,
+                        help="(deprecated) data directory; use --dataset")
+    parser.add_argument("--dataset", default=None, choices=list(REGISTRY.keys()),
+                        help="Dataset name from registry")
+    parser.add_argument("--all", action="store_true", help="Run all groups (default for MovieLens)")
+    parser.add_argument("--group", type=str, help="Run specific group (A-F, single)")
+    parser.add_argument("--groups", type=str, default=None,
+                        help="Comma-separated groups to run (e.g. 'A,B,C'). "
+                             "Default: 'A,B,C,D,E,F' for MovieLens, 'A,B' for other datasets.")
     args = parser.parse_args()
 
-    if not args.all and not args.group:
-        args.all = True
+    if args.dataset:
+        dataset_name = args.dataset
+    elif args.data:
+        warnings.warn(
+            "--data is deprecated; use --dataset {ml-100k,ml-1m,mind-small,amazon-kindle}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        dataset_name = Path(args.data).name
+    else:
+        dataset_name = "ml-100k"
 
-    groups_to_run = set()
-    if args.all:
-        groups_to_run = {"A", "B", "C", "D", "E", "F"}
+    is_movielens = dataset_name.startswith("ml-")
+
+    # Determine groups to run
+    groups_to_run: set[str] = set()
+    if args.groups:
+        groups_to_run = set(args.groups.upper().split(","))
     elif args.group:
         groups_to_run = {args.group.upper()}
+    elif args.all:
+        groups_to_run = {"A", "B", "C", "D", "E", "F"} if is_movielens else {"A", "B"}
+    else:
+        # Default: all on MovieLens, A+B on others
+        groups_to_run = {"A", "B", "C", "D", "E", "F"} if is_movielens else {"A", "B"}
+
+    # Hard guard: Groups C/D/E/F are MovieLens-only
+    if not is_movielens and (groups_to_run & {"C", "D", "E", "F"}):
+        forbidden = sorted(groups_to_run & {"C", "D", "E", "F"})
+        print(f"ERROR: Groups {forbidden} are MovieLens-specific and not supported on {dataset_name}.")
+        print(f"       Use --groups A,B (default for non-MovieLens datasets).")
+        sys.exit(2)
 
     print("=" * 60)
-    print("MovieLens Labels-Not-Loss Experiment")
+    print(f"Labels-Not-Loss Experiment ({dataset_name})")
     print(f"Groups: {', '.join(sorted(groups_to_run))}")
     print("=" * 60)
 
-    data_dir = ROOT / Path(args.data)
-    dataset_name = data_dir.name
-    if not data_dir.exists():
-        print(f"ERROR: MovieLens data not found at {data_dir}")
-        sys.exit(1)
-
     t0 = time.time()
-    dataset = MovieLensDataset(str(data_dir))
-    configs = build_stakeholder_configs(dataset)
-    pool = generate_movielens_content_pool(dataset, min_ratings=5, seed=42)
-    print(f"Loaded: {len(dataset.users)} users, {pool[0].shape[0]} movies")
+    ds = load_dataset(dataset_name)
+    dataset = ds.dataset
+    configs = ds.configs
+    pool = (ds.pool, ds.topics)
+    print(f"Loaded: {len(dataset.users)} users, {pool[0].shape[0]} items")
 
     results = {
         "config": {
@@ -525,12 +580,12 @@ def main():
             "n_pairs": 2500,
             "eval_fraction": 0.2,
             "loss_types": list(LOSS_CONFIGS.keys()),
-            "stakeholders": ["user", "platform", "diversity"],
-            "feature_dim": NUM_GENRES,
+            "stakeholders": list(ds.spec.primary_stakeholder_order),
+            "feature_dim": ds.spec.feature_dim,
         }
     }
 
-    # Load synthetic comparison values
+    # Load synthetic comparison values (MovieLens only)
     comparison_path = ROOT / "results" / "loss_experiments" / "comparison.json"
     synthetic_comparison = {}
     if comparison_path.exists():
@@ -538,15 +593,15 @@ def main():
             synthetic_comparison = json.load(f)
 
     if "A" in groups_to_run:
-        results["group_a_core"] = run_group_a(pool, configs)
+        results["group_a_core"] = run_group_a(ds, pool, configs)
     if "B" in groups_to_run:
-        results["group_b_hyperparameter"] = run_group_b(pool, configs)
+        results["group_b_hyperparameter"] = run_group_b(ds, pool, configs)
     if "C" in groups_to_run:
-        results["group_c_temporal"] = run_group_c(dataset, configs)
+        results["group_c_temporal"] = run_group_c(ds, dataset, configs)
     if "D" in groups_to_run:
-        results["group_d_downstream"] = run_group_d(dataset, pool, configs)
+        results["group_d_downstream"] = run_group_d(ds, dataset, pool, configs)
     if "E" in groups_to_run:
-        results["group_e_user_groups"] = run_group_e(dataset, pool)
+        results["group_e_user_groups"] = run_group_e(ds, dataset, pool)
     if "F" in groups_to_run:
         results["group_f_genre_correlation"] = run_group_f(pool, dataset)
 

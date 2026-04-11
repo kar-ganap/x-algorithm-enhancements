@@ -1,16 +1,23 @@
-"""Scalarization baseline comparison.
+"""Scalarization baseline comparison (registry-driven).
 
 Compares per-stakeholder BT training + frontier composition against
-single-model scalarization (mixed preference training) on both
-synthetic and MovieLens data.
+single-model scalarization (mixed preference training) on synthetic
+or any registry-supported dataset (ml-100k, ml-1m, mind-small,
+amazon-kindle).
 
 Per-stakeholder: 3 models × 21 diversity weights → 21 frontier points
 Scalarization: 21 models × 21 diversity weights → 441 points → Pareto front
 (Generous to scalarization: 21× more frontier evaluations)
 
+Note (Phase B refactor): the previous --dataset flag accepted
+{synthetic, movielens}; this is a breaking change. The "movielens" value
+is removed in favor of explicit dataset names from the registry.
+Pass --dataset ml-100k for the equivalent of the old "movielens"
+behavior.
+
 Usage:
     uv run python scripts/experiments/run_scalarization_baseline.py --all
-    uv run python scripts/experiments/run_scalarization_baseline.py --dataset movielens
+    uv run python scripts/experiments/run_scalarization_baseline.py --dataset ml-100k
     uv run python scripts/experiments/run_scalarization_baseline.py --dataset synthetic
 """
 
@@ -21,30 +28,33 @@ import importlib.util
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _dataset_registry import REGISTRY, load_dataset  # noqa: E402
 
 
 def _load(name: str, path: Path):
+    """Load reward-modeling modules via importlib."""
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
-_ml = _load("movielens", ROOT / "enhancements" / "data" / "movielens.py")
-_st = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
 _al = _load("alternative_losses", ROOT / "enhancements" / "reward_modeling" / "alternative_losses.py")
 _kf = _load("k_stakeholder_frontier", ROOT / "enhancements" / "reward_modeling" / "k_stakeholder_frontier.py")
 
-MovieLensDataset = _ml.MovieLensDataset
-build_stakeholder_configs = _st.build_stakeholder_configs
-generate_movielens_content_pool = _st.generate_movielens_content_pool
-generate_movielens_preferences = _st.generate_movielens_preferences
-split_preferences = _st.split_preferences
+# split_preferences is identical across movielens/mind/amazon stakeholder
+# modules; import the MovieLens copy directly for use in both the
+# synthetic code path (no `ds` object) and the registry-loaded paths.
+_st_ml = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
+split_preferences = _st_ml.split_preferences
 
 compute_scorer_eval_frontier = _kf.compute_scorer_eval_frontier
 extract_pareto_front_nd = _kf.extract_pareto_front_nd
@@ -425,18 +435,37 @@ def run_dataset(
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Scalarization baseline comparison")
-    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
+    parser = argparse.ArgumentParser(description="Scalarization baseline comparison (registry-driven)")
+    parser.add_argument("--data", default=None,
+                        help="(deprecated) MovieLens data directory; use --dataset")
     parser.add_argument("--all", action="store_true")
-    parser.add_argument("--dataset", type=str, choices=["synthetic", "movielens"])
+    parser.add_argument("--dataset", type=str,
+                        choices=["synthetic"] + list(REGISTRY.keys()),
+                        help="Dataset name: 'synthetic' or one of the registry datasets "
+                             "(ml-100k, ml-1m, mind-small, amazon-kindle). "
+                             "Note: the previous 'movielens' value is removed; pass "
+                             "'ml-100k' for the equivalent behavior.")
     args = parser.parse_args()
+
+    # Handle deprecated --data fallback (maps to ml-100k by directory name)
+    if args.data and not args.dataset:
+        warnings.warn(
+            "--data is deprecated; use --dataset ml-100k (or another registry name)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        ds_name_from_data = Path(args.data).name
+        if ds_name_from_data in REGISTRY:
+            args.dataset = ds_name_from_data
+        else:
+            args.dataset = "ml-100k"
 
     if not args.all and not args.dataset:
         args.all = True
 
     datasets_to_run = set()
     if args.all:
-        datasets_to_run = {"synthetic", "movielens"}
+        datasets_to_run = {"synthetic", "ml-100k"}
     elif args.dataset:
         datasets_to_run = {args.dataset}
 
@@ -475,22 +504,24 @@ def main():
             "synthetic", base_probs, content_topics, synth_weights, synth_prefs,
         )
 
-    if "movielens" in datasets_to_run:
-        data_dir = ROOT / Path(args.data)
-        if not data_dir.exists():
-            print(f"ERROR: MovieLens data not found at {data_dir}")
-            sys.exit(1)
-        dataset = MovieLensDataset(str(data_dir))
-        configs = build_stakeholder_configs(dataset)
-        pool, genres = generate_movielens_content_pool(dataset, min_ratings=5, seed=SEED)
+    # Any registry-supported dataset (ml-100k, ml-1m, mind-small, amazon-kindle)
+    registry_dataset = next((d for d in datasets_to_run if d in REGISTRY), None)
+    if registry_dataset:
+        ds = load_dataset(registry_dataset)
+        configs = ds.configs
+        pool, genres = ds.pool, ds.topics
         base_probs = pool[np.newaxis, :, :]
 
         ml_prefs = {}
-        for s in ["user", "platform", "diversity"]:
-            ml_prefs[s] = generate_movielens_preferences(pool, configs[s], 2000, SEED)
+        for s in ds.spec.primary_stakeholder_order:
+            ml_prefs[s] = ds.generate_preferences(configs[s], 2000, SEED)
 
-        results["movielens"] = run_dataset(
-            "movielens", base_probs, genres, configs, ml_prefs,
+        # Output key kept as "movielens" when running on a MovieLens dataset
+        # for backward compat with downstream analysis scripts; otherwise use
+        # the dataset name as the key.
+        results_key = "movielens" if ds.spec.stakeholder_family == "movielens" else registry_dataset
+        results[results_key] = run_dataset(
+            results_key, base_probs, genres, configs, ml_prefs,
         )
 
     elapsed = time.time() - t0
@@ -500,7 +531,12 @@ def main():
     print(f"Complete in {elapsed:.0f}s")
     print("=" * 60)
 
-    dataset_name = Path(args.data).name if "movielens" in datasets_to_run else "synthetic"
+    # Output filename: prefer the explicit dataset name; fall back to "synthetic"
+    # if only synthetic was run.
+    if registry_dataset:
+        dataset_name = registry_dataset
+    else:
+        dataset_name = "synthetic"
     out_path = ROOT / "results" / f"{dataset_name}_scalarization_baseline.json"
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2, cls=NumpyEncoder)
