@@ -121,7 +121,7 @@ def generate_scalarized_preferences(
     return pref, rej
 
 
-def compute_hypervolume_3d(
+def compute_hypervolume_nd(
     frontier: list[dict[str, float]],
     dims: list[str],
     ref_point: tuple[float, float, float],
@@ -152,7 +152,7 @@ def compute_hypervolume_3d(
     # MC sampling
     rng = np.random.default_rng(42)
     n_samples = 50000
-    samples = rng.uniform(mins, maxs, size=(n_samples, 3))
+    samples = rng.uniform(mins, maxs, size=(n_samples, len(dims)))
 
     dominated_count = 0
     for sample in samples:
@@ -359,9 +359,9 @@ def run_dataset(
         min(p[d] for p in all_points) - 0.01 for d in utility_dims
     )
 
-    hv_naive = compute_hypervolume_3d(per_stk_pareto, utility_dims, ref_point)
-    hv_composition = compute_hypervolume_3d(composition_pareto, utility_dims, ref_point)
-    hv_scalar = compute_hypervolume_3d(scalar_pareto, utility_dims, ref_point)
+    hv_naive = compute_hypervolume_nd(per_stk_pareto, utility_dims, ref_point)
+    hv_composition = compute_hypervolume_nd(composition_pareto, utility_dims, ref_point)
+    hv_scalar = compute_hypervolume_nd(scalar_pareto, utility_dims, ref_point)
 
     hv_naive_vs_scalar = hv_naive / hv_scalar if hv_scalar > 0 else float("inf")
     hv_comp_vs_scalar = hv_composition / hv_scalar if hv_scalar > 0 else float("inf")

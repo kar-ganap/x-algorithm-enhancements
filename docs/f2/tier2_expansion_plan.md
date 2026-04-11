@@ -1,7 +1,7 @@
 # Tier 2 Dataset Expansion: MIND + Amazon Reviews
 
-**Status**: Phase A + Phase B complete. Phase C not yet started.
-**Last updated**: 2026-04-10
+**Status**: Phases A, B, C complete. Phase D (Amazon Kindle) not yet started.
+**Last updated**: 2026-04-11
 
 ## Context
 
@@ -26,7 +26,7 @@ To claim meaningful generalizability, we need to reproduce all paper results on 
 |---|---|---|---|
 | **A** | Dry run: download, load, define stakeholders, verify cosine geometry. **Gate before Phase B.** | ~4 hours actual | **Complete 2026-04-10, both datasets PASS** |
 | **B** | Refactor 8 experiment scripts to be dataset-agnostic; regression-test on MovieLens | ~6 hours actual | **Complete 2026-04-10, 7/7 scripts byte-equivalent** |
-| **C** | Run all experiments on MIND | 2 days | Deferred |
+| **C** | Run all experiments on MIND | ~3 hours actual | **Complete 2026-04-11, 3 Phase B misses caught + fixed** |
 | **D** | Run all experiments on Amazon Kindle | 2 days | Deferred |
 | **E** | Cross-dataset analysis and figure/table updates | 1 day | Deferred |
 | **F** | Tests, docs, retro | 1 day | Deferred |
@@ -390,3 +390,4 @@ After Phase F:
 - **2026-04-10**: Initial plan created. Phase A not yet started.
 - **2026-04-10**: Phase A complete. Both MIND and Amazon PASS all blocking criteria (G1, G2, G3, G5, G6). G4 (informational) fails on both due to domain-native stakeholder design; decision is **Option A** (accept and proceed) — reasoning captured in Phase A Results section. Phase B greenlit.
 - **2026-04-10**: Phase B complete. All 8 experiment/analysis scripts refactored to use `scripts/_dataset_registry.py`; 7/7 scripts that produce numeric output verified byte-equivalent against ml-100k baselines. One bug caught by the regression test: labels_not_loss Group C was using the full content pool instead of the temporal subset due to a misleading `LoadedDataset.generate_preferences` adapter. Fix: `_train` now calls the preferences function directly with the explicit `features` arg. Full retro at `docs/f2/tier2_phase_b_retro.md`. Phase C (run experiments on MIND) greenlit.
+- **2026-04-11**: Phase C complete. All 8 scripts ran on mind-small. 3 additional Phase B misses surfaced at Phase C launch (all K-dependent, invisible under ml-100k K=3 regression): (1) `run_extremal_evidence.py` hardcoded unprefixed output filename would have silently overwritten ml-100k baseline; (2) `compute_hypervolume_3d` in `run_scalarization_baseline.py` hardcoded K=3 in `rng.uniform(..., size=(n_samples, 3))` — crashes on K=5; (3) `analyze_recsys_deep.py` dataset-key heuristic silently picks "config" on non-MovieLens datasets. All three fixed and verified byte-equivalent on ml-100k. Scientific finding: BT-trained weight cosines substantially diverge from raw stakeholder cosines on MIND's high-dim sparse features (3 of 10 pairs flip sign), causing direction-condition Method A match rate of 65% (vs MovieLens ~100%). Paper §4 needs to clarify which cosine (raw vs trained) the condition applies to. Full retro at `docs/f2/tier2_phase_c_retro.md`. Phase D (Amazon Kindle) greenlit.
