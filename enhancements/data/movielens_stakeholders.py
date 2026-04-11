@@ -439,3 +439,102 @@ def get_user_genre_groups(
         groups.setdefault(name, []).append(user_id)
 
     return {name: uids for name, uids in groups.items() if len(uids) >= min_group_size}
+
+
+# ── Named (interpretable) stakeholders for Method B of the direction
+# ── condition validation. Moved here from
+# ── scripts/experiments/run_expanded_direction_validation.py during
+# ── Phase B of the tier 2 dataset expansion. These are MovieLens-specific
+# ── (genre features, 1-5 rating scale) and not implemented for MIND
+# ── or Amazon — see docs/f2/tier2_phase_a_retro.md for the rationale.
+
+
+def _compute_creator_weights(dataset: MovieLensDataset) -> np.ndarray:
+    """Creator: weights ∝ number of movies per genre (rewards supply)."""
+    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
+    for movie in dataset.movies.values():
+        genre_counts += movie.genres
+    mx = np.max(genre_counts)
+    return (genre_counts / mx).astype(np.float32) if mx > 0 else genre_counts.astype(np.float32)
+
+
+def _compute_advertiser_weights(dataset: MovieLensDataset) -> np.ndarray:
+    """Advertiser: weights ∝ total ratings per genre (rewards eyeballs)."""
+    genre_ratings = np.zeros(NUM_GENRES, dtype=np.float64)
+    for rating in dataset.train_ratings:
+        movie = dataset.movies.get(rating.movie_id)
+        if movie is not None:
+            genre_ratings += movie.genres
+    mx = np.max(genre_ratings)
+    return (genre_ratings / mx).astype(np.float32) if mx > 0 else genre_ratings.astype(np.float32)
+
+
+def _compute_niche_weights(dataset: MovieLensDataset) -> np.ndarray:
+    """Niche enthusiast: upweights rare genres, downweights popular."""
+    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
+    for movie in dataset.movies.values():
+        genre_counts += movie.genres
+    active = genre_counts > 0
+    median_count = np.median(genre_counts[active]) if np.any(active) else 1.0
+    weights = np.zeros(NUM_GENRES, dtype=np.float32)
+    weights[active & (genre_counts < median_count)] = 1.0
+    weights[active & (genre_counts >= median_count)] = -1.0
+    mx = np.max(np.abs(weights))
+    return weights / mx if mx > 0 else weights
+
+
+def _compute_mainstream_weights(dataset: MovieLensDataset) -> np.ndarray:
+    """Mainstream: upweights top-3 most populous genres."""
+    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
+    for movie in dataset.movies.values():
+        genre_counts += movie.genres
+    top3 = np.argsort(genre_counts)[-3:]
+    weights = np.zeros(NUM_GENRES, dtype=np.float32)
+    weights[top3] = 1.0
+    return weights
+
+
+def _compute_moderator_weights(dataset: MovieLensDataset) -> np.ndarray:
+    """Content moderator: penalizes genres with high fraction of ≤2-star ratings."""
+    genre_low = np.zeros(NUM_GENRES, dtype=np.float64)
+    genre_total = np.zeros(NUM_GENRES, dtype=np.float64)
+    for rating in dataset.train_ratings:
+        movie = dataset.movies.get(rating.movie_id)
+        if movie is None:
+            continue
+        for g in range(NUM_GENRES):
+            if movie.genres[g] > 0:
+                genre_total[g] += 1
+                if rating.rating <= 2:
+                    genre_low[g] += 1
+    active = genre_total > 0
+    frac = np.zeros(NUM_GENRES, dtype=np.float32)
+    frac[active] = (genre_low[active] / genre_total[active]).astype(np.float32)
+    weights = -frac
+    mx = np.max(np.abs(weights))
+    return weights / mx if mx > 0 else weights
+
+
+def build_named_stakeholder_configs(
+    dataset: MovieLensDataset,
+) -> dict[str, np.ndarray]:
+    """Build the 5 MovieLens-specific named stakeholder weight vectors.
+
+    Used by ``run_expanded_direction_validation.py`` Method B to expand
+    direction-condition coverage beyond the 3 base stakeholders. These
+    stakeholders are MovieLens-specific (they use the genre feature
+    space and the 1-5 rating scale); MIND and Amazon stakeholder modules
+    do NOT implement this function — the script feature-flags Method B
+    via ``hasattr``.
+
+    Returns:
+        Dict with 5 keys (creator, advertiser, niche, mainstream,
+        moderator), each mapping to a [19] float32 weight vector.
+    """
+    return {
+        "creator": _compute_creator_weights(dataset),
+        "advertiser": _compute_advertiser_weights(dataset),
+        "niche": _compute_niche_weights(dataset),
+        "mainstream": _compute_mainstream_weights(dataset),
+        "moderator": _compute_moderator_weights(dataset),
+    }

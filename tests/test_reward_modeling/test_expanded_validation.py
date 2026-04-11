@@ -1,9 +1,15 @@
 """Tests for expanded direction condition validation.
 
 Tests Method A (different targets) and Method B (named stakeholders).
+
+Note (Phase B refactor): the 5 named-stakeholder helper functions used
+to be duplicated in this file. They now live in
+``enhancements/data/movielens_stakeholders.py`` as
+``build_named_stakeholder_configs``; this test imports from there.
 """
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -15,6 +21,7 @@ _root = Path(__file__).parent.parent.parent
 def _load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -31,84 +38,6 @@ def cosine_sim(a, b):
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-8))
 
 
-# ── Named stakeholder definitions ──
-
-def compute_creator_weights(dataset):
-    """Creator: weights ∝ number of movies per genre (rewards supply)."""
-    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
-    for movie in dataset.movies.values():
-        genre_counts += movie.genres
-    max_val = np.max(genre_counts)
-    return (genre_counts / max_val).astype(np.float32) if max_val > 0 else genre_counts.astype(np.float32)
-
-
-def compute_advertiser_weights(dataset):
-    """Advertiser: weights ∝ total ratings per genre (rewards eyeballs)."""
-    genre_ratings = np.zeros(NUM_GENRES, dtype=np.float64)
-    for rating in dataset.train_ratings:
-        movie = dataset.movies.get(rating.movie_id)
-        if movie is not None:
-            genre_ratings += movie.genres
-    max_val = np.max(genre_ratings)
-    return (genre_ratings / max_val).astype(np.float32) if max_val > 0 else genre_ratings.astype(np.float32)
-
-
-def compute_niche_weights(dataset):
-    """Niche enthusiast: upweights rare genres, downweights popular."""
-    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
-    for movie in dataset.movies.values():
-        genre_counts += movie.genres
-    active = genre_counts > 0
-    median_count = np.median(genre_counts[active]) if np.any(active) else 1.0
-    weights = np.zeros(NUM_GENRES, dtype=np.float32)
-    weights[active & (genre_counts < median_count)] = 1.0
-    weights[active & (genre_counts >= median_count)] = -1.0
-    max_abs = np.max(np.abs(weights))
-    return weights / max_abs if max_abs > 0 else weights
-
-
-def compute_mainstream_weights(dataset):
-    """Mainstream: upweights top-3 most popular genres."""
-    genre_counts = np.zeros(NUM_GENRES, dtype=np.float64)
-    for movie in dataset.movies.values():
-        genre_counts += movie.genres
-    top3 = np.argsort(genre_counts)[-3:]
-    weights = np.zeros(NUM_GENRES, dtype=np.float32)
-    weights[top3] = 1.0
-    return weights
-
-
-def compute_moderator_weights(dataset):
-    """Content moderator: downweights genres with low ratings."""
-    genre_low_rating_frac = np.zeros(NUM_GENRES, dtype=np.float64)
-    genre_total = np.zeros(NUM_GENRES, dtype=np.float64)
-    for rating in dataset.train_ratings:
-        movie = dataset.movies.get(rating.movie_id)
-        if movie is None:
-            continue
-        for g in range(NUM_GENRES):
-            if movie.genres[g] > 0:
-                genre_total[g] += 1
-                if rating.rating <= 2:
-                    genre_low_rating_frac[g] += 1
-    active = genre_total > 0
-    frac = np.zeros(NUM_GENRES, dtype=np.float32)
-    frac[active] = (genre_low_rating_frac[active] / genre_total[active]).astype(np.float32)
-    # Moderator penalizes high-low-rating genres
-    weights = -frac
-    max_abs = np.max(np.abs(weights))
-    return weights / max_abs if max_abs > 0 else weights
-
-
-NAMED_STAKEHOLDER_FNS = {
-    "creator": compute_creator_weights,
-    "advertiser": compute_advertiser_weights,
-    "niche": compute_niche_weights,
-    "mainstream": compute_mainstream_weights,
-    "moderator": compute_moderator_weights,
-}
-
-
 @pytest.fixture(scope="module")
 def dataset():
     if not DATA_DIR.exists():
@@ -119,29 +48,25 @@ def dataset():
 class TestNamedStakeholders:
 
     def test_all_produce_valid_weights(self, dataset):
-        for name, fn in NAMED_STAKEHOLDER_FNS.items():
-            w = fn(dataset)
+        configs = _st.build_named_stakeholder_configs(dataset)
+        assert set(configs.keys()) == {"creator", "advertiser", "niche", "mainstream", "moderator"}
+        for name, w in configs.items():
             assert w.shape == (NUM_GENRES,), f"{name} wrong shape"
             assert np.any(w != 0), f"{name} is all zeros"
 
     def test_cosine_range(self, dataset):
         """Named stakeholders should span a range of cosines with user."""
         user_w = _st.compute_user_genre_weights(dataset)
-        cosines = {}
-        for name, fn in NAMED_STAKEHOLDER_FNS.items():
-            w = fn(dataset)
-            cosines[name] = cosine_sim(user_w, w)
-        # Should have some variety
-        cos_values = list(cosines.values())
+        configs = _st.build_named_stakeholder_configs(dataset)
+        cos_values = [cosine_sim(user_w, w) for w in configs.values()]
         assert max(cos_values) - min(cos_values) > 0.3, (
-            f"Cosine range too narrow: {cosines}"
+            f"Cosine range too narrow: {cos_values}"
         )
 
     def test_niche_opposes_mainstream(self, dataset):
         """Niche and mainstream should be anti-correlated."""
-        niche_w = compute_niche_weights(dataset)
-        mainstream_w = compute_mainstream_weights(dataset)
-        cos = cosine_sim(niche_w, mainstream_w)
+        configs = _st.build_named_stakeholder_configs(dataset)
+        cos = cosine_sim(configs["niche"], configs["mainstream"])
         assert cos < 0, f"Niche-mainstream cos {cos:.3f} should be negative"
 
 

@@ -1,6 +1,6 @@
 # Tier 2 Dataset Expansion: MIND + Amazon Reviews
 
-**Status**: Phase A complete (both datasets PASS). Phase B not yet started.
+**Status**: Phase A + Phase B complete. Phase C not yet started.
 **Last updated**: 2026-04-10
 
 ## Context
@@ -25,7 +25,7 @@ To claim meaningful generalizability, we need to reproduce all paper results on 
 | Phase | What | Duration | Status |
 |---|---|---|---|
 | **A** | Dry run: download, load, define stakeholders, verify cosine geometry. **Gate before Phase B.** | ~4 hours actual | **Complete 2026-04-10, both datasets PASS** |
-| **B** | Refactor 3 existing scripts to be dataset-agnostic; regression-test on MovieLens | 1.5 days | Not started |
+| **B** | Refactor 8 experiment scripts to be dataset-agnostic; regression-test on MovieLens | ~6 hours actual | **Complete 2026-04-10, 7/7 scripts byte-equivalent** |
 | **C** | Run all experiments on MIND | 2 days | Deferred |
 | **D** | Run all experiments on Amazon Kindle | 2 days | Deferred |
 | **E** | Cross-dataset analysis and figure/table updates | 1 day | Deferred |
@@ -389,3 +389,4 @@ After Phase F:
 
 - **2026-04-10**: Initial plan created. Phase A not yet started.
 - **2026-04-10**: Phase A complete. Both MIND and Amazon PASS all blocking criteria (G1, G2, G3, G5, G6). G4 (informational) fails on both due to domain-native stakeholder design; decision is **Option A** (accept and proceed) — reasoning captured in Phase A Results section. Phase B greenlit.
+- **2026-04-10**: Phase B complete. All 8 experiment/analysis scripts refactored to use `scripts/_dataset_registry.py`; 7/7 scripts that produce numeric output verified byte-equivalent against ml-100k baselines. One bug caught by the regression test: labels_not_loss Group C was using the full content pool instead of the temporal subset due to a misleading `LoadedDataset.generate_preferences` adapter. Fix: `_train` now calls the preferences function directly with the explicit `features` arg. Full retro at `docs/f2/tier2_phase_b_retro.md`. Phase C (run experiments on MIND) greenlit.

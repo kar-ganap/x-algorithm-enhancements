@@ -1,17 +1,18 @@
-"""Goodhart effect experiment on MovieLens-100K (set-level metrics).
+"""Goodhart effect experiment (registry-driven, dataset-agnostic).
 
 Tests whether more training data with misspecified utility weights
-degrades true stakeholder utilities and genre diversity.
+degrades true stakeholder utilities and topic-level entropy.
 
 Metrics (replacing Hausdorff from Phase 5/5b):
-  - True user/platform/diversity utility (evaluated with TRUE weights)
-  - Genre entropy of selected set (nonlinear, set-level, scale-invariant)
+  - True per-stakeholder utility (evaluated with TRUE weights)
+  - Topic entropy of selected set (nonlinear, set-level, scale-invariant)
 
 Strategy 1: Better specification (reduce σ) at fixed N=2000
 Strategy 2: More data (increase N) at fixed σ=0.3
 
 Usage:
     uv run python scripts/experiments/run_movielens_goodhart.py
+    uv run python scripts/experiments/run_movielens_goodhart.py --dataset mind-small
 """
 
 from __future__ import annotations
@@ -20,30 +21,27 @@ import importlib.util
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
 
 ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _dataset_registry import REGISTRY, load_dataset  # noqa: E402
 
 
 def _load(name: str, path: Path):
+    """Load reward-modeling modules via importlib (registry handles dataset modules)."""
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
 
-_ml = _load("movielens", ROOT / "enhancements" / "data" / "movielens.py")
-_st = _load("movielens_stakeholders", ROOT / "enhancements" / "data" / "movielens_stakeholders.py")
 _al = _load("alternative_losses", ROOT / "enhancements" / "reward_modeling" / "alternative_losses.py")
 _kf = _load("k_stakeholder_frontier", ROOT / "enhancements" / "reward_modeling" / "k_stakeholder_frontier.py")
-
-MovieLensDataset = _ml.MovieLensDataset
-build_stakeholder_configs = _st.build_stakeholder_configs
-generate_movielens_content_pool = _st.generate_movielens_content_pool
-generate_movielens_preferences = _st.generate_movielens_preferences
-split_preferences = _st.split_preferences
 
 compute_scorer_eval_frontier = _kf.compute_scorer_eval_frontier
 
@@ -61,7 +59,6 @@ FIXED_SIGMA = 0.3
 FIXED_N = 2000
 N_SEEDS = 5
 N_NOISE_SAMPLES = 5
-STAKEHOLDER = "user"
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -126,6 +123,7 @@ def select_top_k(
 
 
 def run_single_condition(
+    ds,
     pool: np.ndarray,
     genres: np.ndarray,
     base_probs: np.ndarray,
@@ -139,8 +137,8 @@ def run_single_condition(
     rng = np.random.default_rng(seed)
     perturbed = perturb_weights(true_weights, sigma, rng)
 
-    pref, rej = generate_movielens_preferences(pool, perturbed, n_pairs, seed)
-    tp, tr, ep, er = split_preferences(pref, rej, 0.2, seed)
+    pref, rej = ds.generate_preferences(perturbed, n_pairs, seed)
+    tp, tr, ep, er = ds.stakeholders_mod.split_preferences(pref, rej, 0.2, seed)
 
     config = LossConfig(
         loss_type=LossType.BRADLEY_TERRY,
@@ -156,7 +154,14 @@ def run_single_condition(
         DIVERSITY_WEIGHTS, top_k=TOP_K,
     )
 
-    # Extract mean utilities across all diversity weights
+    # Extract mean utilities across all diversity weights.
+    # NOTE: byte-equivalence requires preserving the legacy
+    # ``sorted(configs.keys())`` order on MovieLens, where the alphabetical
+    # order ("diversity", "platform", "user") differs from the canonical
+    # primary_stakeholder_order ("user", "platform", "diversity"). The
+    # output JSON key set is identical either way; only iteration ordering
+    # of the ``mean_utilities`` dict construction differs, which jq -S
+    # normalizes during diffing.
     stakeholder_names = sorted(true_configs.keys())
     mean_utilities = {}
     for name in stakeholder_names:
@@ -197,37 +202,52 @@ def aggregate(results_list: list[dict]) -> dict:
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Goodhart effect on MovieLens")
-    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
+    parser = argparse.ArgumentParser(description="Goodhart effect (registry-driven)")
+    parser.add_argument("--data", default=None,
+                        help="(deprecated) data directory; use --dataset")
+    parser.add_argument("--dataset", default=None, choices=list(REGISTRY.keys()),
+                        help="Dataset name from registry")
     args = parser.parse_args()
 
-    print("=" * 60)
-    print("Phase 6: Goodhart with Set-Level Metrics")
-    print("=" * 60)
+    if args.dataset:
+        dataset_name = args.dataset
+    elif args.data:
+        warnings.warn(
+            "--data is deprecated; use --dataset {ml-100k,ml-1m,mind-small,amazon-kindle}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        dataset_name = Path(args.data).name
+    else:
+        dataset_name = "ml-100k"
 
-    data_dir = ROOT / Path(args.data)
-    dataset_name = data_dir.name
-    if not data_dir.exists():
-        print(f"ERROR: MovieLens data not found at {data_dir}")
-        sys.exit(1)
+    print("=" * 60)
+    print(f"Goodhart with Set-Level Metrics ({dataset_name})")
+    print("=" * 60)
 
     t0 = time.time()
-    dataset = MovieLensDataset(str(data_dir))
-    configs = build_stakeholder_configs(dataset)
-    pool, genres = generate_movielens_content_pool(dataset, min_ratings=5, seed=42)
+    ds = load_dataset(dataset_name)
+    configs = ds.configs
+    pool, genres = ds.pool, ds.topics
     base_probs = pool[np.newaxis, :, :]
-    true_weights = configs[STAKEHOLDER]
+    target_stakeholder = ds.spec.primary_stakeholder_order[0]
+    true_weights = configs[target_stakeholder]
+    diversity_name = ds.spec.diversity_stakeholder
+    diversity_util_key = f"{diversity_name}_utility_mean"
 
-    print(f"Loaded: {pool.shape[0]} movies, {pool.shape[1]} genres")
-    print(f"Target stakeholder: {STAKEHOLDER}")
+    print(f"Loaded: {pool.shape[0]} items, {pool.shape[1]} features")
+    print(f"Target stakeholder: {target_stakeholder}")
 
     # Baseline: true weights as scorer
     baseline = run_single_condition(
-        pool, genres, base_probs, configs, true_weights,
+        ds, pool, genres, base_probs, configs, true_weights,
         sigma=0.0, n_pairs=FIXED_N, seed=42,
     )
     print(f"\nBaseline (σ=0, N=2000):")
-    print(f"  diversity_utility: {baseline['diversity_utility_mean']:.4f}" if 'diversity_utility_mean' in baseline else f"  diversity_utility: {baseline.get('diversity_utility', 'N/A')}")
+    if diversity_util_key in baseline:
+        print(f"  {diversity_name}_utility: {baseline[diversity_util_key]:.4f}")
+    else:
+        print(f"  {diversity_name}_utility: N/A")
 
     # Actually compute baseline separately as reference
     baseline_selected_d0 = select_top_k(pool, genres, true_weights, 0.0, TOP_K)
@@ -243,10 +263,17 @@ def main():
             "fixed_n": FIXED_N,
             "sigma_sweep": SIGMA_SWEEP,
             "n_sweep": N_SWEEP,
-            "stakeholder": STAKEHOLDER,
+            "stakeholder": target_stakeholder,
             "feature_dim": int(pool.shape[1]),
             "top_k": TOP_K,
-            "metrics": ["user_utility", "diversity_utility", "genre_entropy", "n_unique_genres"],
+            # Preserve the 2-stakeholder + 2-metric layout from the
+            # original MovieLens-only script for regression byte-equivalence.
+            "metrics": [
+                f"{target_stakeholder}_utility",
+                f"{diversity_name}_utility",
+                "genre_entropy",
+                "n_unique_genres",
+            ],
         },
         "baseline": {
             "entropy_delta0": baseline_entropy_d0,
@@ -258,21 +285,22 @@ def main():
     print(f"\nStrategy 1: Better specification (fixed N={FIXED_N})")
     print("-" * 50)
     strategy1 = {}
+    target_util_key = f"{target_stakeholder}_utility_mean"
     for sigma in SIGMA_SWEEP:
         condition_results = []
         for seed_idx in range(N_SEEDS):
             for noise_idx in range(N_NOISE_SAMPLES):
                 seed = 42 + seed_idx * 1000 + noise_idx * 100
                 r = run_single_condition(
-                    pool, genres, base_probs, configs, true_weights,
+                    ds, pool, genres, base_probs, configs, true_weights,
                     sigma, FIXED_N, seed,
                 )
                 condition_results.append(r)
 
         agg = aggregate(condition_results)
-        print(f"  σ={sigma:.2f}: div_util={agg.get('diversity_utility_mean', 'N/A'):.4f}, "
+        print(f"  σ={sigma:.2f}: div_util={agg.get(diversity_util_key, 'N/A'):.4f}, "
               f"entropy_d0={agg.get('entropy_delta0_mean', 'N/A'):.4f}, "
-              f"user_util={agg.get('user_utility_mean', 'N/A'):.4f}")
+              f"target_util={agg.get(target_util_key, 'N/A'):.4f}")
         strategy1[str(sigma)] = agg
 
     results["strategy1_better_spec"] = strategy1
@@ -287,15 +315,15 @@ def main():
             for noise_idx in range(N_NOISE_SAMPLES):
                 seed = 42 + seed_idx * 1000 + noise_idx * 100
                 r = run_single_condition(
-                    pool, genres, base_probs, configs, true_weights,
+                    ds, pool, genres, base_probs, configs, true_weights,
                     FIXED_SIGMA, n_pairs, seed,
                 )
                 condition_results.append(r)
 
         agg = aggregate(condition_results)
-        print(f"  N={n_pairs:>4}: div_util={agg.get('diversity_utility_mean', 'N/A'):.4f}, "
+        print(f"  N={n_pairs:>4}: div_util={agg.get(diversity_util_key, 'N/A'):.4f}, "
               f"entropy_d0={agg.get('entropy_delta0_mean', 'N/A'):.4f}, "
-              f"user_util={agg.get('user_utility_mean', 'N/A'):.4f}, "
+              f"target_util={agg.get(target_util_key, 'N/A'):.4f}, "
               f"genres_d0={agg.get('n_unique_genres_d0_mean', 'N/A'):.1f}")
         strategy2[str(n_pairs)] = agg
 
@@ -303,12 +331,12 @@ def main():
 
     # --- Goodhart detection ---
     n_values = N_SWEEP
-    # Check if user utility increases with N (positive control)
-    user_utils = [strategy2[str(n)].get("user_utility_mean", 0) for n in n_values]
+    # Check if target utility increases with N (positive control)
+    user_utils = [strategy2[str(n)].get(target_util_key, 0) for n in n_values]
     user_increasing = user_utils[-1] > user_utils[0]
 
     # Check if diversity utility decreases with N (Goodhart signal)
-    div_utils = [strategy2[str(n)].get("diversity_utility_mean", 0) for n in n_values]
+    div_utils = [strategy2[str(n)].get(diversity_util_key, 0) for n in n_values]
     div_min_idx = int(np.argmin(div_utils))
     # Goodhart: diversity utility has a maximum, then decreases
     div_max_idx = int(np.argmax(div_utils))

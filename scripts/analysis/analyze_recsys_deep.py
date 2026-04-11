@@ -308,15 +308,29 @@ def analyze_bootstrap(dataset_name: str) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description="RecSys deep analysis")
-    parser.add_argument("--data", default="data/ml-100k", help="MovieLens data directory")
+    parser.add_argument("--data", default=None, help="(deprecated) data directory; use --dataset")
+    parser.add_argument("--dataset", default=None,
+                        help="Dataset name from registry (ml-100k, ml-1m, mind-small, amazon-kindle)")
     parser.add_argument("--analysis", type=str, choices=["composition", "degradation", "bootstrap"])
     parser.add_argument("--all", action="store_true")
     args = parser.parse_args()
 
+    # Resolve dataset name: prefer --dataset, fall back to --data, default to ml-100k.
+    if args.dataset:
+        dataset_name = args.dataset
+    elif args.data:
+        import warnings
+        warnings.warn(
+            "--data is deprecated; use --dataset {ml-100k,ml-1m,mind-small,amazon-kindle}",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        dataset_name = Path(args.data).name
+    else:
+        dataset_name = "ml-100k"
+
     if not args.all and not args.analysis:
         args.all = True
-
-    dataset_name = Path(args.data).name
     analyses = set()
     if args.all:
         analyses = {"composition", "degradation", "bootstrap"}
