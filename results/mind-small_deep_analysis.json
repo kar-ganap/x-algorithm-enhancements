@@ -1,0 +1,1461 @@
+{
+  "dataset": "mind-small",
+  "composition": {
+    "mean_projection_cosine": 0.8927,
+    "min_projection_cosine": 0.5636,
+    "std_projection_cosine": 0.0822,
+    "mean_residual_norm": 1.0389,
+    "n_above_095": 30,
+    "n_total": 121,
+    "per_model": [
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9819,
+        "residual_norm": 0.9679
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9595,
+        "residual_norm": 1.1397
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.6,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9611,
+        "residual_norm": 1.0758
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.8,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9763,
+        "residual_norm": 0.8963
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9848,
+        "residual_norm": 1.0117
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9509,
+        "residual_norm": 1.3014
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.4,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9494,
+        "residual_norm": 1.2321
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.6,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.968,
+        "residual_norm": 1.0005
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.8,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9703,
+        "residual_norm": 1.127
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9776,
+        "residual_norm": 1.1309
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9627,
+        "residual_norm": 1.0629
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9683,
+        "residual_norm": 1.0091
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9806,
+        "residual_norm": 0.8479
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.6,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9897,
+        "residual_norm": 0.6736
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.6,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9783,
+        "residual_norm": 0.9609
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.6,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9762,
+        "residual_norm": 1.0328
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.8,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9837,
+        "residual_norm": 1.0527
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.0,
+          "journalist": 0.8,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9747,
+        "residual_norm": 1.2661
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9653,
+        "residual_norm": 1.105
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9435,
+        "residual_norm": 0.9042
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8527,
+        "residual_norm": 1.3524
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.6,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8421,
+        "residual_norm": 1.1161
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.8,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8845,
+        "residual_norm": 1.1211
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9657,
+        "residual_norm": 0.8879
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8786,
+        "residual_norm": 1.0932
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8906,
+        "residual_norm": 0.9836
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9201,
+        "residual_norm": 0.8969
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9377,
+        "residual_norm": 0.9911
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.4,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9149,
+        "residual_norm": 1.0408
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.4,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9114,
+        "residual_norm": 0.9244
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.6,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9171,
+        "residual_norm": 1.174
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.6,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9283,
+        "residual_norm": 0.9663
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.2,
+          "journalist": 0.8,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9342,
+        "residual_norm": 1.3156
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9629,
+        "residual_norm": 0.8513
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8772,
+        "residual_norm": 1.0888
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.6785,
+        "residual_norm": 0.9255
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6124,
+        "residual_norm": 1.0029
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8849,
+        "residual_norm": 1.2859
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8243,
+        "residual_norm": 0.8276
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.2,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6452,
+        "residual_norm": 1.072
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9281,
+        "residual_norm": 0.8473
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.4,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7772,
+        "residual_norm": 1.0757
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.4,
+          "journalist": 0.6,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8645,
+        "residual_norm": 1.2253
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.6,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9098,
+        "residual_norm": 1.1567
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.6,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8073,
+        "residual_norm": 1.0112
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.6,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.5636,
+        "residual_norm": 1.2622
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.6,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9321,
+        "residual_norm": 0.871
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.6,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8246,
+        "residual_norm": 0.8604
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.6,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.931,
+        "residual_norm": 0.9318
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.8,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9571,
+        "residual_norm": 1.0474
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.8,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8593,
+        "residual_norm": 1.2279
+      },
+      {
+        "mixing": {
+          "advertiser": 0.0,
+          "civic_diversity": 0.8,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9697,
+        "residual_norm": 0.6689
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9711,
+        "residual_norm": 1.0051
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9155,
+        "residual_norm": 1.1994
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8903,
+        "residual_norm": 1.0567
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.6,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8769,
+        "residual_norm": 1.1035
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.8,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9313,
+        "residual_norm": 0.9773
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9642,
+        "residual_norm": 0.805
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9092,
+        "residual_norm": 1.0113
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8985,
+        "residual_norm": 0.9119
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.894,
+        "residual_norm": 1.0251
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9324,
+        "residual_norm": 1.0975
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8808,
+        "residual_norm": 1.1488
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9129,
+        "residual_norm": 0.9114
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.6,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9246,
+        "residual_norm": 1.1825
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.6,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9304,
+        "residual_norm": 1.1588
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.0,
+          "journalist": 0.8,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9626,
+        "residual_norm": 0.9219
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9472,
+        "residual_norm": 1.0191
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9036,
+        "residual_norm": 0.7713
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.7606,
+        "residual_norm": 0.9982
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7967,
+        "residual_norm": 0.9202
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8821,
+        "residual_norm": 1.074
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8724,
+        "residual_norm": 0.8229
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7334,
+        "residual_norm": 0.8892
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8618,
+        "residual_norm": 1.2078
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.4,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8183,
+        "residual_norm": 0.9933
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.2,
+          "journalist": 0.6,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8804,
+        "residual_norm": 1.095
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9449,
+        "residual_norm": 0.8526
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8659,
+        "residual_norm": 0.8895
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6624,
+        "residual_norm": 1.046
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.4,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8775,
+        "residual_norm": 1.2107
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.4,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7892,
+        "residual_norm": 0.93
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.4,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9246,
+        "residual_norm": 0.9247
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.6,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9358,
+        "residual_norm": 1.141
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.6,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8746,
+        "residual_norm": 1.1035
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.6,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9686,
+        "residual_norm": 0.6996
+      },
+      {
+        "mixing": {
+          "advertiser": 0.2,
+          "civic_diversity": 0.8,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9794,
+        "residual_norm": 1.0433
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9453,
+        "residual_norm": 0.9798
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.7642,
+        "residual_norm": 1.3173
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.7961,
+        "residual_norm": 0.9769
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.843,
+        "residual_norm": 0.8349
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9145,
+        "residual_norm": 0.9682
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8603,
+        "residual_norm": 0.9456
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.88,
+        "residual_norm": 0.8131
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8769,
+        "residual_norm": 1.0823
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8123,
+        "residual_norm": 1.3555
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.0,
+          "journalist": 0.6,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8758,
+        "residual_norm": 1.2189
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9232,
+        "residual_norm": 1.059
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8514,
+        "residual_norm": 1.0549
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8199,
+        "residual_norm": 0.8534
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8759,
+        "residual_norm": 1.1195
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7984,
+        "residual_norm": 1.0142
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.2,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8938,
+        "residual_norm": 0.963
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9445,
+        "residual_norm": 0.9286
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9221,
+        "residual_norm": 0.8524
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.4,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9177,
+        "residual_norm": 0.9942
+      },
+      {
+        "mixing": {
+          "advertiser": 0.4,
+          "civic_diversity": 0.6,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9745,
+        "residual_norm": 1.1443
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9251,
+        "residual_norm": 0.9922
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.6763,
+        "residual_norm": 1.3676
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7503,
+        "residual_norm": 1.2354
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8666,
+        "residual_norm": 1.4042
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8481,
+        "residual_norm": 1.0988
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.0,
+          "journalist": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.893,
+        "residual_norm": 1.0928
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9141,
+        "residual_norm": 1.321
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8966,
+        "residual_norm": 1.143
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.2,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.929,
+        "residual_norm": 1.0646
+      },
+      {
+        "mixing": {
+          "advertiser": 0.6,
+          "civic_diversity": 0.4,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9867,
+        "residual_norm": 0.8234
+      },
+      {
+        "mixing": {
+          "advertiser": 0.8,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9327,
+        "residual_norm": 1.1754
+      },
+      {
+        "mixing": {
+          "advertiser": 0.8,
+          "civic_diversity": 0.0,
+          "journalist": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9126,
+        "residual_norm": 1.246
+      },
+      {
+        "mixing": {
+          "advertiser": 0.8,
+          "civic_diversity": 0.0,
+          "journalist": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9473,
+        "residual_norm": 1.0888
+      },
+      {
+        "mixing": {
+          "advertiser": 0.8,
+          "civic_diversity": 0.2,
+          "journalist": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9791,
+        "residual_norm": 1.1261
+      }
+    ]
+  },
+  "degradation": {
+    "regret_ranking": {
+      "reader": 1.079,
+      "publisher": 4.0775,
+      "advertiser": 5.5,
+      "journalist": 5.7382,
+      "civic_diversity": 3.5842
+    },
+    "proxy_scores": {
+      "advertiser": 0.0,
+      "civic_diversity": 0.0,
+      "journalist": 0.0,
+      "publisher": 0.0,
+      "reader": 0.0
+    },
+    "regret_order": [
+      "journalist",
+      "advertiser",
+      "publisher",
+      "civic_diversity",
+      "reader"
+    ],
+    "proxy_order": [
+      "advertiser",
+      "civic_diversity",
+      "journalist",
+      "publisher",
+      "reader"
+    ],
+    "ranking_matches": false
+  },
+  "bootstrap": {
+    "baseline_regret": 3.377,
+    "per_n": [
+      {
+        "n_pairs": 0,
+        "regret_mean": 3.377,
+        "regret_ci_lo": 3.377,
+        "regret_ci_hi": 3.377,
+        "recovery_mean": 0.0,
+        "recovery_ci_lo": 0.0,
+        "recovery_ci_hi": 0.0,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 25,
+        "regret_mean": 0.5327,
+        "regret_ci_lo": 0.184,
+        "regret_ci_hi": 0.9344,
+        "recovery_mean": 0.8423,
+        "recovery_ci_lo": 0.7233,
+        "recovery_ci_hi": 0.9455,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 50,
+        "regret_mean": 0.3176,
+        "regret_ci_lo": -0.039,
+        "regret_ci_hi": 0.7161,
+        "recovery_mean": 0.906,
+        "recovery_ci_lo": 0.7879,
+        "recovery_ci_hi": 1.0115,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 100,
+        "regret_mean": -1.4427,
+        "regret_ci_lo": -1.6711,
+        "regret_ci_hi": -1.2252,
+        "recovery_mean": 1.4272,
+        "recovery_ci_lo": 1.3628,
+        "recovery_ci_hi": 1.4948,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 200,
+        "regret_mean": -2.1582,
+        "regret_ci_lo": -2.3127,
+        "regret_ci_hi": -1.9948,
+        "recovery_mean": 1.6391,
+        "recovery_ci_lo": 1.5907,
+        "recovery_ci_hi": 1.6848,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 500,
+        "regret_mean": -2.5794,
+        "regret_ci_lo": -2.6106,
+        "regret_ci_hi": -2.5417,
+        "recovery_mean": 1.7638,
+        "recovery_ci_lo": 1.7527,
+        "recovery_ci_hi": 1.773,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 1000,
+        "regret_mean": -2.6535,
+        "regret_ci_lo": -2.6702,
+        "regret_ci_hi": -2.6352,
+        "recovery_mean": 1.7857,
+        "recovery_ci_lo": 1.7803,
+        "recovery_ci_hi": 1.7907,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 2000,
+        "regret_mean": -2.6787,
+        "regret_ci_lo": -2.6861,
+        "regret_ci_hi": -2.6714,
+        "recovery_mean": 1.7932,
+        "recovery_ci_lo": 1.7911,
+        "recovery_ci_hi": 1.7954,
+        "n_seeds": 20
+      }
+    ],
+    "n25_significant": true
+  }
+}
