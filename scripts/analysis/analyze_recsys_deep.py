@@ -82,9 +82,15 @@ def analyze_composition(dataset_name: str) -> dict:
     with open(scalar_path) as f:
         data = json.load(f)
 
-    # Check for weight vectors
-    ds_key = "movielens" if "movielens" in data else list(data.keys())[0]
-    ds_data = data.get(ds_key, data)
+    # Find the dataset subtree. Prefer exact dataset_name match
+    # (e.g. "mind-small"), fall back to legacy "movielens" key
+    # (ml-100k output uses this for backward compat with analysis scripts).
+    if dataset_name in data:
+        ds_data = data[dataset_name]
+    elif "movielens" in data:
+        ds_data = data["movielens"]
+    else:
+        ds_data = data
 
     if "weight_vectors" not in ds_data:
         print("  ERROR: Weight vectors not saved in scalarization results.")
