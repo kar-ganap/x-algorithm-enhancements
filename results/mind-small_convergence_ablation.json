@@ -1,0 +1,2074 @@
+{
+  "config": {
+    "dataset": "mind-small",
+    "noise_levels": [
+      0.05,
+      0.15,
+      0.3,
+      0.6,
+      1.0,
+      1.5
+    ],
+    "n_seeds": 5,
+    "n_low": 25,
+    "n_high": 2000,
+    "n_train_within_loss": 2000,
+    "sigma_p": 0.3,
+    "stakeholders": [
+      "reader",
+      "publisher",
+      "advertiser",
+      "journalist",
+      "civic_diversity"
+    ]
+  },
+  "sweeps": [
+    {
+      "sigma_noise": 0.05,
+      "within_loss": {
+        "reader": {
+          "mean": 0.9131,
+          "std": 0.0075
+        },
+        "publisher": {
+          "mean": 0.9492,
+          "std": 0.0072
+        },
+        "advertiser": {
+          "mean": 0.9645,
+          "std": 0.0063
+        },
+        "journalist": {
+          "mean": 0.8573,
+          "std": 0.0071
+        },
+        "civic_diversity": {
+          "mean": 0.8039,
+          "std": 0.0189
+        }
+      },
+      "cross_stakeholder_cos": {
+        "reader-publisher": {
+          "mean": 0.0925,
+          "std": 0.0425
+        },
+        "reader-advertiser": {
+          "mean": -0.1755,
+          "std": 0.0224
+        },
+        "reader-journalist": {
+          "mean": 0.3763,
+          "std": 0.0264
+        },
+        "reader-civic_diversity": {
+          "mean": -0.0691,
+          "std": 0.0137
+        },
+        "publisher-advertiser": {
+          "mean": -0.6509,
+          "std": 0.0311
+        },
+        "publisher-journalist": {
+          "mean": 0.3688,
+          "std": 0.0566
+        },
+        "publisher-civic_diversity": {
+          "mean": -0.9465,
+          "std": 0.0121
+        },
+        "advertiser-journalist": {
+          "mean": -0.2782,
+          "std": 0.0286
+        },
+        "advertiser-civic_diversity": {
+          "mean": 0.6796,
+          "std": 0.0307
+        },
+        "journalist-civic_diversity": {
+          "mean": -0.3658,
+          "std": 0.0403
+        }
+      },
+      "direction_condition": {
+        "pairs": [
+          {
+            "target": "reader",
+            "hidden": "publisher",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0436,
+            "change_pct": -66.2,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "advertiser",
+            "raw_cos": 0.3962,
+            "trained_cos": -0.032,
+            "change_pct": 157.1,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "journalist",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.1185,
+            "change_pct": -25.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.0674,
+            "change_pct": 88.1,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "reader",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.1134,
+            "change_pct": -24.4,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "advertiser",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.6434,
+            "change_pct": 30.2,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "journalist",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.2787,
+            "change_pct": -24.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.868,
+            "change_pct": -0.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "reader",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0825,
+            "change_pct": -4.2,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "publisher",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.3957,
+            "change_pct": -0.8,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "journalist",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.2383,
+            "change_pct": 12.2,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.5699,
+            "change_pct": 2.6,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "reader",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0545,
+            "change_pct": -0.7,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "publisher",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1999,
+            "change_pct": 0.1,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "advertiser",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.1978,
+            "change_pct": -30.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2601,
+            "change_pct": -0.1,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "reader",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1537,
+            "change_pct": -10.6,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "publisher",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.588,
+            "change_pct": -83.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "advertiser",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.6212,
+            "change_pct": 614.3,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "journalist",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2941,
+            "change_pct": -70.1,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          }
+        ],
+        "summary": {
+          "n_total": 20,
+          "raw_match": 13,
+          "raw_strong_total": 10,
+          "raw_strong_match": 6,
+          "trained_match": 12,
+          "trained_strong_total": 10,
+          "trained_strong_match": 7
+        },
+        "per_stakeholder_as_hidden": {
+          "reader": {
+            "within_loss": 0.9131,
+            "n_strong_pairs": 0,
+            "n_strong_match": 0,
+            "match_rate": null
+          },
+          "publisher": {
+            "within_loss": 0.9492,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "advertiser": {
+            "within_loss": 0.9645,
+            "n_strong_pairs": 2,
+            "n_strong_match": 1,
+            "match_rate": 0.5
+          },
+          "journalist": {
+            "within_loss": 0.8573,
+            "n_strong_pairs": 3,
+            "n_strong_match": 1,
+            "match_rate": 0.333
+          },
+          "civic_diversity": {
+            "within_loss": 0.8039,
+            "n_strong_pairs": 3,
+            "n_strong_match": 3,
+            "match_rate": 1.0
+          }
+        }
+      }
+    },
+    {
+      "sigma_noise": 0.15,
+      "within_loss": {
+        "reader": {
+          "mean": 0.9131,
+          "std": 0.0061
+        },
+        "publisher": {
+          "mean": 0.9322,
+          "std": 0.0105
+        },
+        "advertiser": {
+          "mean": 0.9645,
+          "std": 0.0063
+        },
+        "journalist": {
+          "mean": 0.8597,
+          "std": 0.0077
+        },
+        "civic_diversity": {
+          "mean": 0.7569,
+          "std": 0.0169
+        }
+      },
+      "cross_stakeholder_cos": {
+        "reader-publisher": {
+          "mean": 0.1324,
+          "std": 0.0501
+        },
+        "reader-advertiser": {
+          "mean": -0.1435,
+          "std": 0.0212
+        },
+        "reader-journalist": {
+          "mean": 0.3358,
+          "std": 0.0253
+        },
+        "reader-civic_diversity": {
+          "mean": -0.0885,
+          "std": 0.0262
+        },
+        "publisher-advertiser": {
+          "mean": -0.6352,
+          "std": 0.0291
+        },
+        "publisher-journalist": {
+          "mean": 0.3316,
+          "std": 0.0462
+        },
+        "publisher-civic_diversity": {
+          "mean": -0.9222,
+          "std": 0.0177
+        },
+        "advertiser-journalist": {
+          "mean": -0.2691,
+          "std": 0.0264
+        },
+        "advertiser-civic_diversity": {
+          "mean": 0.7035,
+          "std": 0.03
+        },
+        "journalist-civic_diversity": {
+          "mean": -0.3107,
+          "std": 0.0366
+        }
+      },
+      "direction_condition": {
+        "pairs": [
+          {
+            "target": "reader",
+            "hidden": "publisher",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0492,
+            "change_pct": -66.3,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "advertiser",
+            "raw_cos": 0.3962,
+            "trained_cos": -0.0132,
+            "change_pct": 255.6,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "journalist",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0875,
+            "change_pct": -26.4,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.0797,
+            "change_pct": 93.1,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "reader",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.1178,
+            "change_pct": -23.2,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "advertiser",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.6374,
+            "change_pct": 31.8,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "journalist",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.2709,
+            "change_pct": -26.6,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.881,
+            "change_pct": 0.1,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "reader",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0864,
+            "change_pct": -0.6,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "publisher",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.396,
+            "change_pct": 5.5,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "journalist",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.2443,
+            "change_pct": 11.1,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.5715,
+            "change_pct": -17.1,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "reader",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0459,
+            "change_pct": -0.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "publisher",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1946,
+            "change_pct": 3.5,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "advertiser",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.2017,
+            "change_pct": -41.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2555,
+            "change_pct": -4.4,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "reader",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1467,
+            "change_pct": -18.5,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "publisher",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.6002,
+            "change_pct": -71.4,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "advertiser",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.6528,
+            "change_pct": 328.6,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "journalist",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2757,
+            "change_pct": -36.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          }
+        ],
+        "summary": {
+          "n_total": 20,
+          "raw_match": 10,
+          "raw_strong_total": 10,
+          "raw_strong_match": 4,
+          "trained_match": 9,
+          "trained_strong_total": 11,
+          "trained_strong_match": 5
+        },
+        "per_stakeholder_as_hidden": {
+          "reader": {
+            "within_loss": 0.9131,
+            "n_strong_pairs": 0,
+            "n_strong_match": 0,
+            "match_rate": null
+          },
+          "publisher": {
+            "within_loss": 0.9322,
+            "n_strong_pairs": 2,
+            "n_strong_match": 1,
+            "match_rate": 0.5
+          },
+          "advertiser": {
+            "within_loss": 0.9645,
+            "n_strong_pairs": 3,
+            "n_strong_match": 2,
+            "match_rate": 0.667
+          },
+          "journalist": {
+            "within_loss": 0.8597,
+            "n_strong_pairs": 3,
+            "n_strong_match": 1,
+            "match_rate": 0.333
+          },
+          "civic_diversity": {
+            "within_loss": 0.7569,
+            "n_strong_pairs": 3,
+            "n_strong_match": 1,
+            "match_rate": 0.333
+          }
+        }
+      }
+    },
+    {
+      "sigma_noise": 0.3,
+      "within_loss": {
+        "reader": {
+          "mean": 0.9306,
+          "std": 0.0157
+        },
+        "publisher": {
+          "mean": 0.9256,
+          "std": 0.0066
+        },
+        "advertiser": {
+          "mean": 0.9643,
+          "std": 0.0063
+        },
+        "journalist": {
+          "mean": 0.8668,
+          "std": 0.0093
+        },
+        "civic_diversity": {
+          "mean": 0.7239,
+          "std": 0.0146
+        }
+      },
+      "cross_stakeholder_cos": {
+        "reader-publisher": {
+          "mean": 0.159,
+          "std": 0.0781
+        },
+        "reader-advertiser": {
+          "mean": -0.1062,
+          "std": 0.0265
+        },
+        "reader-journalist": {
+          "mean": 0.2818,
+          "std": 0.0536
+        },
+        "reader-civic_diversity": {
+          "mean": -0.0721,
+          "std": 0.0433
+        },
+        "publisher-advertiser": {
+          "mean": -0.6169,
+          "std": 0.0248
+        },
+        "publisher-journalist": {
+          "mean": 0.3053,
+          "std": 0.045
+        },
+        "publisher-civic_diversity": {
+          "mean": -0.8974,
+          "std": 0.0233
+        },
+        "advertiser-journalist": {
+          "mean": -0.262,
+          "std": 0.022
+        },
+        "advertiser-civic_diversity": {
+          "mean": 0.6925,
+          "std": 0.0201
+        },
+        "journalist-civic_diversity": {
+          "mean": -0.2782,
+          "std": 0.0379
+        }
+      },
+      "direction_condition": {
+        "pairs": [
+          {
+            "target": "reader",
+            "hidden": "publisher",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0459,
+            "change_pct": -55.4,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "advertiser",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0137,
+            "change_pct": 50.0,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "journalist",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0655,
+            "change_pct": -17.7,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.0848,
+            "change_pct": 89.9,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "reader",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.1108,
+            "change_pct": -21.6,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "advertiser",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.6282,
+            "change_pct": 36.2,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "journalist",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.2559,
+            "change_pct": -22.5,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.8876,
+            "change_pct": 0.1,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "reader",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0906,
+            "change_pct": -9.2,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "publisher",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.3938,
+            "change_pct": 5.6,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "journalist",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.2485,
+            "change_pct": 1.4,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.5695,
+            "change_pct": -17.6,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "reader",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0362,
+            "change_pct": -0.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "publisher",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1812,
+            "change_pct": 0.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "advertiser",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.1888,
+            "change_pct": -25.4,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2388,
+            "change_pct": 0.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "reader",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1419,
+            "change_pct": -12.9,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "publisher",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.6025,
+            "change_pct": -74.1,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "advertiser",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.6599,
+            "change_pct": 733.3,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "journalist",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2529,
+            "change_pct": -46.8,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          }
+        ],
+        "summary": {
+          "n_total": 20,
+          "raw_match": 11,
+          "raw_strong_total": 10,
+          "raw_strong_match": 4,
+          "trained_match": 9,
+          "trained_strong_total": 10,
+          "trained_strong_match": 4
+        },
+        "per_stakeholder_as_hidden": {
+          "reader": {
+            "within_loss": 0.9306,
+            "n_strong_pairs": 0,
+            "n_strong_match": 0,
+            "match_rate": null
+          },
+          "publisher": {
+            "within_loss": 0.9256,
+            "n_strong_pairs": 2,
+            "n_strong_match": 1,
+            "match_rate": 0.5
+          },
+          "advertiser": {
+            "within_loss": 0.9643,
+            "n_strong_pairs": 2,
+            "n_strong_match": 1,
+            "match_rate": 0.5
+          },
+          "journalist": {
+            "within_loss": 0.8668,
+            "n_strong_pairs": 3,
+            "n_strong_match": 1,
+            "match_rate": 0.333
+          },
+          "civic_diversity": {
+            "within_loss": 0.7239,
+            "n_strong_pairs": 3,
+            "n_strong_match": 1,
+            "match_rate": 0.333
+          }
+        }
+      }
+    },
+    {
+      "sigma_noise": 0.6,
+      "within_loss": {
+        "reader": {
+          "mean": 0.9615,
+          "std": 0.0127
+        },
+        "publisher": {
+          "mean": 0.9197,
+          "std": 0.0082
+        },
+        "advertiser": {
+          "mean": 0.963,
+          "std": 0.0082
+        },
+        "journalist": {
+          "mean": 0.8687,
+          "std": 0.0117
+        },
+        "civic_diversity": {
+          "mean": 0.6615,
+          "std": 0.0235
+        }
+      },
+      "cross_stakeholder_cos": {
+        "reader-publisher": {
+          "mean": 0.1876,
+          "std": 0.0989
+        },
+        "reader-advertiser": {
+          "mean": -0.002,
+          "std": 0.0416
+        },
+        "reader-journalist": {
+          "mean": 0.3297,
+          "std": 0.0893
+        },
+        "reader-civic_diversity": {
+          "mean": 0.0446,
+          "std": 0.0937
+        },
+        "publisher-advertiser": {
+          "mean": -0.5571,
+          "std": 0.048
+        },
+        "publisher-journalist": {
+          "mean": 0.3224,
+          "std": 0.0716
+        },
+        "publisher-civic_diversity": {
+          "mean": -0.8065,
+          "std": 0.0587
+        },
+        "advertiser-journalist": {
+          "mean": -0.2117,
+          "std": 0.0221
+        },
+        "advertiser-civic_diversity": {
+          "mean": 0.6822,
+          "std": 0.0275
+        },
+        "journalist-civic_diversity": {
+          "mean": -0.2045,
+          "std": 0.0544
+        }
+      },
+      "direction_condition": {
+        "pairs": [
+          {
+            "target": "reader",
+            "hidden": "publisher",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0437,
+            "change_pct": -50.1,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "advertiser",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0757,
+            "change_pct": 166.7,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "journalist",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.059,
+            "change_pct": -20.5,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1004,
+            "change_pct": 83.8,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "reader",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0874,
+            "change_pct": -19.6,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "advertiser",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.6045,
+            "change_pct": -12.1,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "journalist",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.2496,
+            "change_pct": -25.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.8849,
+            "change_pct": -7.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "reader",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0932,
+            "change_pct": -6.0,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "publisher",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.3903,
+            "change_pct": -3.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "journalist",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.2225,
+            "change_pct": -10.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.5627,
+            "change_pct": 11.1,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "reader",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0339,
+            "change_pct": 1.2,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "publisher",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1746,
+            "change_pct": 26.7,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "advertiser",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.1848,
+            "change_pct": -68.2,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2284,
+            "change_pct": -35.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "reader",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1465,
+            "change_pct": 3.6,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "publisher",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.6034,
+            "change_pct": -74.6,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "advertiser",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.6533,
+            "change_pct": 78.3,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "journalist",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2138,
+            "change_pct": -46.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          }
+        ],
+        "summary": {
+          "n_total": 20,
+          "raw_match": 15,
+          "raw_strong_total": 10,
+          "raw_strong_match": 7,
+          "trained_match": 17,
+          "trained_strong_total": 10,
+          "trained_strong_match": 9
+        },
+        "per_stakeholder_as_hidden": {
+          "reader": {
+            "within_loss": 0.9615,
+            "n_strong_pairs": 0,
+            "n_strong_match": 0,
+            "match_rate": null
+          },
+          "publisher": {
+            "within_loss": 0.9197,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "advertiser": {
+            "within_loss": 0.963,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "journalist": {
+            "within_loss": 0.8687,
+            "n_strong_pairs": 3,
+            "n_strong_match": 2,
+            "match_rate": 0.667
+          },
+          "civic_diversity": {
+            "within_loss": 0.6615,
+            "n_strong_pairs": 3,
+            "n_strong_match": 3,
+            "match_rate": 1.0
+          }
+        }
+      }
+    },
+    {
+      "sigma_noise": 1.0,
+      "within_loss": {
+        "reader": {
+          "mean": 0.9476,
+          "std": 0.0095
+        },
+        "publisher": {
+          "mean": 0.9183,
+          "std": 0.0046
+        },
+        "advertiser": {
+          "mean": 0.9536,
+          "std": 0.0038
+        },
+        "journalist": {
+          "mean": 0.8589,
+          "std": 0.0173
+        },
+        "civic_diversity": {
+          "mean": 0.5335,
+          "std": 0.0138
+        }
+      },
+      "cross_stakeholder_cos": {
+        "reader-publisher": {
+          "mean": 0.3137,
+          "std": 0.1297
+        },
+        "reader-advertiser": {
+          "mean": 0.0911,
+          "std": 0.0662
+        },
+        "reader-journalist": {
+          "mean": 0.4089,
+          "std": 0.0891
+        },
+        "reader-civic_diversity": {
+          "mean": 0.1815,
+          "std": 0.1188
+        },
+        "publisher-advertiser": {
+          "mean": -0.4265,
+          "std": 0.0783
+        },
+        "publisher-journalist": {
+          "mean": 0.3595,
+          "std": 0.0708
+        },
+        "publisher-civic_diversity": {
+          "mean": -0.6318,
+          "std": 0.0873
+        },
+        "advertiser-journalist": {
+          "mean": -0.1066,
+          "std": 0.0381
+        },
+        "advertiser-civic_diversity": {
+          "mean": 0.6734,
+          "std": 0.039
+        },
+        "journalist-civic_diversity": {
+          "mean": -0.1047,
+          "std": 0.0647
+        }
+      },
+      "direction_condition": {
+        "pairs": [
+          {
+            "target": "reader",
+            "hidden": "publisher",
+            "raw_cos": 0.4822,
+            "trained_cos": 0.0075,
+            "change_pct": -64.9,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "advertiser",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0564,
+            "change_pct": 950.0,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "journalist",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0741,
+            "change_pct": -26.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.053,
+            "change_pct": 91.1,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "reader",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0601,
+            "change_pct": -17.5,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "advertiser",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.5786,
+            "change_pct": -860.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "journalist",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1864,
+            "change_pct": -19.7,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.8753,
+            "change_pct": -36.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "reader",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0948,
+            "change_pct": -10.2,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "publisher",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.3702,
+            "change_pct": -11.7,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "journalist",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.1924,
+            "change_pct": -22.9,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.5336,
+            "change_pct": 38.4,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "reader",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0463,
+            "change_pct": 2.0,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "publisher",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.149,
+            "change_pct": 103.5,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "advertiser",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.1559,
+            "change_pct": -540.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.1842,
+            "change_pct": -169.5,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "reader",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1479,
+            "change_pct": -5.9,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "publisher",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.5934,
+            "change_pct": -34.6,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "advertiser",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.6531,
+            "change_pct": 30.8,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "journalist",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2258,
+            "change_pct": -47.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          }
+        ],
+        "summary": {
+          "n_total": 20,
+          "raw_match": 14,
+          "raw_strong_total": 10,
+          "raw_strong_match": 7,
+          "trained_match": 15,
+          "trained_strong_total": 7,
+          "trained_strong_match": 7
+        },
+        "per_stakeholder_as_hidden": {
+          "reader": {
+            "within_loss": 0.9476,
+            "n_strong_pairs": 0,
+            "n_strong_match": 0,
+            "match_rate": null
+          },
+          "publisher": {
+            "within_loss": 0.9183,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "advertiser": {
+            "within_loss": 0.9536,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "journalist": {
+            "within_loss": 0.8589,
+            "n_strong_pairs": 1,
+            "n_strong_match": 1,
+            "match_rate": 1.0
+          },
+          "civic_diversity": {
+            "within_loss": 0.5335,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          }
+        }
+      }
+    },
+    {
+      "sigma_noise": 1.5,
+      "within_loss": {
+        "reader": {
+          "mean": 0.9019,
+          "std": 0.0194
+        },
+        "publisher": {
+          "mean": 0.9011,
+          "std": 0.0107
+        },
+        "advertiser": {
+          "mean": 0.9298,
+          "std": 0.0102
+        },
+        "journalist": {
+          "mean": 0.8582,
+          "std": 0.022
+        },
+        "civic_diversity": {
+          "mean": 0.4516,
+          "std": 0.0252
+        }
+      },
+      "cross_stakeholder_cos": {
+        "reader-publisher": {
+          "mean": 0.486,
+          "std": 0.1373
+        },
+        "reader-advertiser": {
+          "mean": 0.1949,
+          "std": 0.0728
+        },
+        "reader-journalist": {
+          "mean": 0.4712,
+          "std": 0.1031
+        },
+        "reader-civic_diversity": {
+          "mean": 0.3511,
+          "std": 0.0908
+        },
+        "publisher-advertiser": {
+          "mean": -0.248,
+          "std": 0.106
+        },
+        "publisher-journalist": {
+          "mean": 0.3957,
+          "std": 0.0462
+        },
+        "publisher-civic_diversity": {
+          "mean": -0.3136,
+          "std": 0.1412
+        },
+        "advertiser-journalist": {
+          "mean": -0.0308,
+          "std": 0.0614
+        },
+        "advertiser-civic_diversity": {
+          "mean": 0.6943,
+          "std": 0.027
+        },
+        "journalist-civic_diversity": {
+          "mean": 0.0173,
+          "std": 0.1118
+        }
+      },
+      "direction_condition": {
+        "pairs": [
+          {
+            "target": "reader",
+            "hidden": "publisher",
+            "raw_cos": 0.4822,
+            "trained_cos": 0.0341,
+            "change_pct": -49.3,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "advertiser",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.0608,
+            "change_pct": 150.0,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "reader",
+            "hidden": "journalist",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.045,
+            "change_pct": -18.4,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "reader",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.0316,
+            "change_pct": 69.4,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "reader",
+            "raw_cos": 0.4822,
+            "trained_cos": -0.0199,
+            "change_pct": -18.8,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "advertiser",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.4985,
+            "change_pct": -4100.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "publisher",
+            "hidden": "journalist",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1817,
+            "change_pct": -32.6,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "publisher",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.8311,
+            "change_pct": -48.0,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "reader",
+            "raw_cos": 0.3962,
+            "trained_cos": 0.1007,
+            "change_pct": -20.2,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "advertiser",
+            "hidden": "publisher",
+            "raw_cos": -0.0575,
+            "trained_cos": -0.3644,
+            "change_pct": -60.7,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "journalist",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.167,
+            "change_pct": -33.8,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "advertiser",
+            "hidden": "civic_diversity",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.5308,
+            "change_pct": 210.3,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "reader",
+            "raw_cos": -0.1517,
+            "trained_cos": 0.0513,
+            "change_pct": -3.8,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": false
+          },
+          {
+            "target": "journalist",
+            "hidden": "publisher",
+            "raw_cos": -0.0376,
+            "trained_cos": 0.1507,
+            "change_pct": 47.6,
+            "improving": true,
+            "raw_match": false,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "advertiser",
+            "raw_cos": -0.3077,
+            "trained_cos": -0.137,
+            "change_pct": -445.5,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "journalist",
+            "hidden": "civic_diversity",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.1756,
+            "change_pct": -66.4,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "reader",
+            "raw_cos": 0.0122,
+            "trained_cos": 0.1538,
+            "change_pct": -7.7,
+            "improving": false,
+            "raw_match": false,
+            "trained_match": false
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "publisher",
+            "raw_cos": -0.8389,
+            "trained_cos": -0.5643,
+            "change_pct": -51.3,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "advertiser",
+            "raw_cos": 0.4007,
+            "trained_cos": 0.661,
+            "change_pct": 37.1,
+            "improving": true,
+            "raw_match": true,
+            "trained_match": true
+          },
+          {
+            "target": "civic_diversity",
+            "hidden": "journalist",
+            "raw_cos": -0.1158,
+            "trained_cos": -0.2117,
+            "change_pct": -42.7,
+            "improving": false,
+            "raw_match": true,
+            "trained_match": true
+          }
+        ],
+        "summary": {
+          "n_total": 20,
+          "raw_match": 15,
+          "raw_strong_total": 10,
+          "raw_strong_match": 7,
+          "trained_match": 14,
+          "trained_strong_total": 7,
+          "trained_strong_match": 7
+        },
+        "per_stakeholder_as_hidden": {
+          "reader": {
+            "within_loss": 0.9019,
+            "n_strong_pairs": 0,
+            "n_strong_match": 0,
+            "match_rate": null
+          },
+          "publisher": {
+            "within_loss": 0.9011,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "advertiser": {
+            "within_loss": 0.9298,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          },
+          "journalist": {
+            "within_loss": 0.8582,
+            "n_strong_pairs": 1,
+            "n_strong_match": 1,
+            "match_rate": 1.0
+          },
+          "civic_diversity": {
+            "within_loss": 0.4516,
+            "n_strong_pairs": 2,
+            "n_strong_match": 2,
+            "match_rate": 1.0
+          }
+        }
+      }
+    }
+  ],
+  "scatter_points": [
+    {
+      "sigma": 0.05,
+      "stakeholder": "publisher",
+      "within_loss": 0.9492,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 0.05,
+      "stakeholder": "advertiser",
+      "within_loss": 0.9645,
+      "match_rate": 0.5,
+      "n": 2
+    },
+    {
+      "sigma": 0.05,
+      "stakeholder": "journalist",
+      "within_loss": 0.8573,
+      "match_rate": 0.333,
+      "n": 3
+    },
+    {
+      "sigma": 0.05,
+      "stakeholder": "civic_diversity",
+      "within_loss": 0.8039,
+      "match_rate": 1.0,
+      "n": 3
+    },
+    {
+      "sigma": 0.15,
+      "stakeholder": "publisher",
+      "within_loss": 0.9322,
+      "match_rate": 0.5,
+      "n": 2
+    },
+    {
+      "sigma": 0.15,
+      "stakeholder": "advertiser",
+      "within_loss": 0.9645,
+      "match_rate": 0.667,
+      "n": 3
+    },
+    {
+      "sigma": 0.15,
+      "stakeholder": "journalist",
+      "within_loss": 0.8597,
+      "match_rate": 0.333,
+      "n": 3
+    },
+    {
+      "sigma": 0.15,
+      "stakeholder": "civic_diversity",
+      "within_loss": 0.7569,
+      "match_rate": 0.333,
+      "n": 3
+    },
+    {
+      "sigma": 0.3,
+      "stakeholder": "publisher",
+      "within_loss": 0.9256,
+      "match_rate": 0.5,
+      "n": 2
+    },
+    {
+      "sigma": 0.3,
+      "stakeholder": "advertiser",
+      "within_loss": 0.9643,
+      "match_rate": 0.5,
+      "n": 2
+    },
+    {
+      "sigma": 0.3,
+      "stakeholder": "journalist",
+      "within_loss": 0.8668,
+      "match_rate": 0.333,
+      "n": 3
+    },
+    {
+      "sigma": 0.3,
+      "stakeholder": "civic_diversity",
+      "within_loss": 0.7239,
+      "match_rate": 0.333,
+      "n": 3
+    },
+    {
+      "sigma": 0.6,
+      "stakeholder": "publisher",
+      "within_loss": 0.9197,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 0.6,
+      "stakeholder": "advertiser",
+      "within_loss": 0.963,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 0.6,
+      "stakeholder": "journalist",
+      "within_loss": 0.8687,
+      "match_rate": 0.667,
+      "n": 3
+    },
+    {
+      "sigma": 0.6,
+      "stakeholder": "civic_diversity",
+      "within_loss": 0.6615,
+      "match_rate": 1.0,
+      "n": 3
+    },
+    {
+      "sigma": 1.0,
+      "stakeholder": "publisher",
+      "within_loss": 0.9183,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 1.0,
+      "stakeholder": "advertiser",
+      "within_loss": 0.9536,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 1.0,
+      "stakeholder": "journalist",
+      "within_loss": 0.8589,
+      "match_rate": 1.0,
+      "n": 1
+    },
+    {
+      "sigma": 1.0,
+      "stakeholder": "civic_diversity",
+      "within_loss": 0.5335,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 1.5,
+      "stakeholder": "publisher",
+      "within_loss": 0.9011,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 1.5,
+      "stakeholder": "advertiser",
+      "within_loss": 0.9298,
+      "match_rate": 1.0,
+      "n": 2
+    },
+    {
+      "sigma": 1.5,
+      "stakeholder": "journalist",
+      "within_loss": 0.8582,
+      "match_rate": 1.0,
+      "n": 1
+    },
+    {
+      "sigma": 1.5,
+      "stakeholder": "civic_diversity",
+      "within_loss": 0.4516,
+      "match_rate": 1.0,
+      "n": 2
+    }
+  ],
+  "total_time_seconds": 9609.9,
+  "correlation": {
+    "spearman_rho": -0.0057,
+    "p_value": 0.978785
+  }
+}
