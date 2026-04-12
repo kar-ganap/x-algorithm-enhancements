@@ -1,0 +1,536 @@
+{
+  "config": {
+    "n_seeds": 5,
+    "n_pairs": 2500,
+    "eval_fraction": 0.2,
+    "loss_types": [
+      "bradley_terry",
+      "margin_bt",
+      "calibrated_bt"
+    ],
+    "stakeholders": [
+      "reader",
+      "publisher",
+      "indie_author",
+      "premium_seller",
+      "diversity"
+    ],
+    "feature_dim": 32
+  },
+  "group_a_core": {
+    "within_loss_similarity": {
+      "reader": {
+        "mean": 0.9395,
+        "std": 0.005,
+        "min": 0.934,
+        "per_seed": [
+          0.9401,
+          0.9407,
+          0.9478,
+          0.934,
+          0.9348
+        ]
+      },
+      "publisher": {
+        "mean": 0.9613,
+        "std": 0.0064,
+        "min": 0.9519,
+        "per_seed": [
+          0.961,
+          0.9611,
+          0.972,
+          0.9519,
+          0.9607
+        ]
+      },
+      "indie_author": {
+        "mean": 0.8903,
+        "std": 0.0157,
+        "min": 0.8737,
+        "per_seed": [
+          0.8831,
+          0.92,
+          0.8737,
+          0.8894,
+          0.885
+        ]
+      },
+      "premium_seller": {
+        "mean": 0.9748,
+        "std": 0.0033,
+        "min": 0.9715,
+        "per_seed": [
+          0.9762,
+          0.9726,
+          0.9733,
+          0.9806,
+          0.9715
+        ]
+      },
+      "diversity": {
+        "mean": 0.9088,
+        "std": 0.0077,
+        "min": 0.8975,
+        "per_seed": [
+          0.8975,
+          0.9185,
+          0.9039,
+          0.9083,
+          0.9158
+        ]
+      }
+    },
+    "across_stakeholder_similarity": {
+      "bradley_terry": {
+        "reader-publisher": {
+          "mean": -0.0759,
+          "std": 0.0354,
+          "per_seed": [
+            -0.0755,
+            -0.1238,
+            -0.0597,
+            -0.1005,
+            -0.0202
+          ]
+        },
+        "reader-indie_author": {
+          "mean": 0.0345,
+          "std": 0.0193,
+          "per_seed": [
+            0.0589,
+            0.0333,
+            0.0461,
+            0.0335,
+            0.0008
+          ]
+        },
+        "reader-premium_seller": {
+          "mean": 0.4147,
+          "std": 0.0422,
+          "per_seed": [
+            0.4197,
+            0.4859,
+            0.3555,
+            0.3973,
+            0.415
+          ]
+        },
+        "reader-diversity": {
+          "mean": 0.0157,
+          "std": 0.0076,
+          "per_seed": [
+            0.0284,
+            0.0177,
+            0.0163,
+            0.01,
+            0.0062
+          ]
+        },
+        "publisher-indie_author": {
+          "mean": -0.8078,
+          "std": 0.0118,
+          "per_seed": [
+            -0.8017,
+            -0.8111,
+            -0.8241,
+            -0.7889,
+            -0.8131
+          ]
+        },
+        "publisher-premium_seller": {
+          "mean": -0.0364,
+          "std": 0.0121,
+          "per_seed": [
+            -0.0271,
+            -0.0571,
+            -0.0397,
+            -0.0219,
+            -0.0359
+          ]
+        },
+        "publisher-diversity": {
+          "mean": -0.9425,
+          "std": 0.0126,
+          "per_seed": [
+            -0.921,
+            -0.9452,
+            -0.9395,
+            -0.9468,
+            -0.9598
+          ]
+        },
+        "indie_author-premium_seller": {
+          "mean": 0.0387,
+          "std": 0.0141,
+          "per_seed": [
+            0.0483,
+            0.025,
+            0.0582,
+            0.0414,
+            0.0207
+          ]
+        },
+        "indie_author-diversity": {
+          "mean": 0.8047,
+          "std": 0.022,
+          "per_seed": [
+            0.7822,
+            0.8183,
+            0.8215,
+            0.7741,
+            0.8271
+          ]
+        },
+        "premium_seller-diversity": {
+          "mean": 0.0484,
+          "std": 0.0236,
+          "per_seed": [
+            0.0404,
+            0.0184,
+            0.0664,
+            0.0839,
+            0.0332
+          ]
+        }
+      },
+      "margin_bt": {
+        "reader-publisher": {
+          "mean": -0.0304,
+          "std": 0.0493,
+          "per_seed": [
+            -0.0122,
+            -0.1102,
+            -0.0166,
+            -0.052,
+            0.0388
+          ]
+        },
+        "reader-indie_author": {
+          "mean": 0.0174,
+          "std": 0.0371,
+          "per_seed": [
+            0.0808,
+            0.0374,
+            -0.0082,
+            -0.0194,
+            -0.0035
+          ]
+        },
+        "reader-premium_seller": {
+          "mean": 0.2871,
+          "std": 0.0522,
+          "per_seed": [
+            0.3245,
+            0.3581,
+            0.2113,
+            0.2495,
+            0.2922
+          ]
+        },
+        "reader-diversity": {
+          "mean": -0.0204,
+          "std": 0.0185,
+          "per_seed": [
+            0.0044,
+            -0.0462,
+            -0.0367,
+            -0.0099,
+            -0.0136
+          ]
+        },
+        "publisher-indie_author": {
+          "mean": -0.7669,
+          "std": 0.0111,
+          "per_seed": [
+            -0.7552,
+            -0.7523,
+            -0.7765,
+            -0.7793,
+            -0.7712
+          ]
+        },
+        "publisher-premium_seller": {
+          "mean": -0.022,
+          "std": 0.0319,
+          "per_seed": [
+            -0.0041,
+            -0.0732,
+            -0.0393,
+            0.0198,
+            -0.013
+          ]
+        },
+        "publisher-diversity": {
+          "mean": -0.8645,
+          "std": 0.0323,
+          "per_seed": [
+            -0.8146,
+            -0.8529,
+            -0.8558,
+            -0.9043,
+            -0.8949
+          ]
+        },
+        "indie_author-premium_seller": {
+          "mean": 0.0315,
+          "std": 0.0331,
+          "per_seed": [
+            0.0708,
+            -0.0179,
+            0.0661,
+            0.0209,
+            0.0176
+          ]
+        },
+        "indie_author-diversity": {
+          "mean": 0.812,
+          "std": 0.0304,
+          "per_seed": [
+            0.7584,
+            0.8346,
+            0.834,
+            0.7974,
+            0.8354
+          ]
+        },
+        "premium_seller-diversity": {
+          "mean": 0.0476,
+          "std": 0.0647,
+          "per_seed": [
+            0.0702,
+            -0.0499,
+            0.104,
+            0.1182,
+            -0.0046
+          ]
+        }
+      },
+      "calibrated_bt": {
+        "reader-publisher": {
+          "mean": -0.0292,
+          "std": 0.0289,
+          "per_seed": [
+            -0.0357,
+            -0.0462,
+            -0.024,
+            -0.0627,
+            0.0227
+          ]
+        },
+        "reader-indie_author": {
+          "mean": -0.1649,
+          "std": 0.0175,
+          "per_seed": [
+            -0.1464,
+            -0.1473,
+            -0.1625,
+            -0.1766,
+            -0.1919
+          ]
+        },
+        "reader-premium_seller": {
+          "mean": 0.3347,
+          "std": 0.0331,
+          "per_seed": [
+            0.3549,
+            0.3845,
+            0.2884,
+            0.3138,
+            0.332
+          ]
+        },
+        "reader-diversity": {
+          "mean": -0.1509,
+          "std": 0.0034,
+          "per_seed": [
+            -0.1491,
+            -0.1463,
+            -0.1521,
+            -0.1566,
+            -0.1505
+          ]
+        },
+        "publisher-indie_author": {
+          "mean": -0.7426,
+          "std": 0.0163,
+          "per_seed": [
+            -0.726,
+            -0.7612,
+            -0.7421,
+            -0.7229,
+            -0.7606
+          ]
+        },
+        "publisher-premium_seller": {
+          "mean": -0.0324,
+          "std": 0.0122,
+          "per_seed": [
+            -0.017,
+            -0.0494,
+            -0.0326,
+            -0.021,
+            -0.0418
+          ]
+        },
+        "publisher-diversity": {
+          "mean": -0.8882,
+          "std": 0.0221,
+          "per_seed": [
+            -0.854,
+            -0.9046,
+            -0.8757,
+            -0.8892,
+            -0.9175
+          ]
+        },
+        "indie_author-premium_seller": {
+          "mean": 0.0499,
+          "std": 0.0126,
+          "per_seed": [
+            0.0437,
+            0.0314,
+            0.0683,
+            0.058,
+            0.0482
+          ]
+        },
+        "indie_author-diversity": {
+          "mean": 0.8362,
+          "std": 0.0149,
+          "per_seed": [
+            0.8228,
+            0.8421,
+            0.8464,
+            0.815,
+            0.8549
+          ]
+        },
+        "premium_seller-diversity": {
+          "mean": 0.0553,
+          "std": 0.0209,
+          "per_seed": [
+            0.0387,
+            0.0305,
+            0.0698,
+            0.0879,
+            0.0498
+          ]
+        }
+      }
+    },
+    "accuracy_summary": {
+      "train_mean": 0.7977,
+      "eval_mean": 0.7811,
+      "eval_min": 0.616
+    },
+    "n_models": 75
+  },
+  "group_b_hyperparameter": {
+    "margin_bt": {
+      "reader": {
+        "pairwise_cos": [
+          0.9933,
+          0.9818,
+          0.996
+        ],
+        "mean_cos": 0.9904
+      },
+      "publisher": {
+        "pairwise_cos": [
+          0.9577,
+          0.8835,
+          0.9771
+        ],
+        "mean_cos": 0.9394
+      },
+      "indie_author": {
+        "pairwise_cos": [
+          0.9876,
+          0.9798,
+          0.9926
+        ],
+        "mean_cos": 0.9867
+      },
+      "premium_seller": {
+        "pairwise_cos": [
+          0.9921,
+          0.9845,
+          0.9965
+        ],
+        "mean_cos": 0.991
+      },
+      "diversity": {
+        "pairwise_cos": [
+          0.9841,
+          0.9519,
+          0.9869
+        ],
+        "mean_cos": 0.9743
+      }
+    },
+    "calibrated_bt": {
+      "reader": {
+        "pairwise_cos": [
+          0.9752,
+          0.9311,
+          0.9789
+        ],
+        "mean_cos": 0.9618
+      },
+      "publisher": {
+        "pairwise_cos": [
+          0.995,
+          0.961,
+          0.981
+        ],
+        "mean_cos": 0.979
+      },
+      "indie_author": {
+        "pairwise_cos": [
+          0.9848,
+          0.9539,
+          0.9865
+        ],
+        "mean_cos": 0.9751
+      },
+      "premium_seller": {
+        "pairwise_cos": [
+          0.9994,
+          0.9919,
+          0.9953
+        ],
+        "mean_cos": 0.9955
+      },
+      "diversity": {
+        "pairwise_cos": [
+          0.9874,
+          0.9446,
+          0.9785
+        ],
+        "mean_cos": 0.9702
+      }
+    }
+  },
+  "comparison_with_synthetic": {
+    "synthetic_across": {
+      "user_platform": 0.8296,
+      "user_society": 0.8837,
+      "platform_society": 0.4777
+    },
+    "movielens_across": {
+      "reader-publisher": -0.0759,
+      "reader-indie_author": 0.0345,
+      "reader-premium_seller": 0.4147,
+      "reader-diversity": 0.0157,
+      "publisher-indie_author": -0.8078,
+      "publisher-premium_seller": -0.0364,
+      "publisher-diversity": -0.9425,
+      "indie_author-premium_seller": 0.0387,
+      "indie_author-diversity": 0.8047,
+      "premium_seller-diversity": 0.0484
+    },
+    "synthetic_within_loss_min": 0.92,
+    "movielens_within_loss_min": 0.8737
+  },
+  "total_time_seconds": 1662.3
+}

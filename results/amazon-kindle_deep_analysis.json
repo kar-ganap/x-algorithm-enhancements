@@ -1,0 +1,1461 @@
+{
+  "dataset": "amazon-kindle",
+  "composition": {
+    "mean_projection_cosine": 0.8765,
+    "min_projection_cosine": 0.3487,
+    "std_projection_cosine": 0.1114,
+    "mean_residual_norm": 0.9932,
+    "n_above_095": 31,
+    "n_total": 121,
+    "per_model": [
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9825,
+        "residual_norm": 0.7635
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9194,
+        "residual_norm": 1.2089
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.6,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9103,
+        "residual_norm": 1.1335
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.8,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9658,
+        "residual_norm": 0.8062
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9753,
+        "residual_norm": 1.2025
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9274,
+        "residual_norm": 1.2001
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.4,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9173,
+        "residual_norm": 0.9553
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.6,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8885,
+        "residual_norm": 1.1318
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.8,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9586,
+        "residual_norm": 0.9324
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9737,
+        "residual_norm": 1.08
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9011,
+        "residual_norm": 1.0837
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9064,
+        "residual_norm": 0.9296
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9166,
+        "residual_norm": 1.0349
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.6,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9723,
+        "residual_norm": 0.9971
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.6,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9454,
+        "residual_norm": 0.9348
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.6,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8569,
+        "residual_norm": 1.4312
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.8,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9695,
+        "residual_norm": 1.0442
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.0,
+          "premium_seller": 0.8,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9426,
+        "residual_norm": 1.1086
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9649,
+        "residual_norm": 1.0738
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9033,
+        "residual_norm": 1.1015
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8932,
+        "residual_norm": 0.7638
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.6,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8922,
+        "residual_norm": 0.6738
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.8,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8772,
+        "residual_norm": 1.2204
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9561,
+        "residual_norm": 0.9168
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8918,
+        "residual_norm": 0.9536
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.802,
+        "residual_norm": 1.0192
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8898,
+        "residual_norm": 0.785
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.961,
+        "residual_norm": 0.7982
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.4,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9203,
+        "residual_norm": 0.6791
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.4,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7761,
+        "residual_norm": 1.2353
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.6,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9244,
+        "residual_norm": 1.1266
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.6,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8272,
+        "residual_norm": 1.2352
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.2,
+          "premium_seller": 0.8,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9653,
+        "residual_norm": 0.7762
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.8887,
+        "residual_norm": 1.651
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8679,
+        "residual_norm": 1.028
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8067,
+        "residual_norm": 0.9047
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6166,
+        "residual_norm": 1.1365
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.918,
+        "residual_norm": 1.1866
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8327,
+        "residual_norm": 0.8493
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.2,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6165,
+        "residual_norm": 1.1567
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9366,
+        "residual_norm": 0.9496
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.4,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.723,
+        "residual_norm": 1.3263
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.4,
+          "premium_seller": 0.6,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8993,
+        "residual_norm": 1.2336
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.6,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9486,
+        "residual_norm": 1.0133
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.6,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8653,
+        "residual_norm": 1.108
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.6,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7674,
+        "residual_norm": 0.9292
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.6,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9625,
+        "residual_norm": 0.7473
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.6,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8073,
+        "residual_norm": 1.2239
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.6,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.944,
+        "residual_norm": 0.9173
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.8,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9661,
+        "residual_norm": 0.8999
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.8,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8448,
+        "residual_norm": 1.1906
+      },
+      {
+        "mixing": {
+          "diversity": 0.0,
+          "indie_author": 0.8,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9735,
+        "residual_norm": 0.7845
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.8
+        },
+        "projection_cosine": 0.9595,
+        "residual_norm": 1.123
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.8877,
+        "residual_norm": 1.2598
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8337,
+        "residual_norm": 0.9644
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.6,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.7869,
+        "residual_norm": 0.9153
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.8,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9263,
+        "residual_norm": 0.7953
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.962,
+        "residual_norm": 0.8554
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.7981,
+        "residual_norm": 1.2968
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.6466,
+        "residual_norm": 1.1369
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8442,
+        "residual_norm": 0.9183
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9548,
+        "residual_norm": 0.8943
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8361,
+        "residual_norm": 0.9408
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7523,
+        "residual_norm": 0.926
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.6,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9427,
+        "residual_norm": 0.9414
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.6,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.897,
+        "residual_norm": 0.8986
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.0,
+          "premium_seller": 0.8,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9343,
+        "residual_norm": 1.1103
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9358,
+        "residual_norm": 1.0627
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8129,
+        "residual_norm": 1.1425
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.7094,
+        "residual_norm": 0.8644
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.5547,
+        "residual_norm": 1.0202
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9013,
+        "residual_norm": 1.1781
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8417,
+        "residual_norm": 0.8891
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6272,
+        "residual_norm": 0.9873
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8789,
+        "residual_norm": 1.1735
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.4,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.853,
+        "residual_norm": 0.82
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.2,
+          "premium_seller": 0.6,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9411,
+        "residual_norm": 0.8721
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9535,
+        "residual_norm": 0.9233
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.96,
+        "residual_norm": 0.5715
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6613,
+        "residual_norm": 1.2444
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.4,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9305,
+        "residual_norm": 0.9497
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.4,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8191,
+        "residual_norm": 1.0811
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.4,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9069,
+        "residual_norm": 1.0741
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.6,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9488,
+        "residual_norm": 1.0207
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.6,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8656,
+        "residual_norm": 1.0974
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.6,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.958,
+        "residual_norm": 0.9055
+      },
+      {
+        "mixing": {
+          "diversity": 0.2,
+          "indie_author": 0.8,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9752,
+        "residual_norm": 1.0609
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.6
+        },
+        "projection_cosine": 0.9609,
+        "residual_norm": 0.9677
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.8567,
+        "residual_norm": 1.0076
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.5294,
+        "residual_norm": 1.0516
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.6,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.6748,
+        "residual_norm": 0.8421
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9356,
+        "residual_norm": 0.9576
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8383,
+        "residual_norm": 0.8524
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.3487,
+        "residual_norm": 1.2216
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9429,
+        "residual_norm": 0.7298
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.7762,
+        "residual_norm": 1.1623
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.0,
+          "premium_seller": 0.6,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9563,
+        "residual_norm": 0.7708
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.9281,
+        "residual_norm": 1.1082
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8864,
+        "residual_norm": 0.8028
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.5064,
+        "residual_norm": 0.9484
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9205,
+        "residual_norm": 1.0656
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8922,
+        "residual_norm": 0.6798
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.2,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9477,
+        "residual_norm": 0.8232
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9759,
+        "residual_norm": 0.7243
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9367,
+        "residual_norm": 0.7821
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.4,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9484,
+        "residual_norm": 0.9892
+      },
+      {
+        "mixing": {
+          "diversity": 0.4,
+          "indie_author": 0.6,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9836,
+        "residual_norm": 0.8171
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.4
+        },
+        "projection_cosine": 0.93,
+        "residual_norm": 1.1399
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.8022,
+        "residual_norm": 0.9747
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.4,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.797,
+        "residual_norm": 0.8656
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9255,
+        "residual_norm": 0.982
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.8486,
+        "residual_norm": 0.826
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.0,
+          "premium_seller": 0.4,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9607,
+        "residual_norm": 0.8688
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9585,
+        "residual_norm": 0.9346
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.861,
+        "residual_norm": 1.1115
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.2,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9737,
+        "residual_norm": 0.698
+      },
+      {
+        "mixing": {
+          "diversity": 0.6,
+          "indie_author": 0.4,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9705,
+        "residual_norm": 1.1128
+      },
+      {
+        "mixing": {
+          "diversity": 0.8,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.2
+        },
+        "projection_cosine": 0.9498,
+        "residual_norm": 1.1817
+      },
+      {
+        "mixing": {
+          "diversity": 0.8,
+          "indie_author": 0.0,
+          "premium_seller": 0.0,
+          "publisher": 0.2,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9262,
+        "residual_norm": 0.9758
+      },
+      {
+        "mixing": {
+          "diversity": 0.8,
+          "indie_author": 0.0,
+          "premium_seller": 0.2,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9601,
+        "residual_norm": 0.9581
+      },
+      {
+        "mixing": {
+          "diversity": 0.8,
+          "indie_author": 0.2,
+          "premium_seller": 0.0,
+          "publisher": 0.0,
+          "reader": 0.0
+        },
+        "projection_cosine": 0.9878,
+        "residual_norm": 0.7581
+      }
+    ]
+  },
+  "degradation": {
+    "regret_ranking": {
+      "reader": 0.194,
+      "publisher": 8.2797,
+      "indie_author": 2.1818,
+      "premium_seller": 1.545,
+      "diversity": 1.7972
+    },
+    "proxy_scores": {
+      "diversity": 0.0,
+      "indie_author": 0.0,
+      "premium_seller": 0.0,
+      "publisher": 0.0,
+      "reader": 0.0
+    },
+    "regret_order": [
+      "publisher",
+      "indie_author",
+      "diversity",
+      "premium_seller",
+      "reader"
+    ],
+    "proxy_order": [
+      "diversity",
+      "indie_author",
+      "premium_seller",
+      "publisher",
+      "reader"
+    ],
+    "ranking_matches": false
+  },
+  "bootstrap": {
+    "baseline_regret": 3.3527,
+    "per_n": [
+      {
+        "n_pairs": 0,
+        "regret_mean": 3.3527,
+        "regret_ci_lo": 3.3527,
+        "regret_ci_hi": 3.3527,
+        "recovery_mean": 0.0,
+        "recovery_ci_lo": 0.0,
+        "recovery_ci_hi": 0.0,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 25,
+        "regret_mean": 0.3032,
+        "regret_ci_lo": 0.2044,
+        "regret_ci_hi": 0.4033,
+        "recovery_mean": 0.9096,
+        "recovery_ci_lo": 0.8797,
+        "recovery_ci_hi": 0.939,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 50,
+        "regret_mean": 0.1198,
+        "regret_ci_lo": 0.0419,
+        "regret_ci_hi": 0.1974,
+        "recovery_mean": 0.9643,
+        "recovery_ci_lo": 0.9411,
+        "recovery_ci_hi": 0.9875,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 100,
+        "regret_mean": -0.5722,
+        "regret_ci_lo": -0.7813,
+        "regret_ci_hi": -0.3703,
+        "recovery_mean": 1.1707,
+        "recovery_ci_lo": 1.1104,
+        "recovery_ci_hi": 1.233,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 200,
+        "regret_mean": -1.0289,
+        "regret_ci_lo": -1.1518,
+        "regret_ci_hi": -0.8798,
+        "recovery_mean": 1.3069,
+        "recovery_ci_lo": 1.2624,
+        "recovery_ci_hi": 1.3435,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 500,
+        "regret_mean": -1.3969,
+        "regret_ci_lo": -1.4453,
+        "regret_ci_hi": -1.349,
+        "recovery_mean": 1.4167,
+        "recovery_ci_lo": 1.4024,
+        "recovery_ci_hi": 1.4311,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 1000,
+        "regret_mean": -1.5243,
+        "regret_ci_lo": -1.5536,
+        "regret_ci_hi": -1.492,
+        "recovery_mean": 1.4546,
+        "recovery_ci_lo": 1.445,
+        "recovery_ci_hi": 1.4634,
+        "n_seeds": 20
+      },
+      {
+        "n_pairs": 2000,
+        "regret_mean": -1.6537,
+        "regret_ci_lo": -1.6828,
+        "regret_ci_hi": -1.6245,
+        "recovery_mean": 1.4933,
+        "recovery_ci_lo": 1.4845,
+        "recovery_ci_hi": 1.5019,
+        "n_seeds": 20
+      }
+    ],
+    "n25_significant": true
+  }
+}

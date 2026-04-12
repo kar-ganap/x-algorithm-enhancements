@@ -774,7 +774,7 @@
       ],
       "n_seeds": 5,
       "top_k": 10,
-      "target": "user"
+      "target": "reader"
     },
     "points": [
       {
@@ -845,5 +845,5 @@
       }
     ]
   },
-  "total_time_seconds": 4242.6
+  "total_time_seconds": 5224.7
 }

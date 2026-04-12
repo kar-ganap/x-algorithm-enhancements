@@ -322,7 +322,7 @@ def main():
                 "n_values": [25, 50, 100, 200, 500, 2000],
                 "n_seeds": len(SEEDS),
                 "top_k": TOP_K,
-                "target": "user",
+                "target": ds.spec.primary_stakeholder_order[0],
             },
             "points": concentration_results,
         },
