@@ -3136,7 +3136,457 @@
           "all_total": 20
         }
       }
+    },
+    "ml-1m": {
+      "pairs": [
+        {
+          "target": "user",
+          "hidden": "platform",
+          "raw_cos": 0.9526,
+          "trained_cos": 0.9372,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.282823,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.287826,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.275135,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.254024,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.340134,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 1.139755,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 1.970004,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 1.147461,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.41747,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.130029,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.059892,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "user",
+          "hidden": "diversity",
+          "raw_cos": 0.0707,
+          "trained_cos": -0.176,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.174917,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.41149,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.39955,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.392442,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.40921,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.509694,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.521723,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.313025,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.142019,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.051046,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.024584,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "platform",
+          "hidden": "user",
+          "raw_cos": 0.9526,
+          "trained_cos": 0.9372,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.215019,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.447649,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.434679,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.349476,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.354965,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.767313,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 1.308581,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.849186,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.311958,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.094714,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.043201,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "platform",
+          "hidden": "diversity",
+          "raw_cos": -0.0717,
+          "trained_cos": -0.3097,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.241468,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.426205,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.413089,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.399732,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.436853,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.513563,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.569581,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.380632,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.165753,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.057186,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.027242,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "user",
+          "raw_cos": 0.0707,
+          "trained_cos": -0.176,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.15148,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.26337,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.265218,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.269455,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.198413,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.227237,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.248649,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.011817,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.045573,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.032775,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.018841,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "platform",
+          "raw_cos": -0.0717,
+          "trained_cos": -0.3097,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.399782,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.380187,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.381608,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.416192,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.386146,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.146626,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.206244,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.057445,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.089764,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.052293,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.029044,
+              "match_trn": true
+            }
+          }
+        }
+      ],
+      "mechanism_summary": {
+        "top-10": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.001": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.01": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.05": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.1": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.2": {
+          "strong_match": 3,
+          "strong_total": 4,
+          "all_match": 4,
+          "all_total": 6
+        },
+        "T=0.5": {
+          "strong_match": 3,
+          "strong_total": 4,
+          "all_match": 4,
+          "all_total": 6
+        },
+        "T=1.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 5,
+          "all_total": 6
+        },
+        "T=2.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=5.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=10.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        }
+      }
     }
   },
-  "total_time_seconds": 637.0
+  "total_time_seconds": 134.2
 }

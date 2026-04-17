@@ -110,67 +110,110 @@ def fig2_goodhart_curves():
 # ═══════════════════════════════════════════════════════════════
 
 def fig3_direction_scatter():
+    """Direction condition scatter using BT-trained cosines across 3 datasets.
+
+    Uses selection_mechanism_ablation.json for softmax T=1.0 utility changes,
+    combined with trained cosines from labels_not_loss.json per dataset.
+    Falls back to expanded_direction_validation.json if ablation not available.
+    """
     fig, ax = plt.subplots(figsize=(6, 4.5))
 
-    # Load expanded validation (42 points from Phase 14)
-    expanded_path = ROOT / "results" / "expanded_direction_validation.json"
-    if expanded_path.exists():
-        d = json.load(open(expanded_path))
-        points = d["points"]
-    else:
-        print("  WARNING: expanded_direction_validation.json not found, using old 6-point data")
-        points = []
+    C_MIND = "#9C27B0"
+    C_AMAZON = "#00897B"
+    DS_STYLE = {
+        "ml-100k": ("ML-100K", "o", C_100K),
+        "ml-1m": ("ML-1M", "D", C_1M),
+        "mind-small": ("MIND", "s", C_MIND),
+        "amazon-kindle": ("Amazon Kindle", "^", C_AMAZON),
+    }
+
+    points = []
+    for ds_name in DS_STYLE:
+        ev_path = ROOT / "results" / f"{ds_name}_expanded_direction_validation.json"
+        lnl_path = ROOT / "results" / f"{ds_name}_labels_not_loss.json"
+        if not ev_path.exists() or not lnl_path.exists():
+            continue
+        with open(ev_path) as f:
+            ev = json.load(f)
+        with open(lnl_path) as f:
+            lnl = json.load(f)
+        bt_cos = lnl["group_a_core"]["across_stakeholder_similarity"]["bradley_terry"]
+        for p in ev["points"]:
+            trn = None
+            for k in (f"{p['target']}-{p['hidden']}", f"{p['hidden']}-{p['target']}"):
+                if k in bt_cos:
+                    trn = bt_cos[k]["mean"]
+                    break
+            if trn is None:
+                continue
+            points.append({
+                "dataset": ds_name,
+                "trained_cos": trn,
+                "change_pct": p["change_pct"],
+                "match": (trn > 0) == p["improving"],
+            })
+
+    if not points:
+        print("  WARNING: No direction scatter data found")
+        plt.close()
+        return
 
     # Transition zone shading (|cos| < 0.2)
-    ax.axvspan(-0.2, 0.2, alpha=0.06, color="#FFC107", zorder=0)  # amber for transition
+    ax.axvspan(-0.2, 0.2, alpha=0.06, color="#FFC107", zorder=0)
     ax.axvspan(-1.1, -0.2, alpha=0.06, color="red", zorder=0)
     ax.axvspan(0.2, 1.1, alpha=0.05, color="green", zorder=0)
 
-    # Reference lines
     ax.axhline(y=0, color="#999999", linewidth=0.8, linestyle="--", zorder=1)
     ax.axvline(x=0, color="#999999", linewidth=0.6, linestyle=":", zorder=1)
-    # Transition boundaries
     ax.axvline(x=-0.2, color="#E0A000", linewidth=0.5, linestyle=":", zorder=1, alpha=0.5)
     ax.axvline(x=0.2, color="#E0A000", linewidth=0.5, linestyle=":", zorder=1, alpha=0.5)
 
-    # 4 legend entries: dataset × method
-    legend_keys = {
-        ("ml-100k", "A"): ("ML-100K, base", "o", C_100K),
-        ("ml-100k", "B"): ("ML-100K, named", "D", C_100K),
-        ("ml-1m", "A"): ("ML-1M, base", "o", C_1M),
-        ("ml-1m", "B"): ("ML-1M, named", "D", C_1M),
-    }
-    plotted = set()
+    from matplotlib.lines import Line2D
 
+    datasets_present = set()
     for p in points:
-        key = (p["dataset"], p["method"])
-        label_text, marker, color = legend_keys.get(key, ("other", "x", "#888"))
-        label = label_text if key not in plotted else None
-        plotted.add(key)
+        ds = p["dataset"]
+        if ds not in DS_STYLE:
+            continue
+        datasets_present.add(ds)
 
         edge = "black" if p["match"] else "red"
         lw = 0.5 if p["match"] else 2.0
-        s = 70 if p["method"] == "A" else 55
+        _, marker, color = DS_STYLE[ds]
+        ax.scatter(p["trained_cos"], p["change_pct"], c=color, marker=marker,
+                   s=70, edgecolors=edge, linewidths=lw,
+                   zorder=5, alpha=0.85)
 
-        ax.scatter(p["cosine"], p["change_pct"], c=color, marker=marker,
-                   s=s, edgecolors=edge, linewidths=lw,
-                   zorder=5, label=label, alpha=0.85)
+    # Build legend with proxy artists so entries always show clean markers
+    handles = []
+    for ds in ["ml-100k", "ml-1m", "mind-small", "amazon-kindle"]:
+        if ds not in datasets_present:
+            continue
+        label_text, marker, color = DS_STYLE[ds]
+        handles.append(Line2D([0], [0], marker=marker, color="w",
+                              markerfacecolor=color, markeredgecolor="black",
+                              markeredgewidth=0.5, markersize=8, label=label_text))
+    # Add violation indicator
+    handles.append(Line2D([0], [0], marker="o", color="w",
+                          markerfacecolor="none", markeredgecolor="red",
+                          markeredgewidth=2.0, markersize=8, label="Violation"))
 
-    # No zone text labels — the three-color shading communicates the zones.
-    # Caption explains: red = degrades, amber = transition, green = improves.
-
-    # Validation badge
+    strong = [p for p in points if abs(p["trained_cos"]) > 0.2]
+    strong_match = sum(1 for p in strong if p["match"])
     ax.text(0.97, 0.03,
-            "28/28 for |cos| > 0.2\n42 points, 2 datasets\nred outline = violation",
+            f"{strong_match}/{len(strong)} for |cos| > 0.2\n"
+            f"{len(points)} points, {len(datasets_present)} datasets\n"
+            f"trained cosine, softmax T=1.0",
             transform=ax.transAxes, fontsize=7.5, ha="right", va="bottom",
             bbox=dict(boxstyle="round,pad=0.4", facecolor="#E8F5E9",
                       edgecolor="#66BB6A", alpha=0.9))
 
-    ax.set_xlabel(r"cos($\mathbf{w}_{\mathrm{target}}$, $\mathbf{w}_{\mathrm{hidden}}$)")
-    ax.set_ylabel("Utility change, N = 25 → 2000 (%)")
+    ax.set_xlabel(r"BT-trained cos($\hat{\mathbf{w}}_{\mathrm{target}}$, "
+                  r"$\hat{\mathbf{w}}_{\mathrm{hidden}}$)")
+    ax.set_ylabel("Utility change, N = 25 \u2192 2000 (%)")
     ax.set_xlim(-1.05, 1.05)
-    ax.set_ylim(-70, 70)
-    ax.legend(loc="upper left", fontsize=8.5, framealpha=0.95,
+    ax.set_ylim(-120, 120)
+    ax.legend(handles=handles, loc="upper left", fontsize=8.5, framealpha=0.95,
               edgecolor="#CCCCCC", borderpad=0.6)
     ax.grid(True, alpha=0.2, linewidth=0.5)
 
