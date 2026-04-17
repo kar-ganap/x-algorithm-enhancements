@@ -191,7 +191,7 @@ but does not exactly recover the target direction.
 
 \subsection{Datasets and Stakeholders}
 
-We use three datasets spanning two feature spaces.
+We use five datasets spanning four feature spaces (\cref{tab:datasets}).
 
 \paragraph{Synthetic benchmark.}
 
@@ -289,7 +289,61 @@ strongly aligned ($\cos \approx +0.95$), while both oppose diversity
 ($\cos \approx -0.3$ to $-0.2$). Five additional stakeholders with
 real-world analogs (creator, advertiser, niche enthusiast,
 mainstream, content moderator) are introduced in \cref{sec:direction}
-to expand validation coverage.
+to expand validation coverage (MovieLens only; Method~B).
+
+\paragraph{MIND-small.}
+
+For cross-domain validation on news recommendation, we use the
+MIND-small dataset~\cite{wu2020mind}: 12{,}261 news articles with
+click/impression data. Each article has a $D = 35$ feature vector:
+17 top-level news categories (one-hot), 14 top subcategories
+(one-hot), and 4 article quality signals (title length, abstract
+length, entity count, word count; normalized). Five domain-native
+stakeholders are defined:
+\textbf{reader} (click-derived category preferences),
+\textbf{publisher} (volume and reach),
+\textbf{advertiser} (eyeball concentration on popular categories),
+\textbf{journalist} (editorial quality signals, investigative
+category preference), and
+\textbf{civic\_diversity} (anti-concentration across categories,
+analogous to MovieLens diversity).
+Stakeholder weight construction details are in \cref{app:stakeholders}.
+
+\paragraph{Amazon Kindle Store.}
+
+For e-commerce validation, we use the Amazon Kindle Store
+5-core dataset~\cite{ni2019justifying}: 17{,}425 books with
+$D = 32$ features (20 genre categories, 4 price-tier indicators,
+3 review-volume bins, 3 sentiment-polarity features, 2 text-length
+bins). Five stakeholders:
+\textbf{reader} (genre preferences from review history),
+\textbf{publisher} (catalog breadth and volume),
+\textbf{indie\_author} (long-tail genre preference, anti-bestseller),
+\textbf{premium\_seller} (price and review-quality signals), and
+\textbf{diversity} (anti-concentration, analogous to MovieLens).
+Notably, premium\_seller's features occupy slots disjoint from all
+other stakeholders, producing 3 pairs with raw cosine exactly~$0.000$
+--- a unique probe of the direction condition at the boundary.
+
+\begin{table}[t]
+  \caption{Dataset summary. $K$: number of stakeholders.
+    $D$: feature dimensionality. Pool: content items after filtering.
+    Feature type describes the dominant structure of $\mathbf{p}(c)$.}
+  \label{tab:datasets}
+  \centering\small
+  \begin{tabular}{llrrrl}
+    \toprule
+    \textbf{Dataset} & \textbf{Domain} & $\boldsymbol{K}$ &
+      $\boldsymbol{D}$ & \textbf{Pool} & \textbf{Feature type} \\
+    \midrule
+    Synthetic     & Social media & 3 & 18 & 500   & Action probs \\
+    ML-100K       & Movies       & 3 & 19 & 1{,}305 & Genre $\times$ rating \\
+    ML-1M         & Movies       & 3 & 19 & 3{,}347 & Genre $\times$ rating \\
+    MIND-small    & News         & 5 & 35 & 12{,}261 & Category one-hot \\
+    Amazon Kindle & E-commerce   & 5 & 32 & 17{,}425 & Genre + metadata \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{Evaluation}
 \label{sec:eval}
@@ -529,8 +583,109 @@ discrepancy in \cref{sec:hausdorff}.
 \label{sec:lowrank}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Labels-not-loss, projection cos > 0.97, composition
-\textit{[Low-rank explanation placeholder.]}
+The direction condition's predictive power rests on BT-learned weight
+vectors being geometrically constrained. We present two lines of
+evidence: (1)~the loss function is irrelevant given labels, and
+(2)~scalarized weight vectors lie approximately in the span of
+per-stakeholder vectors.
+
+\subsection{Labels, Not Loss}
+
+If two loss functions train on identical preference pairs, do they
+converge to the same weights? We train Bradley-Terry, margin-BT
+($m{=}0.5$), and calibrated-BT ($\lambda{=}1.0$) on each stakeholder
+with 5~seeds and measure the \emph{within-loss cosine}: the mean
+pairwise cosine similarity of weight vectors trained by different
+losses on the same labels.
+
+\begin{table}[t]
+  \caption{Within-loss cosine similarity (mean $\pm$ std across 5
+    seeds). Values above 0.90 indicate that the loss function has
+    negligible effect on the learned direction given identical labels.}
+  \label{tab:within_loss}
+  \centering\small
+  \begin{tabular}{llr}
+    \toprule
+    \textbf{Dataset} & \textbf{Stakeholder} &
+      \textbf{Within-loss cos} \\
+    \midrule
+    ML-100K & user      & $0.957 \pm 0.005$ \\
+            & platform  & $0.987 \pm 0.003$ \\
+            & diversity & $0.958 \pm 0.006$ \\
+    \midrule
+    MIND    & reader      & $0.911 \pm 0.007$ \\
+            & publisher   & $0.944 \pm 0.006$ \\
+            & advertiser  & $0.965 \pm 0.006$ \\
+            & journalist  & $0.847 \pm 0.007$ \\
+            & civic\_div. & $0.824 \pm 0.019$ \\
+    \midrule
+    Amazon  & reader          & $0.940 \pm 0.005$ \\
+            & publisher       & $0.961 \pm 0.006$ \\
+            & indie\_author   & $0.890 \pm 0.016$ \\
+            & premium\_seller & $0.975 \pm 0.003$ \\
+            & diversity       & $0.909 \pm 0.008$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\Cref{tab:within_loss} shows the results. On MovieLens ($D{=}19$),
+all three stakeholders exceed 0.95: the loss function is
+essentially irrelevant. On MIND and Amazon ($D \geq 32$), 11 of~13
+stakeholders exceed 0.89. The two exceptions---MIND journalist
+(0.847) and civic\_diversity (0.824)---have the sparsest weight
+vectors in the dataset (12 and~17 nonzero dimensions out of~35
+respectively). The core claim holds: \emph{stakeholder
+differentiation comes from the training labels, not the loss
+function}, with the qualification that very sparse stakeholders on
+high-dimensional features show weaker convergence.
+
+\subsection{Low-Rank Composition}
+
+If BT-learned weight vectors are constrained to a low-dimensional
+subspace, then the cosine geometry that drives the direction condition
+is itself low-dimensional. We test this by training scalarized models
+(BT on mixed-stakeholder preferences) and projecting each learned
+weight vector onto the span of the per-stakeholder weight vectors.
+
+\begin{table}[t]
+  \caption{Composition analysis: scalarized weight vectors projected
+    onto the per-stakeholder span. Higher projection cosine indicates
+    tighter low-rank structure.}
+  \label{tab:composition}
+  \centering\small
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Dataset} & $\boldsymbol{K}$ & $\boldsymbol{D}$ &
+      \textbf{Mean proj.\ cos} & \textbf{Frac.\ $> 0.95$} \\
+    \midrule
+    ML-100K       & 3 & 19 & 0.979 & 21/21 \\
+    MIND-small    & 5 & 35 & 0.893 & 30/121 \\
+    Amazon Kindle & 5 & 32 & 0.877 & 31/121 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The low-rank structure is present on all datasets but varies in
+tightness (\cref{tab:composition}). On MovieLens, nearly all
+scalarized models project onto the 3-stakeholder span with cosine
+above~0.95. On MIND and Amazon, the mean projection cosine drops to
+${\sim}0.88$---still far above the random baseline for a
+$K$-dimensional subspace in $D$-dimensional space (${\sim}0.6$), but
+no longer tight enough to claim that scalarization is fully contained
+in the per-stakeholder span. The weaker structure on high-$K$,
+high-$D$ datasets is consistent with the additional degrees of freedom
+available to scalarized training: with 5~stakeholders and 32--35
+features, the mixing-weight simplex is large enough for the optimizer
+to find directions outside the per-stakeholder span.
+
+The practical implication: the direction condition's success is not
+contingent on an exact low-rank decomposition. Even on datasets where
+the projection cosine is~0.88, the trained cosine between stakeholders
+is sufficient to predict hidden utility direction (32/32 under softmax,
+\cref{sec:direction}). The low-rank structure \emph{explains} why the
+condition works---BT training is geometrically constrained---but the
+condition holds more broadly than the low-rank claim alone would
+predict.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Practical Implications}
@@ -543,36 +698,41 @@ If the direction condition identifies \emph{which} hidden
 stakeholders are harmed, a natural follow-up is: how much data
 from the hidden stakeholder is needed to mitigate the harm?
 
-We run a leave-one-stakeholder-out (LOSO) experiment on both
-MovieLens datasets. The diversity stakeholder is hidden; the
-platform scorer is trained on user and platform data only. At
-$N = 0$ hidden-stakeholder pairs, the LOSO regret (utility gap
-from full-information frontier) is the baseline harm. We then add
-$N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder preference
-pairs and retrain.
+We run leave-one-stakeholder-out (LOSO) experiments across three
+real datasets (ML-100K, MIND, Amazon Kindle), hiding each
+stakeholder in turn. At $N = 0$ hidden-stakeholder preference pairs,
+the LOSO regret (utility gap from the full-information Pareto
+frontier) is the baseline harm. We then add
+$N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder pairs and
+retrain, measuring the \emph{recovery}: the fraction of baseline
+regret eliminated. We report the preference budget $N_{50\%}$ and
+$N_{80\%}$ --- the minimum $N$ needed to reach 50\% and 80\%
+recovery, interpolated across the sweep.
 
-\Cref{fig:budget} shows the results. On ML-100K, 25 preference
-pairs reduce regret from 3.26 to 1.42---a 56\% recovery of the
-hidden stakeholder's harm. On ML-1M, 25 pairs achieve 46\%
-recovery (regret from 4.66 to 2.50). Across both datasets, 25
-pairs recover approximately 50\% of hidden stakeholder harm (95\%
-CI from 20 seeds: $[40\%, 64\%]$). By 100 pairs, regret
-approaches zero on ML-100K and drops below 1.0 on ML-1M.
+Across 13 (dataset, hidden stakeholder) configurations, the
+\textbf{median $N_{50\%}$ is 33~pairs} and the \textbf{median
+$N_{80\%}$ is 104~pairs}. The practical cost is modest: 33
+preference pairs can be collected from 7 annotators making 5
+pairwise comparisons each. For most hidden stakeholders, a
+modest investment detects and substantially mitigates hidden harm.
 
-The practical cost is modest: 25 preference pairs can be collected
-from 5 annotators making 5 pairwise comparisons each. For a
-platform deploying a new recommendation objective, this represents
-a minimal investment to detect whether a hidden stakeholder is
-being harmed.
+The variance is large. On Amazon Kindle, hiding reader requires
+only 14~pairs for 50\% recovery, while hiding publisher requires
+368---reflecting publisher's strong anti-alignment with every other
+stakeholder ($\cos < -0.5$ with 2 of~4 others). One configuration
+(ML-100K, hide user) does not reach 50\% within the 500-pair sweep,
+because the remaining stakeholders (platform, diversity) already
+proxy for user well ($\cos(\text{user}, \text{platform}) = +0.95$).
+The full per-stakeholder breakdown is in \cref{app:data_budget}.
 
+% TODO: Regenerate fig5 with N-for-target framing across datasets
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig5_data_budget.pdf}
-  \caption{Data budget for hidden stakeholder recovery. Regret
-    decreases monotonically with hidden-stakeholder preference
-    pairs. 25 pairs recover ${\sim}50\%$ of harm; 100 pairs
-    approach zero regret. Shaded bands: $\pm 1$ std across 20
-    seeds.}
+  \caption{Data budget for hidden stakeholder recovery across
+    13~configurations on 3~datasets. Median budget: 33~pairs for
+    50\% recovery, 104~pairs for 80\%. Worst case: $> 500$ pairs
+    for stakeholders with strong substitutes in the observed set.}
   \label{fig:budget}
 \end{figure}
 
