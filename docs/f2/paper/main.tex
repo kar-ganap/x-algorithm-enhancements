@@ -134,15 +134,26 @@ that imperfectly represents one stakeholder, additional training data
 can \emph{worsen} outcomes for other stakeholders---a manifestation of
 Goodhart's law~\cite{casper2023open} in the multi-stakeholder setting.
 
-This paper identifies a precise condition governing when this occurs.
-In Bradley-Terry preference learning with linear utility, the sign of
-the cosine between the optimization target's trained weight vector and
-a hidden stakeholder's trained weight vector determines whether more
-data helps or hurts the hidden stakeholder. We call this the
-\emph{directional Goodhart condition} and validate it on 32
-strong-cosine data points across four datasets---MovieLens (movie
-recommendations), MIND (news), and Amazon Kindle
-(e-commerce)---spanning 13 stakeholders and three feature families.
+This multi-stakeholder phenomenon is qualitatively different from
+single-stakeholder Goodhart, where a proxy is correlated with the
+true objective but diverges under optimization pressure. In that
+setting, one cannot usually predict ex-ante \emph{which} data points
+will cause harm. In the multi-stakeholder setting, the geometric
+structure of utility space introduces a directional object---the
+cosine between stakeholder weight vectors---that enables exactly this
+prediction. The cosine sign determines which stakeholders are
+systematically vulnerable, and this can be checked before any
+additional data is collected.
+
+This paper formalizes this insight as the \emph{directional Goodhart
+condition}. In Bradley-Terry preference learning with linear utility,
+the sign of the cosine between the optimization target's trained
+weight vector and a hidden stakeholder's trained weight vector
+determines whether more data helps or hurts the hidden stakeholder.
+We validate the condition on 32 strong-cosine data points across four
+datasets---MovieLens-100K, MovieLens-1M (movies), MIND-small (news),
+and Amazon Kindle (e-commerce)---spanning 13 stakeholders and three
+feature families.
 
 Three findings emerge from the cross-dataset analysis:
 \begin{enumerate}
@@ -866,6 +877,19 @@ with learned embeddings, making the same audit impossible without
 additional disclosure: the cosine between the system's implicit
 optimization target and a societal utility direction cannot be
 computed from the released code alone.
+
+\emph{Note on trained vs.\ raw cosines.} The direction condition
+requires BT-trained cosines (\cref{sec:direction}), which raises the
+question: can auditors use raw utility weights instead? On the
+synthetic 18-action space ($D{=}18$, dense), raw and trained cosines
+agree closely, so the audit toolkit applies directly. On
+high-dimensional sparse features ($D \geq 32$), auditors would need
+either BT training results or platform-provided trained weight
+vectors. For regulatory contexts, the practical recommendation is: if
+the platform discloses an explicit weight vector, the raw-cosine audit
+is a valid first pass; if the cosine is near the boundary
+($|\cos| < 0.3$), BT training should be performed to confirm the
+sign.
 
 \begin{figure}[t]
   \centering
