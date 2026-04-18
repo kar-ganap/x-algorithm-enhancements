@@ -179,6 +179,8 @@ reduces Goodhart risk to a single observable: whether the platform
 treats negative signals (blocks, reports) as positive engagement. We
 provide an audit toolkit, a data budget analysis, and practical
 guidance for platform transparency under the EU Digital Services Act.
+All code, trained models, and result artifacts are available at
+\url{https://github.com/kar-ganap/x-algorithm-enhancements}.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Background and Related Work}
@@ -997,8 +999,8 @@ behavior on pools of millions of items.
 \paragraph{Linear utility.}
 All stakeholder utilities are linear in content features
 (\cref{eq:utility}). Real stakeholder preferences may exhibit
-diminishing returns, thresholds, or complementarities. Prior work on
-this codebase tested concave and threshold utility families and found
+diminishing returns, thresholds, or complementarities. Preliminary
+tests with concave and threshold utility families found
 the labels-not-loss claim robust (within-loss cos $> 0.92$), but the
 direction condition itself has not been validated under nonlinear
 utilities.
@@ -1101,36 +1103,44 @@ features only (disjoint from genre slots, producing exact-zero raw
 cosines with 3 other stakeholders).
 \textbf{Diversity}: anti-concentration across genres.
 
-Full weight vectors are available in the repository at
-\texttt{enhancements/data/\{mind,amazon\}\_stakeholders.py}.
+Full weight vectors and construction code are available in the
+accompanying repository.
 
 \section{Cosine Matrices}
 \label{app:cosines}
 
-Raw and BT-trained pairwise cosines for all four real datasets are
-available in the result files
-\texttt{results/\{dataset\}\_labels\_not\_loss.json} under
-\texttt{group\_a\_core.across\_stakeholder\_similarity}. Key
-observations: on MovieLens, raw and trained cosines agree within
-$\pm 0.05$. On MIND, 3 of~10 pairs flip sign. On Amazon, 1 of~10
-flips. The 3 Amazon orthogonal-by-construction pairs (involving
-premium\_seller) stay within $|0.05|$ of zero under training.
+Raw stakeholder cosines are computed from the weight definitions in
+\cref{app:stakeholders}. BT-trained cosines are the mean pairwise
+cosine of weight vectors learned by Bradley-Terry across 5~random
+seeds with $N = 2{,}000$ training pairs.
+Key observations: on MovieLens ($D{=}19$, dense), raw and trained
+cosines agree within $\pm 0.05$. On MIND ($D{=}35$, sparse), 3
+of~10 pairs flip sign between raw and trained. On Amazon ($D{=}32$),
+1 of~10 flips. The 3~Amazon orthogonal-by-construction pairs
+(involving premium\_seller) stay within $|0.05|$ of zero under
+training, confirming BT does not manufacture cosine from nothing.
 
 \section{Direction Condition Per-Pair Results}
 \label{app:direction_pairs}
 
-The 52 data points underlying \cref{fig:scatter} (4 datasets,
-Method~A only; Method~B adds 30 MovieLens-specific points) are
-available in \texttt{results/\{dataset\}\_expanded\_direction\_%
-validation.json}. Each entry records target, hidden, raw cosine,
-utility change (N=25 to N=2000), and match status.
+The 52 data points underlying \cref{fig:scatter} comprise Method~A
+(target rotation) across all 4~datasets: 6~pairs each on ML-100K and
+ML-1M (3 stakeholders), 20~pairs each on MIND and Amazon
+(5~stakeholders). Each data point records the target stakeholder,
+hidden stakeholder, BT-trained cosine, percentage utility change from
+$N = 25$ to $N = 2{,}000$, and whether the observed direction matches
+the cosine-sign prediction. An additional 30 MovieLens-specific
+Method~B data points (5 named stakeholders $\times$ 3 targets
+$\times$ 2 datasets) are available in the repository but are not
+included in the cross-dataset pooled count.
 
 \section{Data Budget Full Table}
 \label{app:data_budget}
 
-The 13 (dataset, hidden stakeholder) recovery sweeps are in
-\texttt{results/\{dataset\}\_data\_budget\_all\_hidden.json}. Key
-values (interpolated from the sweep):
+For each of the 13 (dataset, hidden stakeholder) configurations, we
+sweep hidden-stakeholder preference pairs
+$N \in \{0, 25, 50, 100, 200, 500\}$ with 20~seeds and interpolate
+the minimum $N$ for 50\% and 80\% regret recovery:
 
 \begin{table}[h]
   \centering\small
@@ -1167,25 +1177,46 @@ values (interpolated from the sweep):
 \section{Temperature Sweep}
 \label{app:temp_sweep}
 
-Match rates (trained cosine, $|\cos| > 0.2$) under softmax selection
-at varying temperatures, from hard ($T \to 0$) to soft ($T = 10$).
-Full data in \texttt{results/selection\_mechanism\_ablation.json}.
+Direction-condition match rates (BT-trained cosine, $|\cos| > 0.2$)
+under softmax selection at varying temperatures:
+
+\begin{table}[h]
+  \centering\small
+  \caption{Match rate at $|\text{trained cos}| > 0.2$ by selection
+    temperature. Hard top-10 is shown for comparison.}
+  \label{tab:temp_sweep}
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Selection} & \textbf{ML-100K} & \textbf{MIND} &
+      \textbf{Amazon} & \textbf{Pooled} \\
+    \midrule
+    Hard top-10 & 6/6 & 9/14 & 8/8 & 23/28 \\
+    $T = 0.1$   & 6/6 & 11/14 & 8/8 & 25/28 \\
+    $T = 0.5$   & 5/6 & 11/14 & 8/8 & 24/28 \\
+    $T = 1.0$   & 6/6 & 14/14 & 8/8 & 28/28 \\
+    $T = 2.0$   & 6/6 & 14/14 & 8/8 & 28/28 \\
+    $T = 10.0$  & 6/6 & 14/14 & 8/8 & 28/28 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 The transition from sub-100\% to 100\% on MIND occurs between
 $T = 0.5$ and $T = 1.0$. MovieLens and Amazon remain at 100\% across
-all temperatures.
+all temperatures (except one seed-noise fluctuation on ML-100K at
+$T = 0.5$).
 
 \section{Hyperparameter Robustness}
 \label{app:hyperparameter}
 
-Group~B of the labels-not-loss experiment tests whether the choice of
-loss hyperparameters affects the learned weight direction. Margin-BT
+The labels-not-loss finding (\cref{sec:lowrank}) claims that the loss
+function is irrelevant given identical training labels. We test
+robustness to loss hyperparameters by training margin-BT
 ($m \in \{0.1, 0.5, 1.0\}$) and calibrated-BT
-($\lambda \in \{0.1, 1.0, 5.0\}$) are trained on each stakeholder.
-Across all 13~stakeholders and 3~datasets, the within-stakeholder
-cosine between standard BT and each variant exceeds~0.93, confirming
-that the labels-not-loss finding is robust to hyperparameter choice.
-Full results in
-\texttt{results/\{dataset\}\_labels\_not\_loss.json},
-key \texttt{group\_b\_hyperparameter}.
+($\lambda \in \{0.1, 1.0, 5.0\}$) on each stakeholder and computing
+the cosine between the variant's learned weights and the standard BT
+weights (same stakeholder, same seed). Across all 13~stakeholders and
+3~datasets, the within-stakeholder cosine between standard BT and each
+variant exceeds~0.93, confirming that the finding is robust to
+hyperparameter choice.
 
 \end{document}
