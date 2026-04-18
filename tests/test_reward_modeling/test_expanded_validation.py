@@ -79,3 +79,51 @@ class TestMethodA:
         cos_user_div = cosine_sim(configs["user"], configs["diversity"])
         cos_plat_div = cosine_sim(configs["platform"], configs["diversity"])
         assert abs(cos_user_div - cos_plat_div) > 0.05
+
+
+class TestMethodAMultiDataset:
+    """Test that Method A direction condition structure is valid across datasets.
+
+    Uses the dataset registry to load each available dataset and verify
+    that stakeholder configs produce well-formed cosine matrices. Does NOT
+    run BT training — just checks shapes and geometry.
+    """
+
+    @staticmethod
+    def _load_registry():
+        sys.path.insert(0, str(_root / "scripts"))
+        reg = _load("_dataset_registry", _root / "scripts" / "_dataset_registry.py")
+        return reg
+
+    @pytest.mark.parametrize("dataset_name", ["ml-100k", "mind-small", "amazon-kindle"])
+    def test_stakeholder_cosine_matrix(self, dataset_name):
+        reg = self._load_registry()
+        data_dir = _root / "data" / dataset_name
+        if not data_dir.exists():
+            pytest.skip(f"Data not available at {data_dir}")
+
+        ds = reg.load_dataset(dataset_name)
+        configs = ds.configs
+        names = list(ds.spec.primary_stakeholder_order)
+        K = len(names)
+
+        # All stakeholders have correct feature dimension
+        for name in names:
+            assert configs[name].shape == (ds.spec.feature_dim,), (
+                f"{dataset_name}/{name} wrong shape"
+            )
+
+        # Cosine matrix is K×K, symmetric, diagonal = 1
+        cos_matrix = np.zeros((K, K))
+        for i, a in enumerate(names):
+            for j, b in enumerate(names):
+                cos_matrix[i, j] = cosine_sim(configs[a], configs[b])
+
+        np.testing.assert_allclose(np.diag(cos_matrix), 1.0, atol=1e-6)
+        np.testing.assert_allclose(cos_matrix, cos_matrix.T, atol=1e-6)
+
+        # At least one pair should have cos < 0 (otherwise no Goodhart)
+        off_diag = cos_matrix[np.triu_indices(K, k=1)]
+        assert np.any(off_diag < 0), (
+            f"{dataset_name}: no negative cosine pairs — direction condition is trivial"
+        )
