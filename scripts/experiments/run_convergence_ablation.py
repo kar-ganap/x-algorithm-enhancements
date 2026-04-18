@@ -125,7 +125,7 @@ def measure_within_loss(ds, features, configs, stakeholder_names, noise_std):
     for s_name in stakeholder_names:
         per_seed_sims = []
         for seed in SEEDS:
-            seed_weights = [models[(s_name, l, seed)] for l in loss_configs]
+            seed_weights = [models[(s_name, loss, seed)] for loss in loss_configs]
             sims = []
             for i, j in combinations(range(len(seed_weights)), 2):
                 sims.append(cosine_sim(seed_weights[i], seed_weights[j]))
@@ -221,7 +221,7 @@ def main():
 
     t0 = time.time()
     ds = load_dataset(dataset_name)
-    pool, genres = ds.pool, ds.topics
+    pool, _topics = ds.pool, ds.topics
     configs = ds.configs
     stakeholder_names = list(ds.spec.primary_stakeholder_order)
 
@@ -267,7 +267,7 @@ def main():
         raw_strong_match = sum(p["raw_match"] for p in strong_raw)
         trn_strong_match = sum(p["trained_match"] for p in strong_trn)
 
-        print(f"  Direction condition match rates:")
+        print("  Direction condition match rates:")
         print(f"    Raw cos:     {raw_match}/{len(dc_pairs)} overall, "
               f"{raw_strong_match}/{len(strong_raw)} for |cos|>0.2")
         print(f"    Trained cos: {trn_match}/{len(dc_pairs)} overall, "
