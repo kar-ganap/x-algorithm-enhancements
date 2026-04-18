@@ -529,7 +529,7 @@ $\cos \approx 0$ where prediction is unreliable.
 
 \subsection{Empirical Validation}
 
-We validate the direction condition on 32 strong-cosine
+We validate \cref{prop:direction} on 32 strong-cosine
 ($|\cos| > 0.2$) data points across four datasets spanning three
 distinct feature families, using BT-trained cosines.
 
@@ -562,7 +562,9 @@ Pooled under softmax evaluation: 32 of 32 strong-cosine pairs match
 the predicted direction (100\%). Under hard top-$K$: 29 of 32 (91\%),
 with the 3 violations confined to one stakeholder on one dataset. In
 the transition zone ($|\cos| < 0.2$), prediction is less reliable,
-with violations concentrated near $\cos \approx 0$.
+with violations concentrated near $\cos \approx 0$. The full
+per-pair breakdown is in \cref{app:direction_pairs}; raw and trained
+cosine matrices are in \cref{app:cosines}.
 
 In each experiment, the target stakeholder's weights are perturbed
 with multiplicative Gaussian noise ($\sigma = 0.3$). BT models are
@@ -603,7 +605,7 @@ On MIND, hard top-10 matches the direction condition on 11 of~14
 strong-cosine pairs (79\%). At $T = 1.0$, the match rate rises to
 14/14 (100\%). On both MovieLens datasets and Amazon, both mechanisms
 give 100\% at $|\cos| > 0.2$. The transition occurs between
-$T = 0.5$ and $T = 1.0$.
+$T = 0.5$ and $T = 1.0$ (full sweep in \cref{app:temp_sweep}).
 
 The mechanism: hard top-$K$ concentrates on items where the target
 stakeholder scores highest. For hidden stakeholders with high utility
@@ -733,7 +735,8 @@ vectors in the dataset (12 and~17 nonzero dimensions out of~35
 respectively). The core claim holds: \emph{stakeholder
 differentiation comes from the training labels, not the loss
 function}, with the qualification that very sparse stakeholders on
-high-dimensional features show weaker convergence.
+high-dimensional features show weaker convergence. The finding is
+robust to loss hyperparameters (\cref{app:hyperparameter}).
 
 \subsection{Low-Rank Composition}
 
@@ -805,9 +808,9 @@ regret eliminated. We report the preference budget $N_{50\%}$ and
 $N_{80\%}$ --- the minimum $N$ needed to reach 50\% and 80\%
 recovery, interpolated across the sweep.
 
-Across 13 (dataset, hidden stakeholder) configurations, the
-\textbf{median $N_{50\%}$ is 33~pairs} and the \textbf{median
-$N_{80\%}$ is 104~pairs}. The practical cost is modest: 33
+Across 13 (dataset, hidden stakeholder) configurations
+(\cref{fig:budget}), the \textbf{median $N_{50\%}$ is 33~pairs}
+and the \textbf{median $N_{80\%}$ is 104~pairs}. The practical cost is modest: 33
 preference pairs can be collected from 7 annotators making 5
 pairwise comparisons each. For most hidden stakeholders, a
 modest investment detects and substantially mitigates hidden harm.
