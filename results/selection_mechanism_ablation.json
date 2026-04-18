@@ -1,0 +1,3592 @@
+{
+  "config": {
+    "seeds": [
+      42,
+      142,
+      242,
+      342,
+      442
+    ],
+    "sigma_p": 0.3,
+    "top_k": 10,
+    "temperatures": [
+      0.001,
+      0.01,
+      0.05,
+      0.1,
+      0.2,
+      0.5,
+      1.0,
+      2.0,
+      5.0,
+      10.0
+    ]
+  },
+  "datasets": {
+    "ml-100k": {
+      "pairs": [
+        {
+          "target": "user",
+          "hidden": "platform",
+          "raw_cos": 0.9295,
+          "trained_cos": 0.962,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.108275,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.621097,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.657266,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.748291,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.832712,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 1.379278,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 2.962224,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 2.601228,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.696511,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.168229,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.074686,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "user",
+          "hidden": "diversity",
+          "raw_cos": -0.0872,
+          "trained_cos": -0.3382,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.134205,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.212254,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.253505,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.318347,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.355786,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.554771,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.957905,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.78464,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.224619,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.063095,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.029374,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "platform",
+          "hidden": "user",
+          "raw_cos": 0.9295,
+          "trained_cos": 0.962,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.142601,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.583661,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.578074,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.532806,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.561086,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.942458,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 2.16533,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 1.935083,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.528538,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.126108,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.055674,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "platform",
+          "hidden": "diversity",
+          "raw_cos": -0.1535,
+          "trained_cos": -0.4234,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.148874,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.375912,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.375203,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.382592,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.404437,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.567903,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.958452,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.801596,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.241601,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.06847,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.031928,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "user",
+          "raw_cos": -0.0872,
+          "trained_cos": -0.3382,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.152367,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.129142,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.129032,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.027727,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.012321,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.065595,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.068782,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.045502,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.071778,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.04514,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.025522,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "platform",
+          "raw_cos": -0.1535,
+          "trained_cos": -0.4234,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.448261,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.796194,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.794986,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.562062,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.45041,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.152958,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.017017,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.120491,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.117398,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.065022,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.035851,
+              "match_trn": true
+            }
+          }
+        }
+      ],
+      "mechanism_summary": {
+        "top-10": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.001": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.01": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.05": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.1": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.2": {
+          "strong_match": 5,
+          "strong_total": 6,
+          "all_match": 5,
+          "all_total": 6
+        },
+        "T=0.5": {
+          "strong_match": 5,
+          "strong_total": 6,
+          "all_match": 5,
+          "all_total": 6
+        },
+        "T=1.0": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=2.0": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=5.0": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=10.0": {
+          "strong_match": 6,
+          "strong_total": 6,
+          "all_match": 6,
+          "all_total": 6
+        }
+      }
+    },
+    "mind-small": {
+      "pairs": [
+        {
+          "target": "reader",
+          "hidden": "publisher",
+          "raw_cos": 0.4822,
+          "trained_cos": 0.0808,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.510939,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.655129,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.619108,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.506348,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.525259,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.542243,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.437017,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.211475,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.052078,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.001529,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.002028,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "reader",
+          "hidden": "advertiser",
+          "raw_cos": 0.3962,
+          "trained_cos": -0.1613,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.66,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 1.092577,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 1.018568,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.768299,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.774018,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.831276,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.632955,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.227222,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.023329,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.023412,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.017229,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "reader",
+          "hidden": "journalist",
+          "raw_cos": -0.1517,
+          "trained_cos": 0.3708,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.418856,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.600866,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.560898,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.38994,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.290939,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.197998,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.026929,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.106929,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.104375,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.053381,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.028143,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "reader",
+          "hidden": "civic_diversity",
+          "raw_cos": 0.0122,
+          "trained_cos": -0.0653,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.631959,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.810301,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.765749,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.626281,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.649671,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.670678,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.540529,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.261565,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.064413,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.001891,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.002508,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "reader",
+          "raw_cos": 0.4822,
+          "trained_cos": 0.0808,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.264649,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.262538,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.257408,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.277655,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.216181,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.136005,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.046875,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.001743,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.017179,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.012625,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.006942,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "advertiser",
+          "raw_cos": -0.0575,
+          "trained_cos": -0.6536,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.26,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.200127,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.258074,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.214757,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.216187,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.190427,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.001297,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.231514,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.320882,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.195102,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.104959,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "journalist",
+          "raw_cos": -0.0376,
+          "trained_cos": 0.3851,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.44766,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.521688,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.509011,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.493791,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.375992,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.253816,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.069373,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.087262,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.147797,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.090389,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.048109,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "civic_diversity",
+          "raw_cos": -0.8389,
+          "trained_cos": -0.958,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.001657,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.0,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 1.7e-05,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.001779,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.003459,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.013054,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.092089,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.218132,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.257925,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.151489,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.081053,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "advertiser",
+          "hidden": "reader",
+          "raw_cos": 0.3962,
+          "trained_cos": -0.1613,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.026464,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.012307,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.012169,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.081091,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.080613,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.078962,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.084033,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.076551,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.049046,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.020183,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.009837,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "advertiser",
+          "hidden": "publisher",
+          "raw_cos": -0.0575,
+          "trained_cos": -0.6536,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.00121,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.001347,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.000923,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.024775,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.042017,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.069666,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.166167,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.241272,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.206602,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.105171,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.055226,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "advertiser",
+          "hidden": "journalist",
+          "raw_cos": -0.3077,
+          "trained_cos": -0.2369,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.076196,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.183584,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.12321,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.039111,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.033828,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.019659,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.056854,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.13811,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.171156,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.111519,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.063206,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "advertiser",
+          "hidden": "civic_diversity",
+          "raw_cos": 0.4007,
+          "trained_cos": 0.686,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.001496,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.001666,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.001142,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.030643,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.05197,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.086167,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.205525,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.298419,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.255537,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.130081,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.068307,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "journalist",
+          "hidden": "reader",
+          "raw_cos": -0.1517,
+          "trained_cos": 0.3708,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.007678,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.004461,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.001873,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.040411,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.114677,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.171218,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.160501,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.127487,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.087794,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.039115,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.019346,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "journalist",
+          "hidden": "publisher",
+          "raw_cos": -0.0376,
+          "trained_cos": 0.3851,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.00067,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.0,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.0,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.0025,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.006311,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.014702,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.087149,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.193423,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.195957,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.095541,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.047653,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "journalist",
+          "hidden": "advertiser",
+          "raw_cos": -0.3077,
+          "trained_cos": -0.2369,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.4,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.199984,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.181678,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.402309,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.53472,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.566175,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.580842,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.679771,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.546882,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.233504,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.110895,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "journalist",
+          "hidden": "civic_diversity",
+          "raw_cos": -0.1158,
+          "trained_cos": -0.3521,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.000828,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.0,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.0,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.003093,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.007806,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.018184,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.107792,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.239237,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.242371,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.11817,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.05894,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "civic_diversity",
+          "hidden": "reader",
+          "raw_cos": 0.0122,
+          "trained_cos": -0.0653,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.078759,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.114803,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.080671,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.079197,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.070844,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.034833,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.009736,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.02471,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.02982,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.017656,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.009539,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "civic_diversity",
+          "hidden": "publisher",
+          "raw_cos": -0.8389,
+          "trained_cos": -0.958,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.192434,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.258556,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.221577,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.132971,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.132002,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.131308,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.191575,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.270392,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.25053,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.132755,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.06959,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "civic_diversity",
+          "hidden": "advertiser",
+          "raw_cos": 0.4007,
+          "trained_cos": 0.686,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.86,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 1.0,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.961618,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.72357,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.480116,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.232765,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.202337,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.351293,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.359856,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.201393,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.107344,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "civic_diversity",
+          "hidden": "journalist",
+          "raw_cos": -0.1158,
+          "trained_cos": -0.3521,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.396913,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.439929,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.36733,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.333333,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.323668,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.25434,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.190095,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.217727,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.198788,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.108397,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.057665,
+              "match_trn": true
+            }
+          }
+        }
+      ],
+      "mechanism_summary": {
+        "top-10": {
+          "strong_match": 9,
+          "strong_total": 14,
+          "all_match": 11,
+          "all_total": 20
+        },
+        "T=0.001": {
+          "strong_match": 9,
+          "strong_total": 14,
+          "all_match": 10,
+          "all_total": 20
+        },
+        "T=0.01": {
+          "strong_match": 8,
+          "strong_total": 14,
+          "all_match": 10,
+          "all_total": 20
+        },
+        "T=0.05": {
+          "strong_match": 11,
+          "strong_total": 14,
+          "all_match": 13,
+          "all_total": 20
+        },
+        "T=0.1": {
+          "strong_match": 11,
+          "strong_total": 14,
+          "all_match": 13,
+          "all_total": 20
+        },
+        "T=0.2": {
+          "strong_match": 11,
+          "strong_total": 14,
+          "all_match": 13,
+          "all_total": 20
+        },
+        "T=0.5": {
+          "strong_match": 11,
+          "strong_total": 14,
+          "all_match": 13,
+          "all_total": 20
+        },
+        "T=1.0": {
+          "strong_match": 14,
+          "strong_total": 14,
+          "all_match": 16,
+          "all_total": 20
+        },
+        "T=2.0": {
+          "strong_match": 14,
+          "strong_total": 14,
+          "all_match": 17,
+          "all_total": 20
+        },
+        "T=5.0": {
+          "strong_match": 14,
+          "strong_total": 14,
+          "all_match": 18,
+          "all_total": 20
+        },
+        "T=10.0": {
+          "strong_match": 14,
+          "strong_total": 14,
+          "all_match": 20,
+          "all_total": 20
+        }
+      }
+    },
+    "amazon-kindle": {
+      "pairs": [
+        {
+          "target": "reader",
+          "hidden": "publisher",
+          "raw_cos": 0.3113,
+          "trained_cos": -0.0759,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.116992,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.167234,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.244888,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.278534,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.332826,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.424763,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.441031,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.329862,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.170114,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.054162,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.023069,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "reader",
+          "hidden": "indie_author",
+          "raw_cos": 0.154,
+          "trained_cos": 0.0345,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.58,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.895913,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.716924,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.455968,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.492375,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.587479,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.519717,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.349966,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.178558,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.062588,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.028778,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "reader",
+          "hidden": "premium_seller",
+          "raw_cos": 0.1041,
+          "trained_cos": 0.4147,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.772,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.896748,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.812515,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.702679,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.619333,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.47653,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.548412,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.491414,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.301736,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.122057,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.059789,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "reader",
+          "hidden": "diversity",
+          "raw_cos": -0.008,
+          "trained_cos": 0.0157,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.105519,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.041444,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.141937,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.272462,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.341315,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.444265,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.463556,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.34852,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.180155,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.057643,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.024664,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "reader",
+          "raw_cos": 0.3113,
+          "trained_cos": -0.0759,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.164,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.04,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.165033,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.168594,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.151808,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.110923,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.024948,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.00423,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.001799,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.002122,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.0013,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "indie_author",
+          "raw_cos": -0.5778,
+          "trained_cos": -0.8078,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": 0.0,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.002001,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.010567,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.028785,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.044522,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.068574,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.141324,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.193719,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.180958,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.100075,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.053856,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "premium_seller",
+          "raw_cos": 0.0,
+          "trained_cos": -0.0364,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.426,
+              "match_trn": false
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.299999,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.221233,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.307905,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.412658,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.358586,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.109603,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.051005,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.02658,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.009767,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.00446,
+              "match_trn": false
+            }
+          }
+        },
+        {
+          "target": "publisher",
+          "hidden": "diversity",
+          "raw_cos": -0.761,
+          "trained_cos": -0.9425,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": 0.0,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.0,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.004474,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.052188,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.071633,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.107734,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.229502,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.306998,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.273961,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.143742,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.07559,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "indie_author",
+          "hidden": "reader",
+          "raw_cos": 0.154,
+          "trained_cos": 0.0345,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.094197,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.037401,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.021569,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.043495,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.073063,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.031199,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.003806,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.005653,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.005091,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.002037,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.000927,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "indie_author",
+          "hidden": "publisher",
+          "raw_cos": -0.5778,
+          "trained_cos": -0.8078,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.249138,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.254545,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.254121,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.262197,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.261066,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.314029,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.302045,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.303031,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.212478,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.083405,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.03861,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "indie_author",
+          "hidden": "premium_seller",
+          "raw_cos": 0.0,
+          "trained_cos": 0.0387,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.064,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.046508,
+              "match_trn": false
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.012649,
+              "match_trn": false
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.079993,
+              "match_trn": false
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.065619,
+              "match_trn": false
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.171283,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.115493,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.038178,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.015834,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.00552,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.00261,
+              "match_trn": false
+            }
+          }
+        },
+        {
+          "target": "indie_author",
+          "hidden": "diversity",
+          "raw_cos": 0.6539,
+          "trained_cos": 0.8047,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.021564,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.036349,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.032498,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.042792,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.033313,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.059786,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.242475,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.319198,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.228706,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.090392,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.042,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "premium_seller",
+          "hidden": "reader",
+          "raw_cos": 0.1041,
+          "trained_cos": 0.4147,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.079607,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.078544,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.037227,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.065745,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.077976,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.074189,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.105904,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.136249,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.117402,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.057016,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.028469,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "premium_seller",
+          "hidden": "publisher",
+          "raw_cos": 0.0,
+          "trained_cos": -0.0364,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.076362,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.103524,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.130738,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.200992,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.085041,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.062735,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.070235,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.04792,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.031942,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.013979,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.006798,
+              "match_trn": false
+            }
+          }
+        },
+        {
+          "target": "premium_seller",
+          "hidden": "indie_author",
+          "raw_cos": 0.0,
+          "trained_cos": 0.0387,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.12,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.300064,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.449269,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.442696,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.192876,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.0542,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.012193,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.018488,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.013714,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.005126,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.002252,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "premium_seller",
+          "hidden": "diversity",
+          "raw_cos": 0.0,
+          "trained_cos": 0.0484,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.117155,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.079986,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.124659,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.286526,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.183512,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.043499,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.062496,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.040032,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.026183,
+              "match_trn": false
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.011666,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.00575,
+              "match_trn": false
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "reader",
+          "raw_cos": -0.008,
+          "trained_cos": 0.0157,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.136416,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.128612,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.110485,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.147977,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.135103,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.060536,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.019653,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.013242,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.007358,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.002785,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.001306,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "publisher",
+          "raw_cos": -0.761,
+          "trained_cos": -0.9425,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.099897,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.064494,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.097029,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.098787,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.093801,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.101478,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.22263,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.310253,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.280275,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.143876,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.074555,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "indie_author",
+          "raw_cos": 0.6539,
+          "trained_cos": 0.8047,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.59,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.318979,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.604488,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.583456,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.532451,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.480584,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.490494,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.4347,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.295785,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.128208,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.063065,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "premium_seller",
+          "raw_cos": 0.0,
+          "trained_cos": 0.0484,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.448,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 1.025786,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.524274,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.61232,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.519134,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.253828,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.089684,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.041216,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.007245,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.003571,
+              "match_trn": false
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.002939,
+              "match_trn": false
+            }
+          }
+        }
+      ],
+      "mechanism_summary": {
+        "top-10": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 18,
+          "all_total": 20
+        },
+        "T=0.001": {
+          "strong_match": 7,
+          "strong_total": 8,
+          "all_match": 18,
+          "all_total": 20
+        },
+        "T=0.01": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 17,
+          "all_total": 20
+        },
+        "T=0.05": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 17,
+          "all_total": 20
+        },
+        "T=0.1": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 17,
+          "all_total": 20
+        },
+        "T=0.2": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 15,
+          "all_total": 20
+        },
+        "T=0.5": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 14,
+          "all_total": 20
+        },
+        "T=1.0": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 15,
+          "all_total": 20
+        },
+        "T=2.0": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 16,
+          "all_total": 20
+        },
+        "T=5.0": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 15,
+          "all_total": 20
+        },
+        "T=10.0": {
+          "strong_match": 8,
+          "strong_total": 8,
+          "all_match": 15,
+          "all_total": 20
+        }
+      }
+    },
+    "ml-1m": {
+      "pairs": [
+        {
+          "target": "user",
+          "hidden": "platform",
+          "raw_cos": 0.9526,
+          "trained_cos": 0.9372,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.282823,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.287826,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.275135,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.254024,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.340134,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 1.139755,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 1.970004,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 1.147461,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.41747,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.130029,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.059892,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "user",
+          "hidden": "diversity",
+          "raw_cos": 0.0707,
+          "trained_cos": -0.176,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.174917,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.41149,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.39955,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.392442,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.40921,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.509694,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.521723,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.313025,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.142019,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.051046,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.024584,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "platform",
+          "hidden": "user",
+          "raw_cos": 0.9526,
+          "trained_cos": 0.9372,
+          "mechanisms": {
+            "top-10": {
+              "improving": true,
+              "change": 0.215019,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": true,
+              "change": 0.447649,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": true,
+              "change": 0.434679,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": true,
+              "change": 0.349476,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": true,
+              "change": 0.354965,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.767313,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 1.308581,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.849186,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": true,
+              "change": 0.311958,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": true,
+              "change": 0.094714,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": true,
+              "change": 0.043201,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "platform",
+          "hidden": "diversity",
+          "raw_cos": -0.0717,
+          "trained_cos": -0.3097,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.241468,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.426205,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.413089,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.399732,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.436853,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": false,
+              "change": -0.513563,
+              "match_trn": true
+            },
+            "T=0.5": {
+              "improving": false,
+              "change": -0.569581,
+              "match_trn": true
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.380632,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.165753,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.057186,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.027242,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "user",
+          "raw_cos": 0.0707,
+          "trained_cos": -0.176,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.15148,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.26337,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.265218,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.269455,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.198413,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.227237,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.248649,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": true,
+              "change": 0.011817,
+              "match_trn": false
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.045573,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.032775,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.018841,
+              "match_trn": true
+            }
+          }
+        },
+        {
+          "target": "diversity",
+          "hidden": "platform",
+          "raw_cos": -0.0717,
+          "trained_cos": -0.3097,
+          "mechanisms": {
+            "top-10": {
+              "improving": false,
+              "change": -0.399782,
+              "match_trn": true
+            },
+            "T=0.001": {
+              "improving": false,
+              "change": -0.380187,
+              "match_trn": true
+            },
+            "T=0.01": {
+              "improving": false,
+              "change": -0.381608,
+              "match_trn": true
+            },
+            "T=0.05": {
+              "improving": false,
+              "change": -0.416192,
+              "match_trn": true
+            },
+            "T=0.1": {
+              "improving": false,
+              "change": -0.386146,
+              "match_trn": true
+            },
+            "T=0.2": {
+              "improving": true,
+              "change": 0.146626,
+              "match_trn": false
+            },
+            "T=0.5": {
+              "improving": true,
+              "change": 0.206244,
+              "match_trn": false
+            },
+            "T=1.0": {
+              "improving": false,
+              "change": -0.057445,
+              "match_trn": true
+            },
+            "T=2.0": {
+              "improving": false,
+              "change": -0.089764,
+              "match_trn": true
+            },
+            "T=5.0": {
+              "improving": false,
+              "change": -0.052293,
+              "match_trn": true
+            },
+            "T=10.0": {
+              "improving": false,
+              "change": -0.029044,
+              "match_trn": true
+            }
+          }
+        }
+      ],
+      "mechanism_summary": {
+        "top-10": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.001": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.01": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.05": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.1": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=0.2": {
+          "strong_match": 3,
+          "strong_total": 4,
+          "all_match": 4,
+          "all_total": 6
+        },
+        "T=0.5": {
+          "strong_match": 3,
+          "strong_total": 4,
+          "all_match": 4,
+          "all_total": 6
+        },
+        "T=1.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 5,
+          "all_total": 6
+        },
+        "T=2.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=5.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        },
+        "T=10.0": {
+          "strong_match": 4,
+          "strong_total": 4,
+          "all_match": 6,
+          "all_total": 6
+        }
+      }
+    }
+  },
+  "total_time_seconds": 134.2
+}

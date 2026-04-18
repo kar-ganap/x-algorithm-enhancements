@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{bail2018exposure}
 Christopher~A Bail et~al.
@@ -13,11 +13,28 @@ Ralph~Allan Bradley and Milton~E Terry.
   comparisons.
 \newblock {\em Biometrika}, 39(3/4):324--345, 1952.
 
+\bibitem{burke2017multistakeholder}
+Robin Burke and Himan Abdollahpouri.
+\newblock Towards multi-stakeholder utility evaluation of recommender systems.
+\newblock In {\em Workshop on Value-Aware and Multistakeholder Recommendation
+  (VAMS)}, 2017.
+
+\bibitem{casper2023open}
+Stephen Casper et~al.
+\newblock Open problems and fundamental limitations of reinforcement learning
+  from human feedback.
+\newblock {\em arXiv preprint arXiv:2307.15217}, 2023.
+
 \bibitem{harper2015movielens}
 F~Maxwell Harper and Joseph~A Konstan.
 \newblock The {MovieLens} datasets: History and context.
 \newblock {\em ACM Transactions on Interactive Intelligent Systems},
   5(4):1--19, 2015.
+
+\bibitem{iancu2014pareto}
+Dan~A Iancu and Nikolaos Trichakis.
+\newblock Pareto efficiency in robust optimization.
+\newblock {\em Management Science}, 60(1):130--147, 2014.
 
 \bibitem{skalse2024goodhart}
 Jacek Karwowski, Oliver Hayman, Xingjian Bai, Klaus Kiendlhofer, Charlie
@@ -31,6 +48,45 @@ Ralph~L Keeney and Howard Raiffa.
 \newblock {\em Decisions with Multiple Objectives: Preferences and Value
   Tradeoffs}.
 \newblock Wiley, 1976.
+
+\bibitem{lasser2025designing}
+Jana Lasser and Nikolaus Poechhacker.
+\newblock Designing social media content recommendation algorithms for societal
+  good.
+\newblock {\em Annals of the New York Academy of Sciences}, 1548:20--28, 2025.
+
+\bibitem{ni2019justifying}
+Jianmo Ni, Jiacheng Li, and Julian McAuley.
+\newblock Justifying recommendations using distantly-labeled reviews and
+  fine-grained aspects.
+\newblock In {\em Proceedings of the 2019 Conference on Empirical Methods in
+  Natural Language Processing}, pages 188--197, 2019.
+
+\bibitem{stray2024building}
+Jonathan Stray et~al.
+\newblock Building human values into recommender systems: An interdisciplinary
+  synthesis.
+\newblock {\em ACM Transactions on Recommender Systems}, 2024.
+
+\bibitem{sun2025rethinking}
+Hao Sun, Yunyi Shen, and Jean-Francois Ton.
+\newblock Rethinking {Bradley-Terry} models in preference-based reward
+  modeling: Foundations, theory, and alternatives.
+\newblock In {\em International Conference on Learning Representations (ICLR)},
+  2025.
+
+\bibitem{weng2024reward}
+Lilian Weng.
+\newblock Reward hacking in reinforcement learning.
+\newblock Lil'Log, 2024.
+\newblock \url{https://lilianweng.github.io/posts/2024-11-28-reward-hacking/}.
+
+\bibitem{wu2020mind}
+Fangzhao Wu, Ying Qiao, Jiun-Hung Chen, Chuhan Wu, Tao Qi, Jianxun Lian,
+  Dongsheng Liu, Xing Xie, Jianfeng Gao, Winnie Wu, and Ming Zhou.
+\newblock {MIND}: A large-scale dataset for news recommendation.
+\newblock In {\em Proceedings of the 58th Annual Meeting of the Association for
+  Computational Linguistics}, pages 3597--3606, 2020.
 
 \bibitem{xalgorithm2023}
 {X Engineering}.

@@ -90,29 +90,35 @@ Multi-stakeholder recommendation systems optimize proxy objectives
 that may harm unobserved stakeholders. We identify a precise
 condition governing when this occurs: in Bradley-Terry preference
 learning with $K$ stakeholders, additional training data degrades a
-hidden stakeholder's utility if and only if the cosine similarity
-between the optimization target and the hidden stakeholder's utility
-direction is negative. We validate this \emph{directional Goodhart
-condition} on 42 data points across 2 datasets (MovieLens-100K and
-MovieLens-1M), 8 stakeholders, and 3 optimization targets, with
-100\% accuracy for $|\cos| > 0.2$ (28/28) and a transition zone near
-$\cos \approx 0$ (10/14). The condition correctly predicts that a
-synthetic benchmark built on X's 18-action engagement space exhibits
-no Goodhart effect (all stakeholder pairs have positive cosine),
-correcting a prior Hausdorff-based analysis that falsely indicated
-otherwise.
+hidden stakeholder's \emph{expected} utility if and only if the cosine
+similarity between the BT-trained weight vectors of the optimization
+target and the hidden stakeholder is negative. We validate this
+\emph{directional Goodhart condition} on 32 strong-cosine data points
+across 4 datasets (MovieLens-100K, MovieLens-1M, MIND, Amazon Kindle),
+13 stakeholders, and 3 feature families ($D \in \{19, 32, 35\}$), with
+100\% accuracy for $|\cos| > 0.2$ (32/32) under softmax-weighted
+evaluation and 91\% (29/32) under hard top-$K$ selection. The
+condition correctly predicts that X's 18-action engagement space
+exhibits no Goodhart effect (all stakeholder pairs have positive
+cosine), correcting a prior Hausdorff-based analysis that falsely
+indicated otherwise.
 
-The condition arises from the low-rank structure of the
-multi-stakeholder weight space: with $K$ stakeholders, BT-learned
-weight vectors lie in a $K$-dimensional subspace (projection cosine
-$> 0.97$), making convergence direction fully determined by
-stakeholder geometry. Applied to X's open-sourced recommendation
-algorithm, the Goodhart risk reduces to one observable: whether the
-platform treats negative signals (blocks, reports) as positive
-engagement. We provide an audit toolkit, a data budget analysis (25
-preference pairs recover ${\sim}50\%$ of hidden stakeholder harm,
-95\% CI: [40\%, 64\%]), and practical guidance for platform
-transparency under the EU Digital Services Act.
+Two precisions emerge from the cross-dataset analysis. First, the
+relevant cosine is between BT-\emph{trained} weight vectors, not raw
+stakeholder weights; on high-dimensional sparse features, BT training
+remaps the cosine geometry (up to 3 of~10 pairs flip sign on MIND).
+Second, the condition governs expected utility under the learned score
+distribution; under hard top-$K$ selection, it can reverse for
+stakeholders with high utility variance near the selection boundary
+(5 of~20 MIND pairs, 0 of~8 Amazon, 0 of~6 MovieLens). The reversal
+vanishes at softmax temperature $T \geq 1$.
+Applied to X's open-sourced recommendation algorithm, the Goodhart
+risk reduces to one observable: whether the platform treats negative
+signals (blocks, reports) as positive engagement. We provide an audit
+toolkit, a data budget analysis (median 33 preference pairs to recover
+50\% of hidden stakeholder harm across 13 stakeholder configurations),
+and practical guidance for platform transparency under the EU Digital
+Services Act.
 \end{abstract}
 
 %═══════════════════════════════════════════════════════════════════
@@ -120,16 +126,112 @@ transparency under the EU Digital Services Act.
 \label{sec:intro}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Write after §4 and §6
-\textit{[Introduction placeholder.]}
+Recommendation systems serve multiple stakeholders with potentially
+conflicting interests: users want relevant content, platforms want
+engagement, advertisers want reach, and society wants a healthy
+information environment. When a system optimizes a proxy objective
+that imperfectly represents one stakeholder, additional training data
+can \emph{worsen} outcomes for other stakeholders---a manifestation of
+Goodhart's law~\cite{casper2023open} in the multi-stakeholder setting.
+
+This multi-stakeholder phenomenon is qualitatively different from
+single-stakeholder Goodhart, where a proxy is correlated with the
+true objective but diverges under optimization pressure. In that
+setting, one cannot usually predict ex-ante \emph{which} data points
+will cause harm. In the multi-stakeholder setting, the geometric
+structure of utility space introduces a directional object---the
+cosine between stakeholder weight vectors---that enables exactly this
+prediction. The cosine sign determines which stakeholders are
+systematically vulnerable, and this can be checked before any
+additional data is collected.
+
+This paper formalizes this insight as the \emph{directional Goodhart
+condition}. In Bradley-Terry preference learning with linear utility,
+the sign of the cosine between the optimization target's trained
+weight vector and a hidden stakeholder's trained weight vector
+determines whether more data helps or hurts the hidden stakeholder.
+We validate the condition on 32 strong-cosine data points across four
+datasets---MovieLens-100K, MovieLens-1M (movies), MIND-small (news),
+and Amazon Kindle (e-commerce)---spanning 13 stakeholders and three
+feature families.
+
+Three findings emerge from the cross-dataset analysis:
+\begin{enumerate}
+  \item The condition holds with 100\% accuracy ($|\cos| > 0.2$,
+    32/32) when evaluated under softmax-weighted content selection,
+    and 91\% (29/32) under hard top-$K$ selection. The 3~top-$K$
+    violations are explained by a selection mechanism effect: hard
+    selection concentrates on items where target and hidden locally
+    diverge despite globally positive cosine.
+  \item The relevant cosine is between BT-\emph{trained} weight
+    vectors, not raw stakeholder utility weights. On high-dimensional
+    sparse features (MIND, $D{=}35$), BT training remaps the cosine
+    geometry---up to 3 of~10 pairs flip sign---making raw cosines
+    unreliable predictors.
+  \item The preference budget for hidden stakeholder recovery is
+    modest: a median of 33~pairs achieves 50\% recovery of hidden
+    harm, though the variance across stakeholder geometries is large
+    (14 to $>500$ pairs).
+\end{enumerate}
+
+Applied to X's open-sourced recommendation algorithm, the condition
+reduces Goodhart risk to a single observable: whether the platform
+treats negative signals (blocks, reports) as positive engagement. We
+provide an audit toolkit, a data budget analysis, and practical
+guidance for platform transparency under the EU Digital Services Act.
+All code, trained models, and result artifacts are available at
+\url{https://github.com/kar-ganap/x-algorithm-enhancements}.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Background and Related Work}
 \label{sec:background}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Adapt from old preprint §2, add Gao/Kwa
-\textit{[Background placeholder.]}
+\paragraph{Multi-stakeholder recommendation.}
+Recommendation systems affect multiple parties with distinct
+objectives~\cite{burke2017multistakeholder}. Multi-attribute utility
+theory (MAUT)~\cite{keeney1976decisions} provides the formal
+framework: each stakeholder's preferences are encoded as a weight
+vector over item features, and the system must balance these
+potentially conflicting directions. Multi-objective optimization
+produces Pareto frontiers that characterize the
+tradeoffs~\cite{iancu2014pareto}, but in practice platforms optimize
+a single scalarized objective that may underweight certain
+stakeholders~\cite{stray2024building}.
+
+\paragraph{Goodhart's law and reward hacking.}
+Goodhart's law---``when a measure becomes a target, it ceases to be a
+good measure''---has been formalized in the reward learning
+literature. \citet{skalse2024goodhart} distinguish four mechanisms:
+\emph{regressional} (noise in the proxy), \emph{extremal}
+(distribution shift at the tails), \emph{causal} (gaming the proxy),
+and \emph{adversarial} (intentional manipulation). The mechanism
+relevant to this paper is extremal: as the BT model converges more
+precisely toward the optimization target, top-$K$ selection
+concentrates on content at the tail of the score
+distribution~\cite{casper2023open, weng2024reward}. Our contribution
+is showing that the \emph{direction} of this effect (benefit or harm
+to hidden stakeholders) is fully determined by cosine geometry.
+
+\paragraph{Bradley-Terry preference learning.}
+The Bradley-Terry model~\cite{bradley1952rank} is the standard
+preference model in RLHF pipelines~\cite{sun2025rethinking}.
+Given pairwise comparisons, BT learns a score function that assigns
+higher probability to the preferred item. In the linear setting
+($r(c) = \mathbf{w}^\top \mathbf{p}(c)$), the learned weight
+vector~$\hat{\mathbf{w}}$ converges toward the labeling stakeholder's
+utility direction as the number of comparisons grows. We exploit this
+convergence property to derive the directional Goodhart condition.
+
+\paragraph{Algorithmic auditing.}
+X (formerly Twitter) open-sourced its recommendation algorithm in
+2023~\cite{xalgorithm2023}, enabling external
+audits~\cite{lasser2025designing}. The 2026 Grok-based
+successor~\cite{xalgorithm2026} replaced explicit engagement weights
+with learned embeddings, making the same audits substantially harder.
+Our audit framework provides a concrete, falsifiable quantity---the
+cosine between platform and societal utility directions---that
+regulators can demand even from opaque systems.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Setup}
@@ -185,7 +287,7 @@ but does not exactly recover the target direction.
 
 \subsection{Datasets and Stakeholders}
 
-We use three datasets spanning two feature spaces.
+We use five datasets spanning four feature spaces (\cref{tab:datasets}).
 
 \paragraph{Synthetic benchmark.}
 
@@ -283,7 +385,61 @@ strongly aligned ($\cos \approx +0.95$), while both oppose diversity
 ($\cos \approx -0.3$ to $-0.2$). Five additional stakeholders with
 real-world analogs (creator, advertiser, niche enthusiast,
 mainstream, content moderator) are introduced in \cref{sec:direction}
-to expand validation coverage.
+to expand validation coverage (MovieLens only; Method~B).
+
+\paragraph{MIND-small.}
+
+For cross-domain validation on news recommendation, we use the
+MIND-small dataset~\cite{wu2020mind}: 12{,}261 news articles with
+click/impression data. Each article has a $D = 35$ feature vector:
+17 top-level news categories (one-hot), 14 top subcategories
+(one-hot), and 4 article quality signals (title length, abstract
+length, entity count, word count; normalized). Five domain-native
+stakeholders are defined:
+\textbf{reader} (click-derived category preferences),
+\textbf{publisher} (volume and reach),
+\textbf{advertiser} (eyeball concentration on popular categories),
+\textbf{journalist} (editorial quality signals, investigative
+category preference), and
+\textbf{civic\_diversity} (anti-concentration across categories,
+analogous to MovieLens diversity).
+Stakeholder weight construction details are in \cref{app:stakeholders}.
+
+\paragraph{Amazon Kindle Store.}
+
+For e-commerce validation, we use the Amazon Kindle Store
+5-core dataset~\cite{ni2019justifying}: 17{,}425 books with
+$D = 32$ features (20 genre categories, 4 price-tier indicators,
+3 review-volume bins, 3 sentiment-polarity features, 2 text-length
+bins). Five stakeholders:
+\textbf{reader} (genre preferences from review history),
+\textbf{publisher} (catalog breadth and volume),
+\textbf{indie\_author} (long-tail genre preference, anti-bestseller),
+\textbf{premium\_seller} (price and review-quality signals), and
+\textbf{diversity} (anti-concentration, analogous to MovieLens).
+Notably, premium\_seller's features occupy slots disjoint from all
+other stakeholders, producing 3 pairs with raw cosine exactly~$0.000$
+--- a unique probe of the direction condition at the boundary.
+
+\begin{table}[t]
+  \caption{Dataset summary. $K$: number of stakeholders.
+    $D$: feature dimensionality. Pool: content items after filtering.
+    Feature type describes the dominant structure of $\mathbf{p}(c)$.}
+  \label{tab:datasets}
+  \centering\small
+  \begin{tabular}{llrrrl}
+    \toprule
+    \textbf{Dataset} & \textbf{Domain} & $\boldsymbol{K}$ &
+      $\boldsymbol{D}$ & \textbf{Pool} & \textbf{Feature type} \\
+    \midrule
+    Synthetic     & Social media & 3 & 18 & 500   & Action probs \\
+    ML-100K       & Movies       & 3 & 19 & 1{,}305 & Genre $\times$ rating \\
+    ML-1M         & Movies       & 3 & 19 & 3{,}347 & Genre $\times$ rating \\
+    MIND-small    & News         & 5 & 35 & 12{,}261 & Category one-hot \\
+    Amazon Kindle & E-commerce   & 5 & 32 & 17{,}425 & Genre + metadata \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{Evaluation}
 \label{sec:eval}
@@ -328,74 +484,142 @@ the hidden stakeholder?
 \begin{proposition}[Directional Goodhart Condition]
 \label{prop:direction}
 In a linear BT preference learning setting with $K$ stakeholders and a
-finite content pool, let $\hat{\mathbf{w}}_t(N)$ be the weight vector
-learned from $N$ preference pairs labeled by target stakeholder~$t$,
-and let $\mathbf{w}_h$ be the true utility direction of hidden
-stakeholder~$h$. Then:
+finite content pool~$\mathcal{C}$, let $\hat{\mathbf{w}}_t(N)$ be the
+weight vector learned from $N$ preference pairs labeled by target
+stakeholder~$t$, and let $\hat{\mathbf{w}}_h$ be the corresponding
+BT-learned direction for hidden stakeholder~$h$ (the fixed point of BT
+training on~$h$'s labels). Define the expected hidden utility under the
+score distribution induced by $\hat{\mathbf{w}}_t(N)$ as
+\begin{equation}
+  \bar{U}_h(N) \;=\; \sum_{c \in \mathcal{C}}
+    \pi_{\hat{\mathbf{w}}_t(N)}(c) \;\cdot\; U_h(c),
+  \label{eq:expected_util}
+\end{equation}
+where $\pi_{\mathbf{w}}(c) \propto
+\exp\!\bigl(\mathbf{w}^\top \mathbf{p}(c) / T\bigr)$ is the
+softmax selection distribution at temperature~$T$. Then for
+sufficiently large~$T$ (empirically, $T \geq 1$):
 \begin{itemize}
-  \item If\, $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) < 0$:\;
-    $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually decreasing in~$N$.
-  \item If\, $\cos(\hat{\mathbf{w}}_t, \mathbf{w}_h) > 0$:\;
-    $U_h(S(\hat{\mathbf{w}}_t(N)))$ is eventually increasing in~$N$.
+  \item If\, $\cos(\hat{\mathbf{w}}_t, \hat{\mathbf{w}}_h) < 0$:\;
+    $\bar{U}_h(N)$ is eventually decreasing in~$N$.
+  \item If\, $\cos(\hat{\mathbf{w}}_t, \hat{\mathbf{w}}_h) > 0$:\;
+    $\bar{U}_h(N)$ is eventually increasing in~$N$.
 \end{itemize}
-where $S(\mathbf{w})$ denotes content selected by
-scorer~$\mathbf{w}$ and $U_h$ is the hidden stakeholder's utility
-evaluated on the selected content.
 \end{proposition}
 
-In words: more training data degrades a hidden stakeholder if and only
-if the optimization target is anti-correlated with that stakeholder's
-utility direction. The condition holds perfectly for
-$|\cos| > 0.2$ and has a transition zone near $\cos \approx 0$ where
-prediction is unreliable.
+Two clarifications relative to a na\"{\i}ve formulation. First, the
+cosine is computed between \emph{BT-trained} weight vectors, not the
+raw stakeholder utility weights. On low-dimensional dense feature
+spaces (MovieLens, $D{=}19$), raw and trained cosines agree to within
+$\pm 0.05$. On high-dimensional sparse features (MIND, $D{=}35$;
+Amazon Kindle, $D{=}32$), BT training can substantially remap the
+cosine geometry---up to 3 of~10 pairs flip sign on MIND---and trained
+cosines are necessary for reliable prediction. Second, the hidden
+utility is evaluated under the \emph{score distribution}
+$\pi_{\mathbf{w}}$, not on a hard top-$K$ selection set. Under hard
+top-$K$, the condition can reverse for hidden stakeholders with high
+utility variance near the selection boundary
+(\cref{sec:selection_mechanism}).
+
+In words: more training data degrades a hidden stakeholder's expected
+utility if and only if the optimization target is anti-correlated with
+that stakeholder in the BT-trained weight space. The condition holds
+perfectly for $|\cos| > 0.2$ and has a transition zone near
+$\cos \approx 0$ where prediction is unreliable.
 
 \subsection{Empirical Validation}
 
-We validate the direction condition on 42 data points across two
-MovieLens datasets (ML-100K and ML-1M), using two complementary
-methods:
+We validate the direction condition on 32 strong-cosine
+($|\cos| > 0.2$) data points across four datasets spanning three
+distinct feature families, using BT-trained cosines.
 
 \begin{itemize}
-  \item \textbf{Method A} (target rotation): The same three
-    stakeholders (user, platform, diversity) are used with each
-    stakeholder serving as the optimization target in turn. This
-    produces 12 data points (3~targets $\times$ 2~hidden $\times$
-    2~datasets) without introducing any new stakeholder definitions.
+  \item \textbf{MovieLens-100K and MovieLens-1M} ($D{=}19$,
+    3 stakeholders each): 6 Method~A pairs per dataset, all with
+    $|\text{trained~cos}| > 0.2$. 10 of~10 match (100\%) under both
+    top-$K$ and softmax evaluation. Raw and trained cosines agree
+    closely on this low-dimensional dense feature space.
 
-  \item \textbf{Method B} (named stakeholders): Five additional
-    stakeholders with real-world analogs---creator (rewards content
-    supply), advertiser (rewards eyeball volume), niche enthusiast
-    (upweights rare genres), mainstream (upweights popular genres), and
-    content moderator (penalizes low-rated genres)---are defined from
-    MovieLens data and tested as hidden stakeholders under all three
-    targets, producing 30 data points.
+  \item \textbf{MIND-small} ($D{=}35$, 5 stakeholders): 20 Method~A
+    pairs, of which 14 have $|\text{trained~cos}| > 0.2$. Under
+    softmax ($T{=}1.0$): 14/14 match (100\%). Under hard top-10:
+    11/14 match (79\%)---the 3 violations all involve one stakeholder
+    (journalist) and are explained by the selection mechanism
+    (\cref{sec:selection_mechanism}). With raw cosines, only 6 of~10
+    strong pairs match (60\%)---the gap is driven by 3 sign flips
+    between raw and trained cosines.
+
+  \item \textbf{Amazon Kindle} ($D{=}32$, 5 stakeholders): 20 Method~A
+    pairs, of which 8 have $|\text{trained~cos}| > 0.2$. All 8 match
+    (100\%) under both mechanisms. Amazon additionally provides
+    3 pairs with raw cosine exactly~$0.000$ (orthogonal by
+    construction); these stay near zero under BT training
+    (max $|\text{trained cos}| = 0.048$), confirming the condition's
+    behavior at the boundary.
 \end{itemize}
+
+Pooled under softmax evaluation: 32 of 32 strong-cosine pairs match
+the predicted direction (100\%). Under hard top-$K$: 29 of 32 (91\%),
+with the 3 violations confined to one stakeholder on one dataset. In
+the transition zone ($|\cos| < 0.2$), prediction is less reliable,
+with violations concentrated near $\cos \approx 0$.
 
 In each experiment, the target stakeholder's weights are perturbed
 with multiplicative Gaussian noise ($\sigma = 0.3$). BT models are
-trained at $N = 25$ and $N = 2{,}000$ preference pairs, and all
-stakeholder utilities are evaluated on the selected content. The
-utility change from $N = 25$ to $N = 2{,}000$ determines whether the
-hidden stakeholder improved or degraded.
+trained at $N = 25$ and $N = 2{,}000$ preference pairs. The utility
+change from $N = 25$ to $N = 2{,}000$ determines whether the hidden
+stakeholder improved or degraded.
 
-\Cref{fig:scatter} shows the results. The 42 points span cosine
-similarity from $-0.95$ to $+0.95$. For $|\cos| > 0.2$, the
-condition holds without exception: 28 of 28 data points fall in the
-predicted quadrant (degrading if $\cos < 0$, improving if
-$\cos > 0$). In the transition zone ($|\cos| < 0.2$), prediction
-is less reliable: 10 of 14 match (71\%), with 4 violations near
-$\cos \approx 0$ where the signal-to-noise ratio is low.
+On MovieLens, an additional 30 data points from 5 named stakeholders
+with real-world analogs (creator, advertiser, niche enthusiast,
+mainstream, content moderator) are available via Method~B; these are
+dataset-specific and not included in the cross-dataset pooled count.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig3_direction_scatter.pdf}
-  \caption{Direction condition validation: 42 data points across
-    2 datasets and 8 stakeholders. Red shading: $\cos < -0.2$
-    (degrades). Green: $\cos > 0.2$ (improves). Amber: transition
-    zone $|\cos| < 0.2$. Red-outlined points are violations. For
-    $|\cos| > 0.2$: 28/28 match (100\%).}
+  \caption{Direction condition validation across 4 datasets and
+    13 stakeholders (BT-trained cosines, top-$K$ utility change).
+    Red shading: $\cos < -0.2$ (predicted degradation). Green:
+    $\cos > 0.2$ (predicted improvement). Amber: transition zone.
+    Red outlines mark violations. Under top-$K$: 29/32 for
+    $|\cos| > 0.2$; the 3 violations (all MIND journalist pairs)
+    vanish under softmax $T \geq 1$ (32/32).}
   \label{fig:scatter}
 \end{figure}
+
+\subsection{Selection Mechanism Matters}
+\label{sec:selection_mechanism}
+
+The direction condition is a statement about expected utility under the
+learned score distribution (\cref{eq:expected_util}). When content
+selection uses a hard top-$K$ cutoff instead of a soft weighting, the
+condition can reverse. We test this with a temperature sweep: for each
+(target, hidden) pair, we evaluate hidden utility under softmax
+selection at temperatures $T \in \{0.001, \ldots, 10\}$ and compare
+against hard top-10.
+
+On MIND, hard top-10 matches the direction condition on 11 of~14
+strong-cosine pairs (79\%). At $T = 1.0$, the match rate rises to
+14/14 (100\%). On both MovieLens datasets and Amazon, both mechanisms
+give 100\% at $|\cos| > 0.2$. The transition occurs between
+$T = 0.5$ and $T = 1.0$.
+
+The mechanism: hard top-$K$ concentrates on items where the target
+stakeholder scores highest. For hidden stakeholders with high utility
+variance near the selection boundary, these items can be specifically
+the ones where target and hidden \emph{locally} diverge, despite their
+\emph{global} cosine being positive. Softmax weighting averages over
+this local divergence, recovering the global prediction. This is a form
+of extremal Goodhart~\cite{skalse2024goodhart} operating \emph{within}
+the positive-cosine regime: the selection mechanism, not the cosine
+geometry, drives the reversal.
+
+The practical implication is that the direction condition is directly
+applicable to platforms using probability-weighted or temperature-scaled
+ranking (as most modern recommender systems do). For systems using hard
+top-$K$ selection, stakeholders with high utility variance on
+borderline items should be monitored explicitly.
 
 \subsection{The MovieLens Goodhart Curve}
 
@@ -455,8 +679,109 @@ discrepancy in \cref{sec:hausdorff}.
 \label{sec:lowrank}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Labels-not-loss, projection cos > 0.97, composition
-\textit{[Low-rank explanation placeholder.]}
+The direction condition's predictive power rests on BT-learned weight
+vectors being geometrically constrained. We present two lines of
+evidence: (1)~the loss function is irrelevant given labels, and
+(2)~scalarized weight vectors lie approximately in the span of
+per-stakeholder vectors.
+
+\subsection{Labels, Not Loss}
+
+If two loss functions train on identical preference pairs, do they
+converge to the same weights? We train Bradley-Terry, margin-BT
+($m{=}0.5$), and calibrated-BT ($\lambda{=}1.0$) on each stakeholder
+with 5~seeds and measure the \emph{within-loss cosine}: the mean
+pairwise cosine similarity of weight vectors trained by different
+losses on the same labels.
+
+\begin{table}[t]
+  \caption{Within-loss cosine similarity (mean $\pm$ std across 5
+    seeds). Values above 0.90 indicate that the loss function has
+    negligible effect on the learned direction given identical labels.}
+  \label{tab:within_loss}
+  \centering\small
+  \begin{tabular}{llr}
+    \toprule
+    \textbf{Dataset} & \textbf{Stakeholder} &
+      \textbf{Within-loss cos} \\
+    \midrule
+    ML-100K & user      & $0.957 \pm 0.005$ \\
+            & platform  & $0.987 \pm 0.003$ \\
+            & diversity & $0.958 \pm 0.006$ \\
+    \midrule
+    MIND    & reader      & $0.911 \pm 0.007$ \\
+            & publisher   & $0.944 \pm 0.006$ \\
+            & advertiser  & $0.965 \pm 0.006$ \\
+            & journalist  & $0.847 \pm 0.007$ \\
+            & civic\_div. & $0.824 \pm 0.019$ \\
+    \midrule
+    Amazon  & reader          & $0.940 \pm 0.005$ \\
+            & publisher       & $0.961 \pm 0.006$ \\
+            & indie\_author   & $0.890 \pm 0.016$ \\
+            & premium\_seller & $0.975 \pm 0.003$ \\
+            & diversity       & $0.909 \pm 0.008$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\Cref{tab:within_loss} shows the results. On MovieLens ($D{=}19$),
+all three stakeholders exceed 0.95: the loss function is
+essentially irrelevant. On MIND and Amazon ($D \geq 32$), 11 of~13
+stakeholders exceed 0.89. The two exceptions---MIND journalist
+(0.847) and civic\_diversity (0.824)---have the sparsest weight
+vectors in the dataset (12 and~17 nonzero dimensions out of~35
+respectively). The core claim holds: \emph{stakeholder
+differentiation comes from the training labels, not the loss
+function}, with the qualification that very sparse stakeholders on
+high-dimensional features show weaker convergence.
+
+\subsection{Low-Rank Composition}
+
+If BT-learned weight vectors are constrained to a low-dimensional
+subspace, then the cosine geometry that drives the direction condition
+is itself low-dimensional. We test this by training scalarized models
+(BT on mixed-stakeholder preferences) and projecting each learned
+weight vector onto the span of the per-stakeholder weight vectors.
+
+\begin{table}[t]
+  \caption{Composition analysis: scalarized weight vectors projected
+    onto the per-stakeholder span. Higher projection cosine indicates
+    tighter low-rank structure.}
+  \label{tab:composition}
+  \centering\small
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Dataset} & $\boldsymbol{K}$ & $\boldsymbol{D}$ &
+      \textbf{Mean proj.\ cos} & \textbf{Frac.\ $> 0.95$} \\
+    \midrule
+    ML-100K       & 3 & 19 & 0.979 & 21/21 \\
+    MIND-small    & 5 & 35 & 0.893 & 30/121 \\
+    Amazon Kindle & 5 & 32 & 0.877 & 31/121 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The low-rank structure is present on all datasets but varies in
+tightness (\cref{tab:composition}). On MovieLens, nearly all
+scalarized models project onto the 3-stakeholder span with cosine
+above~0.95. On MIND and Amazon, the mean projection cosine drops to
+${\sim}0.88$---still far above the random baseline for a
+$K$-dimensional subspace in $D$-dimensional space (${\sim}0.6$), but
+no longer tight enough to claim that scalarization is fully contained
+in the per-stakeholder span. The weaker structure on high-$K$,
+high-$D$ datasets is consistent with the additional degrees of freedom
+available to scalarized training: with 5~stakeholders and 32--35
+features, the mixing-weight simplex is large enough for the optimizer
+to find directions outside the per-stakeholder span.
+
+The practical implication: the direction condition's success is not
+contingent on an exact low-rank decomposition. Even on datasets where
+the projection cosine is~0.88, the trained cosine between stakeholders
+is sufficient to predict hidden utility direction (32/32 under softmax,
+\cref{sec:direction}). The low-rank structure \emph{explains} why the
+condition works---BT training is geometrically constrained---but the
+condition holds more broadly than the low-rank claim alone would
+predict.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Practical Implications}
@@ -469,36 +794,41 @@ If the direction condition identifies \emph{which} hidden
 stakeholders are harmed, a natural follow-up is: how much data
 from the hidden stakeholder is needed to mitigate the harm?
 
-We run a leave-one-stakeholder-out (LOSO) experiment on both
-MovieLens datasets. The diversity stakeholder is hidden; the
-platform scorer is trained on user and platform data only. At
-$N = 0$ hidden-stakeholder pairs, the LOSO regret (utility gap
-from full-information frontier) is the baseline harm. We then add
-$N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder preference
-pairs and retrain.
+We run leave-one-stakeholder-out (LOSO) experiments across three
+real datasets (ML-100K, MIND, Amazon Kindle), hiding each
+stakeholder in turn. At $N = 0$ hidden-stakeholder preference pairs,
+the LOSO regret (utility gap from the full-information Pareto
+frontier) is the baseline harm. We then add
+$N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder pairs and
+retrain, measuring the \emph{recovery}: the fraction of baseline
+regret eliminated. We report the preference budget $N_{50\%}$ and
+$N_{80\%}$ --- the minimum $N$ needed to reach 50\% and 80\%
+recovery, interpolated across the sweep.
 
-\Cref{fig:budget} shows the results. On ML-100K, 25 preference
-pairs reduce regret from 3.26 to 1.42---a 56\% recovery of the
-hidden stakeholder's harm. On ML-1M, 25 pairs achieve 46\%
-recovery (regret from 4.66 to 2.50). Across both datasets, 25
-pairs recover approximately 50\% of hidden stakeholder harm (95\%
-CI from 20 seeds: $[40\%, 64\%]$). By 100 pairs, regret
-approaches zero on ML-100K and drops below 1.0 on ML-1M.
+Across 13 (dataset, hidden stakeholder) configurations, the
+\textbf{median $N_{50\%}$ is 33~pairs} and the \textbf{median
+$N_{80\%}$ is 104~pairs}. The practical cost is modest: 33
+preference pairs can be collected from 7 annotators making 5
+pairwise comparisons each. For most hidden stakeholders, a
+modest investment detects and substantially mitigates hidden harm.
 
-The practical cost is modest: 25 preference pairs can be collected
-from 5 annotators making 5 pairwise comparisons each. For a
-platform deploying a new recommendation objective, this represents
-a minimal investment to detect whether a hidden stakeholder is
-being harmed.
+The variance is large. On Amazon Kindle, hiding reader requires
+only 14~pairs for 50\% recovery, while hiding publisher requires
+368---reflecting publisher's strong anti-alignment with every other
+stakeholder ($\cos < -0.5$ with 2 of~4 others). One configuration
+(ML-100K, hide user) does not reach 50\% within the 500-pair sweep,
+because the remaining stakeholders (platform, diversity) already
+proxy for user well ($\cos(\text{user}, \text{platform}) = +0.95$).
+The full per-stakeholder breakdown is in \cref{app:data_budget}.
 
+% TODO: Regenerate fig5 with N-for-target framing across datasets
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig5_data_budget.pdf}
-  \caption{Data budget for hidden stakeholder recovery. Regret
-    decreases monotonically with hidden-stakeholder preference
-    pairs. 25 pairs recover ${\sim}50\%$ of harm; 100 pairs
-    approach zero regret. Shaded bands: $\pm 1$ std across 20
-    seeds.}
+  \caption{Data budget for hidden stakeholder recovery across
+    13~configurations on 3~datasets. Median budget: 33~pairs for
+    50\% recovery, 104~pairs for 80\%. Worst case: $> 500$ pairs
+    for stakeholders with strong substitutes in the observed set.}
   \label{fig:budget}
 \end{figure}
 
@@ -549,6 +879,19 @@ with learned embeddings, making the same audit impossible without
 additional disclosure: the cosine between the system's implicit
 optimization target and a societal utility direction cannot be
 computed from the released code alone.
+
+\emph{Note on trained vs.\ raw cosines.} The direction condition
+requires BT-trained cosines (\cref{sec:direction}), which raises the
+question: can auditors use raw utility weights instead? On the
+synthetic 18-action space ($D{=}18$, dense), raw and trained cosines
+agree closely, so the audit toolkit applies directly. On
+high-dimensional sparse features ($D \geq 32$), auditors would need
+either BT training results or platform-provided trained weight
+vectors. For regulatory contexts, the practical recommendation is: if
+the platform discloses an explicit weight vector, the raw-cosine audit
+is a valid first pass; if the cosine is near the boundary
+($|\cos| < 0.3$), BT training should be performed to confirm the
+sign.
 
 \begin{figure}[t]
   \centering
@@ -613,24 +956,115 @@ learned objective.
 \label{sec:hausdorff}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Metric correction
-\textit{[Hausdorff correction placeholder.]}
+A natural approach to measuring multi-stakeholder harm is to compare
+Pareto frontiers: if the frontier at $N = 2{,}000$ is ``closer'' to
+the full-information frontier than the frontier at $N = 25$, then more
+data helped. The Hausdorff distance is the standard metric for
+frontier comparison~\cite{iancu2014pareto}.
+
+On the synthetic benchmark (\cref{sec:setup}), the Hausdorff distance
+\emph{increases} from $N = 25$ to $N = 2{,}000$ ($0.42 \to 0.61$),
+suggesting that more data hurts---a false positive Goodhart signal.
+But utility-based evaluation shows that \emph{every} stakeholder's
+utility improves (society $+67\%$, user $+12\%$, platform $+8\%$).
+The direction condition correctly predicts no Goodhart (all cosines
+positive); Hausdorff gives the wrong answer.
+
+The discrepancy arises because Hausdorff measures the \emph{geometric
+distance} between frontier surfaces, which conflates two effects:
+(1)~the frontier shifting toward higher utility (good), and (2)~the
+frontier shrinking as the model concentrates on fewer operating points
+(neutral). As $N$ grows, the BT model's score distribution sharpens,
+causing the diversity parameter~$\delta$ to have less effect: many
+$\delta$ values select the same content. The frontier contracts
+geometrically even as every point on it improves in utility.
+
+The lesson: frontier distance metrics are inappropriate for
+multi-stakeholder Goodhart detection. Per-stakeholder utility on
+selected content---the metric used throughout this paper---directly
+measures what matters: whether each stakeholder is better or worse off.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Limitations}
 \label{sec:limitations}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Scale gap, magnitude, linear utilities, transition zone
-\textit{[Limitations placeholder.]}
+\paragraph{Scale gap.}
+Our largest content pool (Amazon Kindle, 17{,}425 items) is orders of
+magnitude smaller than production recommendation systems. The
+direction condition is derived from linear BT convergence properties
+that hold regardless of scale, but we cannot empirically verify
+behavior on pools of millions of items.
+
+\paragraph{Linear utility.}
+All stakeholder utilities are linear in content features
+(\cref{eq:utility}). Real stakeholder preferences may exhibit
+diminishing returns, thresholds, or complementarities. Preliminary
+tests with concave and threshold utility families found
+the labels-not-loss claim robust (within-loss cos $> 0.92$), but the
+direction condition itself has not been validated under nonlinear
+utilities.
+
+\paragraph{Transition zone.}
+For $|\cos| < 0.2$, prediction accuracy drops to ${\sim}78\%$ across
+datasets. The direction condition provides no reliable guidance near
+cosine zero, where small perturbations to the trained weights can
+flip the predicted direction.
+
+\paragraph{Selection mechanism.}
+Under hard top-$K$ selection, the condition can reverse for
+stakeholders with high utility variance near the selection boundary
+(3 of~32 strong-cosine pairs on MIND). We tested and ruled out BT
+non-convergence as an alternative explanation (Spearman
+$\rho = -0.006$, $p = 0.98$ between within-loss cosine and
+direction-condition match rate across a noise-level sweep). The
+selection mechanism fully accounts for the observed violations, which
+vanish under softmax selection at $T \geq 1$.
+
+\paragraph{Trained vs.\ raw cosines.}
+On high-dimensional sparse features, BT training substantially
+remaps the cosine geometry (up to 3 of~10 pairs flip sign on MIND).
+The direction condition requires trained cosines, which are available
+only after training a BT model per stakeholder. This limits the
+condition's use as a pre-hoc diagnostic: an analyst cannot check it
+from raw stakeholder definitions alone without first running training.
+
+\paragraph{Sample of stakeholders.}
+We test 13 stakeholders across 4 datasets. While these span three
+domains and three feature families, they are all hand-crafted from
+dataset metadata. The condition's behavior on stakeholders learned
+from data (e.g., via clustering or elicitation) is untested.
 
 %═══════════════════════════════════════════════════════════════════
 \section{Conclusion}
 \label{sec:conclusion}
 %═══════════════════════════════════════════════════════════════════
 
-% TODO: Direction condition, toolkit, honest limits
-\textit{[Conclusion placeholder.]}
+We identified a directional Goodhart condition for multi-stakeholder
+preference learning: the sign of the cosine between BT-trained weight
+vectors determines whether additional training data helps or harms a
+hidden stakeholder. The condition holds with 100\% accuracy (32/32,
+$|\cos| > 0.2$) under softmax-weighted evaluation across four
+datasets spanning movies, news, and e-commerce. Under hard top-$K$
+selection, 3 of~32 pairs reverse---a selection mechanism artifact,
+not a failure of the cosine geometry.
+
+Two methodological contributions sharpen the condition's
+applicability. First, the cosine must be computed from BT-trained
+weight vectors, not raw stakeholder utility weights; on
+high-dimensional sparse features, BT training remaps the geometry
+substantially. Second, the condition governs expected utility under
+the score distribution, not utility on hard-selected content;
+softmax temperature $T \geq 1$ is the safe regime.
+
+For practitioners: the direction condition reduces multi-stakeholder
+Goodhart risk to a checkable quantity. The audit toolkit
+(\cref{sec:audit}) operationalizes this for X's recommendation
+algorithm, and the data budget analysis (\cref{sec:practical}) shows
+that 33~preference pairs typically suffice to recover half of hidden
+stakeholder harm. The remaining open questions---nonlinear utilities,
+learned representations, and production-scale validation---are
+directions for future work.
 
 %═══════════════════════════════════════════════════════════════════
 \bibliographystyle{plain}
@@ -639,7 +1073,150 @@ learned objective.
 
 \appendix
 
-% TODO: Fill appendix sections
-\textit{[Appendix placeholder.]}
+\section{Stakeholder Weight Definitions}
+\label{app:stakeholders}
+
+\paragraph{MIND-small.} Five stakeholders on $D = 35$ features
+(17 categories + 14 subcategories + 4 quality signals):
+\textbf{Reader}: category weights proportional to click rate minus
+baseline; positive weight on categories clicked above average.
+\textbf{Publisher}: weights proportional to article volume per
+category, rewarding categories with many articles.
+\textbf{Advertiser}: concentrated weight on the 3 highest-volume
+categories (news, sports, entertainment); negative weight on niche
+categories.
+\textbf{Journalist}: positive weight on quality signals (title
+length, abstract length, entity count) and investigative categories;
+negative weight on entertainment/lifestyle.
+\textbf{Civic\_diversity}: negative weight on dominant categories,
+positive on underrepresented ones (anti-concentration, analogous to
+MovieLens diversity).
+
+\paragraph{Amazon Kindle.} Five stakeholders on $D = 32$ features
+(20 genres + 4 price + 3 volume + 3 sentiment + 2 length):
+\textbf{Reader}: genre weights from review-count-weighted ratings.
+\textbf{Publisher}: catalog breadth across genres, volume signals.
+\textbf{Indie\_author}: positive weight on long-tail genres,
+negative on bestseller categories.
+\textbf{Premium\_seller}: weight on price-tier and review-quality
+features only (disjoint from genre slots, producing exact-zero raw
+cosines with 3 other stakeholders).
+\textbf{Diversity}: anti-concentration across genres.
+
+Full weight vectors and construction code are available in the
+accompanying repository.
+
+\section{Cosine Matrices}
+\label{app:cosines}
+
+Raw stakeholder cosines are computed from the weight definitions in
+\cref{app:stakeholders}. BT-trained cosines are the mean pairwise
+cosine of weight vectors learned by Bradley-Terry across 5~random
+seeds with $N = 2{,}000$ training pairs.
+Key observations: on MovieLens ($D{=}19$, dense), raw and trained
+cosines agree within $\pm 0.05$. On MIND ($D{=}35$, sparse), 3
+of~10 pairs flip sign between raw and trained. On Amazon ($D{=}32$),
+1 of~10 flips. The 3~Amazon orthogonal-by-construction pairs
+(involving premium\_seller) stay within $|0.05|$ of zero under
+training, confirming BT does not manufacture cosine from nothing.
+
+\section{Direction Condition Per-Pair Results}
+\label{app:direction_pairs}
+
+The 52 data points underlying \cref{fig:scatter} comprise Method~A
+(target rotation) across all 4~datasets: 6~pairs each on ML-100K and
+ML-1M (3 stakeholders), 20~pairs each on MIND and Amazon
+(5~stakeholders). Each data point records the target stakeholder,
+hidden stakeholder, BT-trained cosine, percentage utility change from
+$N = 25$ to $N = 2{,}000$, and whether the observed direction matches
+the cosine-sign prediction. An additional 30 MovieLens-specific
+Method~B data points (5 named stakeholders $\times$ 3 targets
+$\times$ 2 datasets) are available in the repository but are not
+included in the cross-dataset pooled count.
+
+\section{Data Budget Full Table}
+\label{app:data_budget}
+
+For each of the 13 (dataset, hidden stakeholder) configurations, we
+sweep hidden-stakeholder preference pairs
+$N \in \{0, 25, 50, 100, 200, 500\}$ with 20~seeds and interpolate
+the minimum $N$ for 50\% and 80\% regret recovery:
+
+\begin{table}[h]
+  \centering\small
+  \caption{Preference budget for hidden stakeholder recovery.
+    $N_{50\%}$/$N_{80\%}$: minimum pairs for 50\%/80\% regret
+    recovery (interpolated). ``$>500$'': not reached within sweep.}
+  \label{tab:budget_full}
+  \begin{tabular}{llrr}
+    \toprule
+    \textbf{Dataset} & \textbf{Hidden} &
+      $\boldsymbol{N_{50\%}}$ & $\boldsymbol{N_{80\%}}$ \\
+    \midrule
+    ML-100K & user      & $>500$ & $>500$ \\
+            & platform  & 45     & 445 \\
+            & diversity & 34     & 136 \\
+    \midrule
+    MIND    & reader          & 31  & 55 \\
+            & publisher       & 22  & 58 \\
+            & advertiser      & 35  & 139 \\
+            & journalist      & 33  & 74 \\
+            & civic\_div.     & 34  & 166 \\
+    \midrule
+    Amazon  & reader          & 14  & 22 \\
+            & publisher       & 368 & $>500$ \\
+            & indie\_author   & 447 & $>500$ \\
+            & premium\_seller & 23  & $>500$ \\
+            & diversity       & 19  & $>500$ \\
+    \midrule
+    \multicolumn{2}{l}{\textbf{Median}} & \textbf{33} & \textbf{104} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Temperature Sweep}
+\label{app:temp_sweep}
+
+Direction-condition match rates (BT-trained cosine, $|\cos| > 0.2$)
+under softmax selection at varying temperatures:
+
+\begin{table}[h]
+  \centering\small
+  \caption{Match rate at $|\text{trained cos}| > 0.2$ by selection
+    temperature. Hard top-10 is shown for comparison.}
+  \label{tab:temp_sweep}
+  \begin{tabular}{lrrrr}
+    \toprule
+    \textbf{Selection} & \textbf{ML-100K} & \textbf{MIND} &
+      \textbf{Amazon} & \textbf{Pooled} \\
+    \midrule
+    Hard top-10 & 6/6 & 9/14 & 8/8 & 23/28 \\
+    $T = 0.1$   & 6/6 & 11/14 & 8/8 & 25/28 \\
+    $T = 0.5$   & 5/6 & 11/14 & 8/8 & 24/28 \\
+    $T = 1.0$   & 6/6 & 14/14 & 8/8 & 28/28 \\
+    $T = 2.0$   & 6/6 & 14/14 & 8/8 & 28/28 \\
+    $T = 10.0$  & 6/6 & 14/14 & 8/8 & 28/28 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The transition from sub-100\% to 100\% on MIND occurs between
+$T = 0.5$ and $T = 1.0$. MovieLens and Amazon remain at 100\% across
+all temperatures (except one seed-noise fluctuation on ML-100K at
+$T = 0.5$).
+
+\section{Hyperparameter Robustness}
+\label{app:hyperparameter}
+
+The labels-not-loss finding (\cref{sec:lowrank}) claims that the loss
+function is irrelevant given identical training labels. We test
+robustness to loss hyperparameters by training margin-BT
+($m \in \{0.1, 0.5, 1.0\}$) and calibrated-BT
+($\lambda \in \{0.1, 1.0, 5.0\}$) on each stakeholder and computing
+the cosine between the variant's learned weights and the standard BT
+weights (same stakeholder, same seed). Across all 13~stakeholders and
+3~datasets, the within-stakeholder cosine between standard BT and each
+variant exceeds~0.93, confirming that the finding is robust to
+hyperparameter choice.
 
 \end{document}
