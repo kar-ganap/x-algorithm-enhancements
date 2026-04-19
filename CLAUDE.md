@@ -6,7 +6,7 @@ Enhancements to xAI's open-sourced recommendation algorithm (Phoenix/Grok). Two 
 
 **Feature F1 (KV-Cache Optimization):** Complete, dormant. 10.3x JIT speedup, 9.6x KV-cache, 58% INT8 memory reduction. 166 tests (9 failures, environment-related). See `docs/f1/retro.md`.
 
-**Feature F2 (Reward Modeling):** All 7 phases complete.
+**Feature F2 (Reward Modeling):** All 7 phases complete + Tier 2 dataset expansion (Phases A–F).
 
 | Phase | What | Key Result |
 |-------|------|------------|
@@ -17,12 +17,17 @@ Enhancements to xAI's open-sourced recommendation algorithm (Phoenix/Grok). Two 
 | Phase 5 | MovieLens validation | +59% NDCG; 107.5% synergy effect |
 | Phase 6 | Synthetic Twitter verification | All 5 test suites pass; 648 params recovered |
 | Phase 7 | Research directions (D1-D3) | Labels-not-loss; partial observation; sensitivity |
+| Tier 2 | MIND + Amazon Kindle expansion | Direction condition 32/32 across 4 datasets |
 
-**Core insight:** Stakeholder differentiation comes from the training labels, not the loss function. 79 of 87 experiments across 4 loss functions converged: when all stakeholders train on identical preference pairs, they converge to identical weights regardless of loss (8 constrained-BT-society experiments diverged due to numerical instability in the diversity constraint, since fixed). Different utility functions → different labels → different models.
+**Paper:** "When More Data Hurts: A Directional Goodhart Condition for Multi-Stakeholder Preference Learning" — `docs/f2/paper/main.pdf`
 
-**Nonlinear robustness:** Tested under Concave (prospect theory) and Threshold (dead zone) utility families. Labels-not-loss holds (cos sim >0.92), α-recovery Spearman=1.0 for both. α-interpolation proxy degrades under threshold (0.738→0.499) but diversity knob is invariant (0.724). See `results/nonlinear_robustness.json`.
+**Core result:** The directional Goodhart condition — cos(trained target, trained hidden) < 0 predicts hidden stakeholder harm — holds at 100% (32/32, |cos|>0.2) under softmax-weighted evaluation across 4 datasets (MovieLens-100K/1M, MIND-small, Amazon Kindle). Under hard top-K, 29/32 (91%) — 3 violations explained by selection mechanism concentration.
 
-Full narrative: `docs/results.md`
+**Datasets:** All experiments use `scripts/_dataset_registry.py` which provides `load_dataset(name)` for `{ml-100k, ml-1m, mind-small, amazon-kindle}`. Each returns a `LoadedDataset` with pool, configs, stakeholder module. Data dirs: `data/{ml-100k, ml-1m, mind-small, amazon-kindle}/`.
+
+**Labels-not-loss insight:** Stakeholder differentiation comes from the training labels, not the loss function. Within-loss cosine >0.89 across 16 stakeholder configurations on 4 datasets.
+
+Full narrative: `docs/results.md` (phases 1–7), `docs/f2/tier2_expansion_plan.md` (tier 2)
 
 ## Ground Rules
 
@@ -73,13 +78,22 @@ enhancements/reward_modeling/   # F2 core: reward model, training, utilities
   alternative_losses.py         # Phase 4: margin-BT, calibrated-BT, etc.
   weights.py                    # ACTION_INDICES, NUM_ACTIONS (18)
 
+enhancements/data/              # Dataset loaders + stakeholder modules
+  movielens.py                  # MovieLensDataset (ml-100k, ml-1m)
+  movielens_stakeholders.py     # user, platform, diversity + 5 named
+  mind.py                       # MINDDataset (mind-small)
+  mind_stakeholders.py          # reader, publisher, advertiser, journalist, civic_diversity
+  amazon.py                     # AmazonDataset (amazon-kindle)
+  amazon_stakeholders.py        # reader, publisher, indie_author, premium_seller, diversity
+
 scripts/                        # Organized into subdirectories:
+  _dataset_registry.py          # DatasetSpec, LoadedDataset, load_dataset() — single entry point
   training/                     # train_reward_model, train_synthetic, train_movielens
   analysis/                     # analyze_partial_observation, analyze_nonlinear_robustness, etc.
-  experiments/                  # run_loss_experiments, run_charter_e, compute_exp4_frontiers
-  visualization/                # visualize_exp4 (reads JSON, instant)
+  experiments/                  # run_loss_experiments, run_convergence_ablation, etc.
+  visualization/                # generate_paper_figures, visualize_exp4
   evaluation/                   # evaluate_reward_model, verify_synthetic, compare_pareto
-  data/                         # generate_synthetic, download_movielens
+  data/                         # generate_synthetic, download_movielens, download_mind, download_amazon
   _archive/                     # one-off diagnostics (exp4_diagnostic, ablation_study, etc.)
 
 tests/                          # pytest suite

@@ -88,20 +88,19 @@
 \begin{abstract}\noindent
 Multi-stakeholder recommendation systems optimize proxy objectives
 that may harm unobserved stakeholders. We identify a precise
-condition governing when this occurs: in Bradley-Terry preference
+condition governing when this occurs: in Bradley-Terry (BT) preference
 learning with $K$ stakeholders, additional training data degrades a
 hidden stakeholder's \emph{expected} utility if and only if the cosine
-similarity between the BT-trained weight vectors of the optimization
+similarity between the learned weight vectors of the optimization
 target and the hidden stakeholder is negative. We validate this
-\emph{directional Goodhart condition} on 32 strong-cosine data points
-across 4 datasets (MovieLens-100K, MovieLens-1M, MIND, Amazon Kindle),
-13 stakeholders, and 3 feature families ($D \in \{19, 32, 35\}$), with
-100\% accuracy for $|\cos| > 0.2$ (32/32) under softmax-weighted
-evaluation and 91\% (29/32) under hard top-$K$ selection. The
-condition correctly predicts that X's 18-action engagement space
-exhibits no Goodhart effect (all stakeholder pairs have positive
-cosine), correcting a prior Hausdorff-based analysis that falsely
-indicated otherwise.
+\emph{directional Goodhart condition} on 32 data points with
+$|\cos| > 0.2$ across 4 datasets (MovieLens-100K, MovieLens-1M,
+MIND, Amazon Kindle), 13 stakeholders, and 3 feature families
+($D \in \{19, 32, 35\}$ dimensions), with 100\% accuracy (32/32)
+under softmax-weighted evaluation and 91\% (29/32) under hard
+top-$K$ selection. We also show that a standard Pareto frontier
+metric (Hausdorff distance) produces a false positive Goodhart signal
+on synthetic data where the condition correctly predicts no harm.
 
 Two precisions emerge from the cross-dataset analysis. First, the
 relevant cosine is between BT-\emph{trained} weight vectors, not raw
@@ -115,8 +114,8 @@ vanishes at softmax temperature $T \geq 1$.
 Applied to X's open-sourced recommendation algorithm, the Goodhart
 risk reduces to one observable: whether the platform treats negative
 signals (blocks, reports) as positive engagement. We provide an audit
-toolkit, a data budget analysis (median 33 preference pairs to recover
-50\% of hidden stakeholder harm across 13 stakeholder configurations),
+toolkit, a data budget analysis (median 34 preference pairs to recover
+50\% of hidden stakeholder harm across 16 dataset--stakeholder configurations),
 and practical guidance for platform transparency under the EU Digital
 Services Act.
 \end{abstract}
@@ -169,7 +168,7 @@ Three findings emerge from the cross-dataset analysis:
     geometry---up to 3 of~10 pairs flip sign---making raw cosines
     unreliable predictors.
   \item The preference budget for hidden stakeholder recovery is
-    modest: a median of 33~pairs achieves 50\% recovery of hidden
+    modest: a median of 34~pairs achieves 50\% recovery of hidden
     harm, though the variance across stakeholder geometries is large
     (14 to $>500$ pairs).
 \end{enumerate}
@@ -202,7 +201,7 @@ stakeholders~\cite{stray2024building}.
 \paragraph{Goodhart's law and reward hacking.}
 Goodhart's law---``when a measure becomes a target, it ceases to be a
 good measure''---has been formalized in the reward learning
-literature. \citet{skalse2024goodhart} distinguish four mechanisms:
+literature. Skalse et al.~\cite{skalse2024goodhart} distinguish four mechanisms:
 \emph{regressional} (noise in the proxy), \emph{extremal}
 (distribution shift at the tails), \emph{causal} (gaming the proxy),
 and \emph{adversarial} (intentional manipulation). The mechanism
@@ -281,9 +280,11 @@ target differs from any stakeholder's true utility---we perturb
 the target weight vector with multiplicative Gaussian noise:
 $\tilde{\mathbf{w}} = \mathbf{w}_t \odot (1 + \boldsymbol{\epsilon})$,
 $\boldsymbol{\epsilon} \sim \mathcal{N}(0, \sigma_p^2 \mathbf{I})$
-with $\sigma_p = 0.3$. The BT model trains on preferences labeled by
-the perturbed~$\tilde{\mathbf{w}}$, so the learned model approaches
-but does not exactly recover the target direction.
+with $\sigma_p = 0.3$ (chosen so the proxy is correlated with but
+not identical to the true objective; each weight element is perturbed
+by approximately $\pm 30\%$). The BT model trains on preferences
+labeled by the perturbed~$\tilde{\mathbf{w}}$, so the learned model
+approaches but does not exactly recover the target direction.
 
 \subsection{Datasets and Stakeholders}
 
@@ -297,8 +298,8 @@ content (\cref{tab:actions}). Each content item produces an action
 probability vector $\mathbf{p} \in [0,1]^{18}$. We generate 500
 content items across 6 topics (technology, sports, politics-left,
 politics-right, entertainment, science) and 600 users in 5
-archetypes, with action probabilities drawn from calibrated
-distributions.
+archetypes, with action probabilities drawn from distributions
+calibrated to realistic engagement rates for each action type.
 
 Three stakeholders are defined via the structural family
 \begin{equation}
@@ -456,15 +457,18 @@ set. The 21-point sweep traces a Pareto frontier in stakeholder
 utility space.
 
 For Goodhart experiments (\cref{sec:direction}), we compare
-stakeholder utilities at $N = 25$ and $N = 2{,}000$ training pairs
-across 5 random seeds, measuring the percentage change from the
-$N = 25$ baseline. The target stakeholder improves by construction;
-whether hidden stakeholders improve or degrade is the quantity of
-interest. For leave-one-stakeholder-out (LOSO) experiments, we
-exclude one stakeholder during training and measure its
-\emph{regret}: the utility gap between the full-information Pareto
-frontier and the LOSO frontier, averaged across operating points and
-20 seeds.
+stakeholder utilities at $N = 25$ (a minimal practical budget: 5
+annotators $\times$ 5 comparisons) and $N = 2{,}000$ (the
+well-converged regime) training pairs across 5~random seeds,
+measuring the percentage change from the $N = 25$ baseline. The
+target stakeholder improves by construction; whether hidden
+stakeholders improve or degrade is the quantity of interest. For
+leave-one-stakeholder-out (LOSO) experiments, we exclude one
+stakeholder during training and measure its \emph{regret}: the
+utility gap between the full-information Pareto frontier and the
+LOSO frontier, averaged across operating points and 20~seeds (more
+seeds than Goodhart experiments to tighten confidence intervals on
+the recovery percentage).
 
 %═══════════════════════════════════════════════════════════════════
 \section{The Directional Goodhart Condition}
@@ -486,9 +490,9 @@ the hidden stakeholder?
 In a linear BT preference learning setting with $K$ stakeholders and a
 finite content pool~$\mathcal{C}$, let $\hat{\mathbf{w}}_t(N)$ be the
 weight vector learned from $N$ preference pairs labeled by target
-stakeholder~$t$, and let $\hat{\mathbf{w}}_h$ be the corresponding
-BT-learned direction for hidden stakeholder~$h$ (the fixed point of BT
-training on~$h$'s labels). Define the expected hidden utility under the
+stakeholder~$t$, and let $\hat{\mathbf{w}}_h$ be the asymptotic BT-learned direction
+for hidden stakeholder~$h$ (the weight vector that BT training
+converges to in the large-$N$ limit on~$h$'s labels). Define the expected hidden utility under the
 score distribution induced by $\hat{\mathbf{w}}_t(N)$ as
 \begin{equation}
   \bar{U}_h(N) \;=\; \sum_{c \in \mathcal{C}}
@@ -513,7 +517,8 @@ raw stakeholder utility weights. On low-dimensional dense feature
 spaces (MovieLens, $D{=}19$), raw and trained cosines agree to within
 $\pm 0.05$. On high-dimensional sparse features (MIND, $D{=}35$;
 Amazon Kindle, $D{=}32$), BT training can substantially remap the
-cosine geometry---up to 3 of~10 pairs flip sign on MIND---and trained
+cosine geometry---up to 3 of~$\binom{5}{2}{=}10$ stakeholder pairs
+flip sign on MIND---and trained
 cosines are necessary for reliable prediction. Second, the hidden
 utility is evaluated under the \emph{score distribution}
 $\pi_{\mathbf{w}}$, not on a hard top-$K$ selection set. Under hard
@@ -529,7 +534,7 @@ $\cos \approx 0$ where prediction is unreliable.
 
 \subsection{Empirical Validation}
 
-We validate the direction condition on 32 strong-cosine
+We validate \cref{prop:direction} on 32 strong-cosine
 ($|\cos| > 0.2$) data points across four datasets spanning three
 distinct feature families, using BT-trained cosines.
 
@@ -562,7 +567,9 @@ Pooled under softmax evaluation: 32 of 32 strong-cosine pairs match
 the predicted direction (100\%). Under hard top-$K$: 29 of 32 (91\%),
 with the 3 violations confined to one stakeholder on one dataset. In
 the transition zone ($|\cos| < 0.2$), prediction is less reliable,
-with violations concentrated near $\cos \approx 0$.
+with violations concentrated near $\cos \approx 0$. The full
+per-pair breakdown is in \cref{app:direction_pairs}; raw and trained
+cosine matrices are in \cref{app:cosines}.
 
 In each experiment, the target stakeholder's weights are perturbed
 with multiplicative Gaussian noise ($\sigma = 0.3$). BT models are
@@ -603,7 +610,7 @@ On MIND, hard top-10 matches the direction condition on 11 of~14
 strong-cosine pairs (79\%). At $T = 1.0$, the match rate rises to
 14/14 (100\%). On both MovieLens datasets and Amazon, both mechanisms
 give 100\% at $|\cos| > 0.2$. The transition occurs between
-$T = 0.5$ and $T = 1.0$.
+$T = 0.5$ and $T = 1.0$ (full sweep in \cref{app:temp_sweep}).
 
 The mechanism: hard top-$K$ concentrates on items where the target
 stakeholder scores highest. For hidden stakeholders with high utility
@@ -623,25 +630,31 @@ borderline items should be monitored explicitly.
 
 \subsection{The MovieLens Goodhart Curve}
 
-\Cref{fig:goodhart} shows the Goodhart effect in action on MovieLens.
-Three stakeholder utility curves are plotted as a function of training
-pairs~$N$, normalized to percentage change from the $N = 25$ baseline.
-On both ML-100K (\cref{fig:goodhart}a) and ML-1M
-(\cref{fig:goodhart}b), user and platform utilities increase
-monotonically ($+14\%$ by $N = 2{,}000$), while diversity utility
-decreases ($-34\%$ on ML-100K, $-46\%$ on ML-1M). The cosine values
-in the legend predict the direction: positive cosine leads to an
-upward curve, negative cosine to a downward curve.
+\Cref{fig:goodhart} shows the Goodhart effect across all four real
+datasets. Stakeholder utility curves are plotted as a function of
+training pairs~$N$, normalized to percentage change from the
+$N = 25$ baseline. In every panel, the cosine sign predicts the
+curve direction: positive cosine (green) leads to an upward or flat
+curve, negative cosine (red) leads to a downward curve. The effect
+is strongest on MIND (\cref{fig:goodhart}c), where
+civic\_diversity ($\cos = -0.84$) drops by $-200\%$. On Amazon
+(\cref{fig:goodhart}d), the near-zero cosine case
+(diversity, $\cos = -0.01$) produces a nearly flat curve---the
+direction condition correctly predicts no strong effect at the
+boundary.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/fig2_goodhart_curves.pdf}
-  \caption{Multi-stakeholder Goodhart effect on MovieLens. User and
-    platform (cosine $> 0$ with target) improve monotonically.
-    Diversity (cosine $< 0$) degrades. Same experiment, same data,
-    opposite outcomes predicted by the cosine sign.
-    \textbf{(a)}~ML-100K ($D = 19$, 1{,}305 movies).
-    \textbf{(b)}~ML-1M ($D = 19$, 3{,}347 movies).}
+  \includegraphics[width=\textwidth]{figures/fig2_goodhart_4panel.pdf}
+  \caption{Multi-stakeholder Goodhart effect across 4 datasets.
+    Each panel shows stakeholder utility change as the BT model
+    trains on more data. Positive cosine with the target (legend)
+    leads to improvement; negative cosine leads to degradation.
+    \textbf{(a)}~ML-100K ($D{=}19$, movies).
+    \textbf{(b)}~ML-1M ($D{=}19$, movies).
+    \textbf{(c)}~MIND ($D{=}35$, news).
+    \textbf{(d)}~Amazon Kindle ($D{=}32$, e-commerce).
+    The pattern is consistent across three feature families.}
   \label{fig:goodhart}
 \end{figure*}
 
@@ -703,11 +716,15 @@ losses on the same labels.
   \begin{tabular}{llr}
     \toprule
     \textbf{Dataset} & \textbf{Stakeholder} &
-      \textbf{Within-loss cos} \\
+      \textbf{Within-loss cosine} \\
     \midrule
     ML-100K & user      & $0.957 \pm 0.005$ \\
             & platform  & $0.987 \pm 0.003$ \\
             & diversity & $0.958 \pm 0.006$ \\
+    \midrule
+    ML-1M   & user      & $0.956 \pm 0.001$ \\
+            & platform  & $0.988 \pm 0.001$ \\
+            & diversity & $0.955 \pm 0.003$ \\
     \midrule
     MIND    & reader      & $0.911 \pm 0.007$ \\
             & publisher   & $0.944 \pm 0.006$ \\
@@ -733,7 +750,8 @@ vectors in the dataset (12 and~17 nonzero dimensions out of~35
 respectively). The core claim holds: \emph{stakeholder
 differentiation comes from the training labels, not the loss
 function}, with the qualification that very sparse stakeholders on
-high-dimensional features show weaker convergence.
+high-dimensional features show weaker convergence. The finding is
+robust to loss hyperparameters (\cref{app:hyperparameter}).
 
 \subsection{Low-Rank Composition}
 
@@ -755,6 +773,7 @@ weight vector onto the span of the per-stakeholder weight vectors.
       \textbf{Mean proj.\ cos} & \textbf{Frac.\ $> 0.95$} \\
     \midrule
     ML-100K       & 3 & 19 & 0.979 & 21/21 \\
+    ML-1M         & 3 & 19 & 0.984 & 18/18 \\
     MIND-small    & 5 & 35 & 0.893 & 30/121 \\
     Amazon Kindle & 5 & 32 & 0.877 & 31/121 \\
     \bottomrule
@@ -794,41 +813,41 @@ If the direction condition identifies \emph{which} hidden
 stakeholders are harmed, a natural follow-up is: how much data
 from the hidden stakeholder is needed to mitigate the harm?
 
-We run leave-one-stakeholder-out (LOSO) experiments across three
-real datasets (ML-100K, MIND, Amazon Kindle), hiding each
-stakeholder in turn. At $N = 0$ hidden-stakeholder preference pairs,
-the LOSO regret (utility gap from the full-information Pareto
-frontier) is the baseline harm. We then add
-$N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder pairs and
-retrain, measuring the \emph{recovery}: the fraction of baseline
+We run leave-one-stakeholder-out (LOSO) experiments across all four
+real datasets, hiding each stakeholder in turn. At $N = 0$
+hidden-stakeholder preference pairs, the LOSO regret (utility gap
+from the full-information Pareto frontier) is the baseline harm. We
+then add $N \in \{25, 50, 100, 200, 500\}$ hidden-stakeholder pairs
+and retrain, measuring the \emph{recovery}: the fraction of baseline
 regret eliminated. We report the preference budget $N_{50\%}$ and
 $N_{80\%}$ --- the minimum $N$ needed to reach 50\% and 80\%
 recovery, interpolated across the sweep.
 
-Across 13 (dataset, hidden stakeholder) configurations, the
-\textbf{median $N_{50\%}$ is 33~pairs} and the \textbf{median
-$N_{80\%}$ is 104~pairs}. The practical cost is modest: 33
-preference pairs can be collected from 7 annotators making 5
-pairwise comparisons each. For most hidden stakeholders, a
+Across 16 (dataset, hidden stakeholder) configurations
+(\cref{fig:budget}), the \textbf{median $N_{50\%}$ is 34~pairs}
+and the \textbf{median $N_{80\%}$ is 137~pairs}. The practical cost
+is modest: 34 preference pairs can be collected from 7 annotators
+making 5 pairwise comparisons each. For most hidden stakeholders, a
 modest investment detects and substantially mitigates hidden harm.
 
 The variance is large. On Amazon Kindle, hiding reader requires
 only 14~pairs for 50\% recovery, while hiding publisher requires
 368---reflecting publisher's strong anti-alignment with every other
-stakeholder ($\cos < -0.5$ with 2 of~4 others). One configuration
-(ML-100K, hide user) does not reach 50\% within the 500-pair sweep,
-because the remaining stakeholders (platform, diversity) already
-proxy for user well ($\cos(\text{user}, \text{platform}) = +0.95$).
-The full per-stakeholder breakdown is in \cref{app:data_budget}.
+stakeholder ($\cos < -0.5$ with 2 of~4 others). Two configurations
+(ML-100K and ML-1M, hide user) do not reach 50\% within the
+500-pair sweep, because the remaining stakeholders (platform,
+diversity) already proxy for user well
+($\cos(\text{user}, \text{platform}) = +0.95$). The full
+per-stakeholder breakdown is in \cref{app:data_budget}.
 
-% TODO: Regenerate fig5 with N-for-target framing across datasets
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig5_data_budget.pdf}
   \caption{Data budget for hidden stakeholder recovery across
-    13~configurations on 3~datasets. Median budget: 33~pairs for
-    50\% recovery, 104~pairs for 80\%. Worst case: $> 500$ pairs
-    for stakeholders with strong substitutes in the observed set.}
+    16~configurations on 4~datasets. Bold lines: median regret
+    across hidden stakeholders per dataset. Faint lines: individual
+    per-stakeholder regret curves. Median budget: 34~pairs for
+    50\% recovery, 137~pairs for 80\%.}
   \label{fig:budget}
 \end{figure}
 
@@ -1061,13 +1080,13 @@ For practitioners: the direction condition reduces multi-stakeholder
 Goodhart risk to a checkable quantity. The audit toolkit
 (\cref{sec:audit}) operationalizes this for X's recommendation
 algorithm, and the data budget analysis (\cref{sec:practical}) shows
-that 33~preference pairs typically suffice to recover half of hidden
+that 34~preference pairs typically suffice to recover half of hidden
 stakeholder harm. The remaining open questions---nonlinear utilities,
 learned representations, and production-scale validation---are
 directions for future work.
 
 %═══════════════════════════════════════════════════════════════════
-\bibliographystyle{plain}
+\bibliographystyle{unsrt}
 \bibliography{references}
 %═══════════════════════════════════════════════════════════════════
 
@@ -1129,15 +1148,17 @@ ML-1M (3 stakeholders), 20~pairs each on MIND and Amazon
 (5~stakeholders). Each data point records the target stakeholder,
 hidden stakeholder, BT-trained cosine, percentage utility change from
 $N = 25$ to $N = 2{,}000$, and whether the observed direction matches
-the cosine-sign prediction. An additional 30 MovieLens-specific
-Method~B data points (5 named stakeholders $\times$ 3 targets
-$\times$ 2 datasets) are available in the repository but are not
-included in the cross-dataset pooled count.
+the cosine-sign prediction. An additional 30 MovieLens-specific Method~B data points (5 named
+stakeholders $\times$ 3 targets $\times$ 2 datasets) are available
+in the repository. Of these, 28 of~28 with $|\cos| > 0.2$ match the
+direction condition under raw cosines (consistent with the Method~A
+result on MovieLens). They are not included in the cross-dataset
+pooled count because the named stakeholders are MovieLens-specific.
 
 \section{Data Budget Full Table}
 \label{app:data_budget}
 
-For each of the 13 (dataset, hidden stakeholder) configurations, we
+For each of the 16 (dataset, hidden stakeholder) configurations, we
 sweep hidden-stakeholder preference pairs
 $N \in \{0, 25, 50, 100, 200, 500\}$ with 20~seeds and interpolate
 the minimum $N$ for 50\% and 80\% regret recovery:
@@ -1157,6 +1178,10 @@ the minimum $N$ for 50\% and 80\% regret recovery:
             & platform  & 45     & 445 \\
             & diversity & 34     & 136 \\
     \midrule
+    ML-1M   & user      & $>500$ & $>500$ \\
+            & platform  & 86     & 272 \\
+            & diversity & 69     & 138 \\
+    \midrule
     MIND    & reader          & 31  & 55 \\
             & publisher       & 22  & 58 \\
             & advertiser      & 35  & 139 \\
@@ -1169,7 +1194,7 @@ the minimum $N$ for 50\% and 80\% regret recovery:
             & premium\_seller & 23  & $>500$ \\
             & diversity       & 19  & $>500$ \\
     \midrule
-    \multicolumn{2}{l}{\textbf{Median}} & \textbf{33} & \textbf{104} \\
+    \multicolumn{2}{l}{\textbf{Median}} & \textbf{34} & \textbf{137} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1182,20 +1207,20 @@ under softmax selection at varying temperatures:
 
 \begin{table}[h]
   \centering\small
-  \caption{Match rate at $|\text{trained cos}| > 0.2$ by selection
+  \caption{Match rate at $|\text{trained cosine}| > 0.2$ by selection
     temperature. Hard top-10 is shown for comparison.}
   \label{tab:temp_sweep}
-  \begin{tabular}{lrrrr}
+  \begin{tabular}{lrrrrr}
     \toprule
-    \textbf{Selection} & \textbf{ML-100K} & \textbf{MIND} &
-      \textbf{Amazon} & \textbf{Pooled} \\
+    \textbf{Selection} & \textbf{ML-100K} & \textbf{ML-1M} &
+      \textbf{MIND} & \textbf{Amazon} & \textbf{Pooled} \\
     \midrule
-    Hard top-10 & 6/6 & 9/14 & 8/8 & 23/28 \\
-    $T = 0.1$   & 6/6 & 11/14 & 8/8 & 25/28 \\
-    $T = 0.5$   & 5/6 & 11/14 & 8/8 & 24/28 \\
-    $T = 1.0$   & 6/6 & 14/14 & 8/8 & 28/28 \\
-    $T = 2.0$   & 6/6 & 14/14 & 8/8 & 28/28 \\
-    $T = 10.0$  & 6/6 & 14/14 & 8/8 & 28/28 \\
+    Hard top-10 & 6/6 & 4/4 & 9/14  & 8/8 & 27/32 \\
+    $T = 0.1$   & 6/6 & 4/4 & 11/14 & 8/8 & 29/32 \\
+    $T = 0.5$   & 5/6 & 4/4 & 11/14 & 8/8 & 28/32 \\
+    $T = 1.0$   & 6/6 & 4/4 & 14/14 & 8/8 & 32/32 \\
+    $T = 2.0$   & 6/6 & 4/4 & 14/14 & 8/8 & 32/32 \\
+    $T = 10.0$  & 6/6 & 4/4 & 14/14 & 8/8 & 32/32 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1214,9 +1239,9 @@ robustness to loss hyperparameters by training margin-BT
 ($m \in \{0.1, 0.5, 1.0\}$) and calibrated-BT
 ($\lambda \in \{0.1, 1.0, 5.0\}$) on each stakeholder and computing
 the cosine between the variant's learned weights and the standard BT
-weights (same stakeholder, same seed). Across all 13~stakeholders and
-3~datasets, the within-stakeholder cosine between standard BT and each
-variant exceeds~0.93, confirming that the finding is robust to
-hyperparameter choice.
+weights (same stakeholder, same seed). Across all 16~stakeholder
+configurations and 4~datasets, the within-stakeholder cosine between
+standard BT and each variant exceeds~0.89, confirming that the finding
+is robust to hyperparameter choice.
 
 \end{document}

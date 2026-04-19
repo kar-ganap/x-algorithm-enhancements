@@ -319,41 +319,56 @@ def fig4_audit_threshold():
 # ═══════════════════════════════════════════════════════════════
 
 def fig5_data_budget():
-    fig, ax = plt.subplots(figsize=(5.5, 3.8))
+    """Data budget: regret vs N across 3 datasets, all hidden stakeholders.
 
-    # Plot raw regret — no >100% confusion
-    datasets = [
-        ("ML-100K", "results/ml-100k_loso.json", C_100K, "s"),
-        ("ML-1M", "results/ml-1m_loso.json", C_1M, "^"),
+    Shows the median regret curve across all hidden stakeholders per dataset,
+    with individual stakeholder curves as thin lines.
+    """
+    C_MIND = "#9C27B0"
+    C_AMAZON = "#00897B"
+    fig, ax = plt.subplots(figsize=(6, 4))
+
+    ds_configs = [
+        ("ML-100K", "results/ml-100k_data_budget_all_hidden.json", "ml-100k", C_100K, "o"),
+        ("ML-1M", "results/ml-1m_data_budget_all_hidden.json", "ml-1m", C_1M, "D"),
+        ("MIND", "results/mind-small_data_budget_all_hidden.json", "mind-small", C_MIND, "s"),
+        ("Amazon", "results/amazon-kindle_data_budget_all_hidden.json", "amazon-kindle", C_AMAZON, "^"),
     ]
 
-    for ds_name, path, color, marker in datasets:
-        d = json.load(open(ROOT / path))
-        budget = d.get("data_budget", {})
-        sweep = budget.get("sweep", [])
-        if not sweep:
+    for ds_label, path, ds_key, color, marker in ds_configs:
+        fpath = ROOT / path
+        if not fpath.exists():
             continue
+        with open(fpath) as f:
+            d = json.load(f)
 
-        N = np.array([e["n_pairs"] for e in sweep], dtype=float)
-        regret = np.array([e["avg_regret_mean"] for e in sweep])
-        std = np.array([e["avg_regret_std"] for e in sweep])
+        ds_data = d["datasets"][ds_key]
+        all_sweeps = []
 
-        # Show up to N=500
-        mask = N <= 500
-        ax.plot(N[mask], regret[mask], color=color,
-                marker=marker, markersize=5.5, linewidth=1.8,
-                label=ds_name, zorder=3)
-        ax.fill_between(N[mask], (regret - std)[mask], (regret + std)[mask],
-                         alpha=0.18, color=color, zorder=2)
+        for hidden_name, info in ds_data.items():
+            sweep = info.get("sweep", [])
+            if not sweep:
+                continue
+            N_vals = np.array([e["n_pairs"] for e in sweep], dtype=float)
+            regrets = np.array([e["avg_regret_mean"] for e in sweep])
+            mask = N_vals <= 500
+            # Individual stakeholder curve (thin, transparent)
+            ax.plot(N_vals[mask], regrets[mask], color=color, alpha=0.15,
+                    linewidth=0.8, zorder=2)
+            all_sweeps.append(regrets[mask])
 
-    # Zero regret line
+        if all_sweeps:
+            # Median curve across hidden stakeholders
+            median_regret = np.median(all_sweeps, axis=0)
+            N_common = N_vals[mask]
+            ax.plot(N_common, median_regret, color=color,
+                    marker=marker, markersize=5.5, linewidth=2.0,
+                    label=ds_label, zorder=4)
+
     ax.axhline(y=0, color="#888888", linewidth=0.8, linestyle=":",
-               zorder=1, label="Zero regret")
+               zorder=1)
+    ax.axhspan(0, 15, alpha=0.02, color="red", zorder=0)
 
-    # Subtle shading: regret > 0 = harm zone
-    ax.axhspan(0, 6, alpha=0.02, color="red", zorder=0)
-
-    # Linear x-axis with evenly spaced ticks at actual N values
     ax.set_xlim(-10, 520)
     ax.set_xticks([0, 25, 50, 100, 200, 500])
     ax.set_xlabel("Hidden stakeholder preference pairs (N)")

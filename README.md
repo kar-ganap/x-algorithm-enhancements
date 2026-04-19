@@ -15,13 +15,23 @@ Inference optimization for the Phoenix transformer, targeting latency and memory
 
 ### Multi-Stakeholder Reward Modeling
 
-Bradley-Terry preference learning for multi-stakeholder recommendation — user engagement, platform retention, and societal welfare. Studied on a synthetic benchmark built on X's 18-action engagement space (preprint: [`PDF`](docs/f2/paper/main.pdf)).
+Bradley-Terry preference learning for multi-stakeholder recommendation. Preprint: [*When More Data Hurts: A Directional Goodhart Condition for Multi-Stakeholder Preference Learning*](docs/f2/paper/main.pdf).
 
-- **Core finding:** Stakeholder differentiation comes from training *labels*, not the loss function. 79 of 87 experiments across 4 BT loss variants converge to near-identical weights (cosine similarity >0.92) when trained on identical preference pairs.
-- **Identifiability:** The negativity-aversion parameter α is recoverable from learned weights (Spearman=1.0), robust to ≤20% label noise and ≥250 preference pairs.
-- **Partial observation:** Hiding society costs 10x more regret than hiding user; even 25 preference pairs from the hidden stakeholder cuts regret by 42%.
-- **Utility sensitivity:** The Pareto frontier absorbs individual weight perturbation (rank stability = 1.0) but not simultaneous misspecification. More data amplifies misspecified utilities after N > 100 pairs — a Goodhart effect.
-- Validated on MovieLens-100K (+59% NDCG) and a 648-parameter synthetic Twitter environment.
+- **Directional Goodhart condition:** The sign of the cosine between BT-trained stakeholder weight vectors determines whether additional training data helps or harms a hidden stakeholder. Validated at 100% accuracy (32/32, |cos|>0.2) under softmax-weighted evaluation across 4 datasets.
+- **Selection mechanism matters:** Under hard top-K selection, the condition can reverse for stakeholders with high utility variance near the selection boundary (3 of 32 pairs on MIND). The reversal vanishes at softmax temperature T >= 1.
+- **Labels, not loss:** Stakeholder differentiation comes from training labels, not the loss function. 3 BT loss variants converge to near-identical weights across 16 stakeholder configurations on 4 datasets.
+- **Data budget:** A median of 34 preference pairs achieves 50% recovery of hidden stakeholder harm (range: 14 to >500 pairs depending on stakeholder geometry).
+- **Audit toolkit:** For X's 18-action engagement space, the Goodhart risk reduces to one observable — whether the platform treats negative signals (blocks, reports) as positive engagement.
+
+Validated on 4 datasets spanning 3 feature families:
+
+| Dataset | Domain | D | K | Pool |
+|---|---|---|---|---|
+| MovieLens-100K | Movies | 19 | 3 | 1,305 |
+| MovieLens-1M | Movies | 19 | 3 | 3,347 |
+| MIND-small | News | 35 | 5 | 12,261 |
+| Amazon Kindle | E-commerce | 32 | 5 | 17,425 |
+
 - See [`enhancements/reward_modeling/`](enhancements/reward_modeling/) and [`docs/f2/`](docs/f2/)
 
 ## Architecture
@@ -59,7 +69,7 @@ uv run python scripts/analysis/analyze_partial_observation.py --exp 4
 enhancements/               # Enhancement code
 ├── optimization/           # KV-cache, JIT, INT8 quantization
 ├── reward_modeling/        # BT training, stakeholder utilities, Pareto analysis
-├── data/                   # Data adapters (synthetic, MovieLens)
+├── data/                   # Data adapters (synthetic, MovieLens, MIND, Amazon Kindle)
 ├── analysis/               # Trajectory & sensitivity analysis
 ├── verification/           # Test suites for synthetic verification
 └── training/               # Training harness
