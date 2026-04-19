@@ -630,25 +630,31 @@ borderline items should be monitored explicitly.
 
 \subsection{The MovieLens Goodhart Curve}
 
-\Cref{fig:goodhart} shows the Goodhart effect in action on MovieLens.
-Three stakeholder utility curves are plotted as a function of training
-pairs~$N$, normalized to percentage change from the $N = 25$ baseline.
-On both ML-100K (\cref{fig:goodhart}a) and ML-1M
-(\cref{fig:goodhart}b), user and platform utilities increase
-monotonically ($+14\%$ by $N = 2{,}000$), while diversity utility
-decreases ($-34\%$ on ML-100K, $-46\%$ on ML-1M). The cosine values
-in the legend predict the direction: positive cosine leads to an
-upward curve, negative cosine to a downward curve.
+\Cref{fig:goodhart} shows the Goodhart effect across all four real
+datasets. Stakeholder utility curves are plotted as a function of
+training pairs~$N$, normalized to percentage change from the
+$N = 25$ baseline. In every panel, the cosine sign predicts the
+curve direction: positive cosine (green) leads to an upward or flat
+curve, negative cosine (red) leads to a downward curve. The effect
+is strongest on MIND (\cref{fig:goodhart}c), where
+civic\_diversity ($\cos = -0.84$) drops by $-200\%$. On Amazon
+(\cref{fig:goodhart}d), the near-zero cosine case
+(diversity, $\cos = -0.01$) produces a nearly flat curve---the
+direction condition correctly predicts no strong effect at the
+boundary.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/fig2_goodhart_curves.pdf}
-  \caption{Multi-stakeholder Goodhart effect on MovieLens. User and
-    platform (cosine $> 0$ with target) improve monotonically.
-    Diversity (cosine $< 0$) degrades. Same experiment, same data,
-    opposite outcomes predicted by the cosine sign.
-    \textbf{(a)}~ML-100K ($D = 19$, 1{,}305 movies).
-    \textbf{(b)}~ML-1M ($D = 19$, 3{,}347 movies).}
+  \includegraphics[width=\textwidth]{figures/fig2_goodhart_4panel.pdf}
+  \caption{Multi-stakeholder Goodhart effect across 4 datasets.
+    Each panel shows stakeholder utility change as the BT model
+    trains on more data. Positive cosine with the target (legend)
+    leads to improvement; negative cosine leads to degradation.
+    \textbf{(a)}~ML-100K ($D{=}19$, movies).
+    \textbf{(b)}~ML-1M ($D{=}19$, movies).
+    \textbf{(c)}~MIND ($D{=}35$, news).
+    \textbf{(d)}~Amazon Kindle ($D{=}32$, e-commerce).
+    The pattern is consistent across three feature families.}
   \label{fig:goodhart}
 \end{figure*}
 
