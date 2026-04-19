@@ -1,17 +1,10 @@
 \begin{thebibliography}{10}
 
-\bibitem{bail2018exposure}
-Christopher~A Bail et~al.
-\newblock Exposure to opposing views on social media can increase political
-  polarization.
-\newblock {\em Proceedings of the National Academy of Sciences},
-  115(37):9216--9221, 2018.
-
-\bibitem{bradley1952rank}
-Ralph~Allan Bradley and Milton~E Terry.
-\newblock Rank analysis of incomplete block designs: {I}. the method of paired
-  comparisons.
-\newblock {\em Biometrika}, 39(3/4):324--345, 1952.
+\bibitem{casper2023open}
+Stephen Casper et~al.
+\newblock Open problems and fundamental limitations of reinforcement learning
+  from human feedback.
+\newblock {\em arXiv preprint arXiv:2307.15217}, 2023.
 
 \bibitem{burke2017multistakeholder}
 Robin Burke and Himan Abdollahpouri.
@@ -19,22 +12,22 @@ Robin Burke and Himan Abdollahpouri.
 \newblock In {\em Workshop on Value-Aware and Multistakeholder Recommendation
   (VAMS)}, 2017.
 
-\bibitem{casper2023open}
-Stephen Casper et~al.
-\newblock Open problems and fundamental limitations of reinforcement learning
-  from human feedback.
-\newblock {\em arXiv preprint arXiv:2307.15217}, 2023.
-
-\bibitem{harper2015movielens}
-F~Maxwell Harper and Joseph~A Konstan.
-\newblock The {MovieLens} datasets: History and context.
-\newblock {\em ACM Transactions on Interactive Intelligent Systems},
-  5(4):1--19, 2015.
+\bibitem{keeney1976decisions}
+Ralph~L Keeney and Howard Raiffa.
+\newblock {\em Decisions with Multiple Objectives: Preferences and Value
+  Tradeoffs}.
+\newblock Wiley, 1976.
 
 \bibitem{iancu2014pareto}
 Dan~A Iancu and Nikolaos Trichakis.
 \newblock Pareto efficiency in robust optimization.
 \newblock {\em Management Science}, 60(1):130--147, 2014.
+
+\bibitem{stray2024building}
+Jonathan Stray et~al.
+\newblock Building human values into recommender systems: An interdisciplinary
+  synthesis.
+\newblock {\em ACM Transactions on Recommender Systems}, 2024.
 
 \bibitem{skalse2024goodhart}
 Jacek Karwowski, Oliver Hayman, Xingjian Bai, Klaus Kiendlhofer, Charlie
@@ -43,30 +36,17 @@ Jacek Karwowski, Oliver Hayman, Xingjian Bai, Klaus Kiendlhofer, Charlie
 \newblock In {\em International Conference on Learning Representations (ICLR)},
   2024.
 
-\bibitem{keeney1976decisions}
-Ralph~L Keeney and Howard Raiffa.
-\newblock {\em Decisions with Multiple Objectives: Preferences and Value
-  Tradeoffs}.
-\newblock Wiley, 1976.
+\bibitem{weng2024reward}
+Lilian Weng.
+\newblock Reward hacking in reinforcement learning.
+\newblock Lil'Log, 2024.
+\newblock \url{https://lilianweng.github.io/posts/2024-11-28-reward-hacking/}.
 
-\bibitem{lasser2025designing}
-Jana Lasser and Nikolaus Poechhacker.
-\newblock Designing social media content recommendation algorithms for societal
-  good.
-\newblock {\em Annals of the New York Academy of Sciences}, 1548:20--28, 2025.
-
-\bibitem{ni2019justifying}
-Jianmo Ni, Jiacheng Li, and Julian McAuley.
-\newblock Justifying recommendations using distantly-labeled reviews and
-  fine-grained aspects.
-\newblock In {\em Proceedings of the 2019 Conference on Empirical Methods in
-  Natural Language Processing}, pages 188--197, 2019.
-
-\bibitem{stray2024building}
-Jonathan Stray et~al.
-\newblock Building human values into recommender systems: An interdisciplinary
-  synthesis.
-\newblock {\em ACM Transactions on Recommender Systems}, 2024.
+\bibitem{bradley1952rank}
+Ralph~Allan Bradley and Milton~E Terry.
+\newblock Rank analysis of incomplete block designs: {I}. the method of paired
+  comparisons.
+\newblock {\em Biometrika}, 39(3/4):324--345, 1952.
 
 \bibitem{sun2025rethinking}
 Hao Sun, Yunyi Shen, and Jean-Francois Ton.
@@ -75,11 +55,36 @@ Hao Sun, Yunyi Shen, and Jean-Francois Ton.
 \newblock In {\em International Conference on Learning Representations (ICLR)},
   2025.
 
-\bibitem{weng2024reward}
-Lilian Weng.
-\newblock Reward hacking in reinforcement learning.
-\newblock Lil'Log, 2024.
-\newblock \url{https://lilianweng.github.io/posts/2024-11-28-reward-hacking/}.
+\bibitem{xalgorithm2023}
+{X Engineering}.
+\newblock Twitter's recommendation algorithm.
+\newblock
+  \url{https://blog.x.com/engineering/en_us/topics/open-source/2023/twitter-recommendation-algorithm},
+  2023.
+
+\bibitem{lasser2025designing}
+Jana Lasser and Nikolaus Poechhacker.
+\newblock Designing social media content recommendation algorithms for societal
+  good.
+\newblock {\em Annals of the New York Academy of Sciences}, 1548:20--28, 2025.
+
+\bibitem{xalgorithm2026}
+{xAI}.
+\newblock X open sources algorithm powered by {Grok AI}.
+\newblock \url{https://github.com/xai-org/x-algorithm}, 2026.
+
+\bibitem{bail2018exposure}
+Christopher~A Bail et~al.
+\newblock Exposure to opposing views on social media can increase political
+  polarization.
+\newblock {\em Proceedings of the National Academy of Sciences},
+  115(37):9216--9221, 2018.
+
+\bibitem{harper2015movielens}
+F~Maxwell Harper and Joseph~A Konstan.
+\newblock The {MovieLens} datasets: History and context.
+\newblock {\em ACM Transactions on Interactive Intelligent Systems},
+  5(4):1--19, 2015.
 
 \bibitem{wu2020mind}
 Fangzhao Wu, Ying Qiao, Jiun-Hung Chen, Chuhan Wu, Tao Qi, Jianxun Lian,
@@ -88,16 +93,11 @@ Fangzhao Wu, Ying Qiao, Jiun-Hung Chen, Chuhan Wu, Tao Qi, Jianxun Lian,
 \newblock In {\em Proceedings of the 58th Annual Meeting of the Association for
   Computational Linguistics}, pages 3597--3606, 2020.
 
-\bibitem{xalgorithm2023}
-{X Engineering}.
-\newblock Twitter's recommendation algorithm.
-\newblock
-  \url{https://blog.x.com/engineering/en_us/topics/open-source/2023/twitter-recommendation-algorithm},
-  2023.
-
-\bibitem{xalgorithm2026}
-{xAI}.
-\newblock X open sources algorithm powered by {Grok AI}.
-\newblock \url{https://github.com/xai-org/x-algorithm}, 2026.
+\bibitem{ni2019justifying}
+Jianmo Ni, Jiacheng Li, and Julian McAuley.
+\newblock Justifying recommendations using distantly-labeled reviews and
+  fine-grained aspects.
+\newblock In {\em Proceedings of the 2019 Conference on Empirical Methods in
+  Natural Language Processing}, pages 188--197, 2019.
 
 \end{thebibliography}
