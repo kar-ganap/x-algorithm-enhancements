@@ -501,8 +501,7 @@ score distribution induced by $\hat{\mathbf{w}}_t(N)$ as
 \end{equation}
 where $\pi_{\mathbf{w}}(c) \propto
 \exp\!\bigl(\mathbf{w}^\top \mathbf{p}(c) / T\bigr)$ is the
-softmax selection distribution at temperature~$T$. Then for
-sufficiently large~$T$ (empirically, $T \geq 1$):
+softmax selection distribution at temperature~$T > 0$. Then:
 \begin{itemize}
   \item If\, $\cos(\hat{\mathbf{w}}_t, \hat{\mathbf{w}}_h) < 0$:\;
     $\bar{U}_h(N)$ is eventually decreasing in~$N$.
@@ -510,6 +509,11 @@ sufficiently large~$T$ (empirically, $T \geq 1$):
     $\bar{U}_h(N)$ is eventually increasing in~$N$.
 \end{itemize}
 \end{proposition}
+
+Empirically, the condition holds at 100\% accuracy ($|\cos| > 0.2$,
+32/32 pairs across 4~datasets) for $T \geq 1$. At lower temperatures
+the softmax approaches hard selection and violations can appear
+(\cref{sec:selection_mechanism}).
 
 Two clarifications relative to a na\"{\i}ve formulation. First, the
 cosine is computed between \emph{BT-trained} weight vectors, not the
@@ -622,11 +626,21 @@ of extremal Goodhart~\cite{skalse2024goodhart} operating \emph{within}
 the positive-cosine regime: the selection mechanism, not the cosine
 geometry, drives the reversal.
 
+In our experiments, the same stakeholder (MIND journalist) exhibits
+both the lowest within-loss cosine (0.847, \cref{tab:within_loss}) and
+all 3 top-$K$ violations. Both are consequences of its sparse,
+adversarial weight structure: 12 of~35 nonzero dimensions with 5
+negative weights, producing the highest utility variance on the content
+pool ($\sigma = 0.57$). We tested whether within-loss cosine directly
+predicts violations and found no correlation (Spearman $\rho = -0.006$,
+$p = 0.98$ across a label-noise sweep); the shared root cause is
+feature sparsity, not convergence quality per se.
+
 The practical implication is that the direction condition is directly
 applicable to platforms using probability-weighted or temperature-scaled
 ranking (as most modern recommender systems do). For systems using hard
-top-$K$ selection, stakeholders with high utility variance on
-borderline items should be monitored explicitly.
+top-$K$ selection, stakeholders with sparse or adversarial weight
+structures should be monitored explicitly.
 
 \subsection{The MovieLens Goodhart Curve}
 
@@ -1032,13 +1046,9 @@ flip the predicted direction.
 
 \paragraph{Selection mechanism.}
 Under hard top-$K$ selection, the condition can reverse for
-stakeholders with high utility variance near the selection boundary
-(3 of~32 strong-cosine pairs on MIND). We tested and ruled out BT
-non-convergence as an alternative explanation (Spearman
-$\rho = -0.006$, $p = 0.98$ between within-loss cosine and
-direction-condition match rate across a noise-level sweep). The
-selection mechanism fully accounts for the observed violations, which
-vanish under softmax selection at $T \geq 1$.
+stakeholders with sparse, high-variance weight structures (3 of~32
+strong-cosine pairs on MIND; see \cref{sec:selection_mechanism}). The
+violations vanish under softmax selection at $T \geq 1$.
 
 \paragraph{Trained vs.\ raw cosines.}
 On high-dimensional sparse features, BT training substantially
