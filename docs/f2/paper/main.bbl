@@ -7,10 +7,10 @@ Stephen Casper et~al.
 \newblock {\em arXiv preprint arXiv:2307.15217}, 2023.
 
 \bibitem{burke2017multistakeholder}
-Robin Burke and Himan Abdollahpouri.
+Robin Burke, Himan Abdollahpouri, Bamshad Mobasher, and Trinadh Gupta.
 \newblock Towards multi-stakeholder utility evaluation of recommender systems.
-\newblock In {\em Workshop on Value-Aware and Multistakeholder Recommendation
-  (VAMS)}, 2017.
+\newblock In {\em Workshop on Surprise, Opposition, and Obstruction in Adaptive
+  and Personalized Systems (SOAP) at UMAP}, 2016.
 
 \bibitem{keeney1976decisions}
 Ralph~L Keeney and Howard Raiffa.
@@ -88,7 +88,7 @@ F~Maxwell Harper and Joseph~A Konstan.
 
 \bibitem{wu2020mind}
 Fangzhao Wu, Ying Qiao, Jiun-Hung Chen, Chuhan Wu, Tao Qi, Jianxun Lian,
-  Dongsheng Liu, Xing Xie, Jianfeng Gao, Winnie Wu, and Ming Zhou.
+  Danyang Liu, Xing Xie, Jianfeng Gao, Winnie Wu, and Ming Zhou.
 \newblock {MIND}: A large-scale dataset for news recommendation.
 \newblock In {\em Proceedings of the 58th Annual Meeting of the Association for
   Computational Linguistics}, pages 3597--3606, 2020.

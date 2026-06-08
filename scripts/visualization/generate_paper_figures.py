@@ -110,11 +110,13 @@ def fig2_goodhart_curves():
 # ═══════════════════════════════════════════════════════════════
 
 def fig3_direction_scatter():
-    """Direction condition scatter using BT-trained cosines across 3 datasets.
+    """Direction condition scatter using BT-trained cosines across 4 datasets.
 
-    Uses selection_mechanism_ablation.json for softmax T=1.0 utility changes,
-    combined with trained cosines from labels_not_loss.json per dataset.
-    Falls back to expanded_direction_validation.json if ablation not available.
+    Plots the genuine hard top-K (delta=0, pure score selection) result from
+    selection_mechanism_ablation.json: 27/32 match for |cos|>0.2, with 5 MIND
+    violations. (An earlier version averaged utility over the full diversity
+    frontier -- a softer selection giving 29/32 -- and mislabeled it softmax
+    T=1.0.) Softmax T>=1 recovers 32/32; see the figure caption.
     """
     fig, ax = plt.subplots(figsize=(6, 4.5))
 
@@ -127,30 +129,24 @@ def fig3_direction_scatter():
         "amazon-kindle": ("Amazon Kindle", "^", C_AMAZON),
     }
 
+    # Genuine hard top-K: delta=0 pure-score selection from the selection-mechanism
+    # ablation (the authoritative selection-mechanism experiment). Each pair carries
+    # its BT-trained cosine and the hard-top-K utility change directly.
+    MECH = "top-10"
     points = []
+    with open(ROOT / "results" / "selection_mechanism_ablation.json") as f:
+        abl = json.load(f)
     for ds_name in DS_STYLE:
-        ev_path = ROOT / "results" / f"{ds_name}_expanded_direction_validation.json"
-        lnl_path = ROOT / "results" / f"{ds_name}_labels_not_loss.json"
-        if not ev_path.exists() or not lnl_path.exists():
+        ds_data = abl["datasets"].get(ds_name)
+        if ds_data is None:
             continue
-        with open(ev_path) as f:
-            ev = json.load(f)
-        with open(lnl_path) as f:
-            lnl = json.load(f)
-        bt_cos = lnl["group_a_core"]["across_stakeholder_similarity"]["bradley_terry"]
-        for p in ev["points"]:
-            trn = None
-            for k in (f"{p['target']}-{p['hidden']}", f"{p['hidden']}-{p['target']}"):
-                if k in bt_cos:
-                    trn = bt_cos[k]["mean"]
-                    break
-            if trn is None:
-                continue
+        for p in ds_data["pairs"]:
+            m = p["mechanisms"][MECH]
             points.append({
                 "dataset": ds_name,
-                "trained_cos": trn,
-                "change_pct": p["change_pct"],
-                "match": (trn > 0) == p["improving"],
+                "trained_cos": p["trained_cos"],
+                "change_pct": m["change"] * 100.0,  # 'change' is a fraction
+                "match": m["match_trn"],
             })
 
     if not points:
@@ -203,7 +199,7 @@ def fig3_direction_scatter():
     ax.text(0.97, 0.03,
             f"{strong_match}/{len(strong)} for |cos| > 0.2\n"
             f"{len(points)} points, {len(datasets_present)} datasets\n"
-            f"trained cosine, softmax T=1.0",
+            f"trained cosine, hard top-K",
             transform=ax.transAxes, fontsize=7.5, ha="right", va="bottom",
             bbox=dict(boxstyle="round,pad=0.4", facecolor="#E8F5E9",
                       edgecolor="#66BB6A", alpha=0.9))

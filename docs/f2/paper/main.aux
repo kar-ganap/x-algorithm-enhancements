@@ -73,72 +73,72 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Selection Mechanism Matters}{7}{subsection.4.3}\protected@file@percent }
 \newlabel{sec:selection_mechanism}{{4.3}{7}{Selection Mechanism Matters}{subsection.4.3}{}}
 \newlabel{sec:selection_mechanism@cref}{{[subsection][3][4]4.3}{[1][7][]7}{}{}{}}
-\citation{skalse2024goodhart}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Direction condition validation across 4 datasets and 13 stakeholders (BT-trained cosines, top-$K$ utility change). Red shading: $\cos < -0.2$ (predicted degradation). Green: $\cos > 0.2$ (predicted improvement). Amber: transition zone. Red outlines mark violations. Under top-$K$: 29/32 for $|\cos | > 0.2$; the 3 violations (all MIND journalist pairs) vanish under softmax $T \geq 1$ (32/32).}}{8}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:scatter}{{1}{8}{Direction condition validation across 4 datasets and 13 stakeholders (BT-trained cosines, top-$K$ utility change). Red shading: $\cos < -0.2$ (predicted degradation). Green: $\cos > 0.2$ (predicted improvement). Amber: transition zone. Red outlines mark violations. Under top-$K$: 29/32 for $|\cos | > 0.2$; the 3 violations (all MIND journalist pairs) vanish under softmax $T \geq 1$ (32/32)}{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Direction condition validation across 4 datasets and 13 stakeholders (BT-trained cosines, top-$K$ utility change). Red shading: $\cos < -0.2$ (predicted degradation). Green: $\cos > 0.2$ (predicted improvement). Amber: transition zone. Red outlines mark violations. Under hard top-$K$: 27/32 for $|\cos | > 0.2$ (5 strong-cosine violations, all on MIND; the 3 safety-relevant ones---predicted benign, hidden harmed---are the journalist pairs). All violations vanish under softmax $T \geq 1$ (32/32).}}{8}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:scatter}{{1}{8}{Direction condition validation across 4 datasets and 13 stakeholders (BT-trained cosines, top-$K$ utility change). Red shading: $\cos < -0.2$ (predicted degradation). Green: $\cos > 0.2$ (predicted improvement). Amber: transition zone. Red outlines mark violations. Under hard top-$K$: 27/32 for $|\cos | > 0.2$ (5 strong-cosine violations, all on MIND; the 3 safety-relevant ones---predicted benign, hidden harmed---are the journalist pairs). All violations vanish under softmax $T \geq 1$ (32/32)}{figure.caption.11}{}}
 \newlabel{fig:scatter@cref}{{[figure][1][]1}{[1][7][]8}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}The MovieLens Goodhart Curve}{8}{subsection.4.4}\protected@file@percent }
+\citation{skalse2024goodhart}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Multi-stakeholder Goodhart effect across 4 datasets. Each panel shows stakeholder utility change as the BT model trains on more data. Positive cosine with the target (legend) leads to improvement; negative cosine leads to degradation. \textbf  {(a)}~ML-100K ($D{=}19$, movies). \textbf  {(b)}~ML-1M ($D{=}19$, movies). \textbf  {(c)}~MIND ($D{=}35$, news). \textbf  {(d)}~Amazon Kindle ($D{=}32$, e-commerce). The pattern is consistent across three feature families.}}{9}{figure.caption.12}\protected@file@percent }
 \newlabel{fig:goodhart}{{2}{9}{Multi-stakeholder Goodhart effect across 4 datasets. Each panel shows stakeholder utility change as the BT model trains on more data. Positive cosine with the target (legend) leads to improvement; negative cosine leads to degradation. \textbf {(a)}~ML-100K ($D{=}19$, movies). \textbf {(b)}~ML-1M ($D{=}19$, movies). \textbf {(c)}~MIND ($D{=}35$, news). \textbf {(d)}~Amazon Kindle ($D{=}32$, e-commerce). The pattern is consistent across three feature families}{figure.caption.12}{}}
-\newlabel{fig:goodhart@cref}{{[figure][2][]2}{[1][8][]9}{}{}{}}
+\newlabel{fig:goodhart@cref}{{[figure][2][]2}{[1][9][]9}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.5}The Synthetic Null Case}{9}{subsection.4.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Why the Condition Holds: Low-Rank Weight Space}{9}{section.5}\protected@file@percent }
-\newlabel{sec:lowrank}{{5}{9}{Why the Condition Holds: Low-Rank Weight Space}{section.5}{}}
-\newlabel{sec:lowrank@cref}{{[section][5][]5}{[1][9][]9}{}{}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Within-loss cosine similarity (mean $\pm $ std across 5 seeds). Values above 0.90 indicate that the loss function has negligible effect on the learned direction given identical labels.}}{10}{table.caption.13}\protected@file@percent }
 \newlabel{tab:within_loss}{{3}{10}{Within-loss cosine similarity (mean $\pm $ std across 5 seeds). Values above 0.90 indicate that the loss function has negligible effect on the learned direction given identical labels}{table.caption.13}{}}
 \newlabel{tab:within_loss@cref}{{[table][3][]3}{[1][10][]10}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Why the Condition Holds: Low-Rank Weight Space}{10}{section.5}\protected@file@percent }
+\newlabel{sec:lowrank}{{5}{10}{Why the Condition Holds: Low-Rank Weight Space}{section.5}{}}
+\newlabel{sec:lowrank@cref}{{[section][5][]5}{[1][10][]10}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Labels, Not Loss}{10}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Low-Rank Composition}{10}{subsection.5.2}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Composition analysis: scalarized weight vectors projected onto the per-stakeholder span. Higher projection cosine indicates tighter low-rank structure.}}{11}{table.caption.14}\protected@file@percent }
 \newlabel{tab:composition}{{4}{11}{Composition analysis: scalarized weight vectors projected onto the per-stakeholder span. Higher projection cosine indicates tighter low-rank structure}{table.caption.14}{}}
-\newlabel{tab:composition@cref}{{[table][4][]4}{[1][10][]11}{}{}{}}
+\newlabel{tab:composition@cref}{{[table][4][]4}{[1][11][]11}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Low-Rank Composition}{11}{subsection.5.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {6}Practical Implications}{11}{section.6}\protected@file@percent }
 \newlabel{sec:practical}{{6}{11}{Practical Implications}{section.6}{}}
 \newlabel{sec:practical@cref}{{[section][6][]6}{[1][11][]11}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Data Budget for Hidden Stakeholder Recovery}{11}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Audit Toolkit Applied to X}{11}{subsection.6.2}\protected@file@percent }
-\newlabel{sec:audit}{{6.2}{11}{Audit Toolkit Applied to X}{subsection.6.2}{}}
-\newlabel{sec:audit@cref}{{[subsection][2][6]6.2}{[1][11][]11}{}{}{}}
 \citation{xalgorithm2023}
 \citation{xalgorithm2026}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Data budget for hidden stakeholder recovery across 16~configurations on 4~datasets. Bold lines: median regret across hidden stakeholders per dataset. Faint lines: individual per-stakeholder regret curves. Median budget: 34~pairs for 50\% recovery, 137~pairs for 80\%.}}{12}{figure.caption.15}\protected@file@percent }
 \newlabel{fig:budget}{{3}{12}{Data budget for hidden stakeholder recovery across 16~configurations on 4~datasets. Bold lines: median regret across hidden stakeholders per dataset. Faint lines: individual per-stakeholder regret curves. Median budget: 34~pairs for 50\% recovery, 137~pairs for 80\%}{figure.caption.15}{}}
-\newlabel{fig:budget@cref}{{[figure][3][]3}{[1][11][]12}{}{}{}}
-\@writefile{toc}{\contentsline {paragraph}{A five-step audit procedure.}{12}{paragraph*.18}\protected@file@percent }
+\newlabel{fig:budget@cref}{{[figure][3][]3}{[1][12][]12}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Audit Toolkit Applied to X}{12}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:audit}{{6.2}{12}{Audit Toolkit Applied to X}{subsection.6.2}{}}
+\newlabel{sec:audit@cref}{{[subsection][2][6]6.2}{[1][12][]12}{}{}{}}
 \citation{iancu2014pareto}
 \@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Audit scenarios on X's 18-action space. The single variable determining Goodhart risk is how the platform weights negative actions. $\alpha $: negativity aversion (\cref  {eq:synth_utility}).}}{13}{table.caption.16}\protected@file@percent }
 \newlabel{tab:scenarios}{{5}{13}{Audit scenarios on X's 18-action space. The single variable determining Goodhart risk is how the platform weights negative actions. $\alpha $: negativity aversion (\cref {eq:synth_utility})}{table.caption.16}{}}
-\newlabel{tab:scenarios@cref}{{[table][5][]5}{[1][11][]13}{}{}{}}
+\newlabel{tab:scenarios@cref}{{[table][5][]5}{[1][12][]13}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{A five-step audit procedure.}{13}{paragraph*.18}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Selection Mechanism Independence}{13}{subsection.6.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {7}Methodological Note: Hausdorff Distance and False Positive Goodhart}{13}{section.7}\protected@file@percent }
 \newlabel{sec:hausdorff}{{7}{13}{Methodological Note: Hausdorff Distance and False Positive Goodhart}{section.7}{}}
 \newlabel{sec:hausdorff@cref}{{[section][7][]7}{[1][13][]13}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Audit threshold for X's 18-action space. The curve shows $\cos (\text  {platform}, \text  {society})$ as a function of the platform's weight on negative actions. Goodhart zone (red): negative actions treated as positive engagement. Safe zone (green): any negative penalty suffices. Markers show specific platform configurations.}}{14}{figure.caption.17}\protected@file@percent }
 \newlabel{fig:audit}{{4}{14}{Audit threshold for X's 18-action space. The curve shows $\cos (\text {platform}, \text {society})$ as a function of the platform's weight on negative actions. Goodhart zone (red): negative actions treated as positive engagement. Safe zone (green): any negative penalty suffices. Markers show specific platform configurations}{figure.caption.17}{}}
-\newlabel{fig:audit@cref}{{[figure][4][]4}{[1][12][]14}{}{}{}}
+\newlabel{fig:audit@cref}{{[figure][4][]4}{[1][13][]14}{}{}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {8}Limitations}{14}{section.8}\protected@file@percent }
 \newlabel{sec:limitations}{{8}{14}{Limitations}{section.8}{}}
 \newlabel{sec:limitations@cref}{{[section][8][]8}{[1][14][]14}{}{}{}}
 \@writefile{toc}{\contentsline {paragraph}{Scale gap.}{14}{paragraph*.19}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Linear utility.}{14}{paragraph*.20}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Transition zone.}{14}{paragraph*.21}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Selection mechanism.}{14}{paragraph*.22}\protected@file@percent }
 \bibstyle{unsrt}
 \bibdata{references}
 \bibcite{casper2023open}{1}
 \bibcite{burke2017multistakeholder}{2}
 \bibcite{keeney1976decisions}{3}
-\bibcite{iancu2014pareto}{4}
-\bibcite{stray2024building}{5}
-\bibcite{skalse2024goodhart}{6}
-\bibcite{weng2024reward}{7}
-\bibcite{bradley1952rank}{8}
+\@writefile{toc}{\contentsline {paragraph}{Transition zone.}{15}{paragraph*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Selection mechanism.}{15}{paragraph*.22}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Trained vs.\ raw cosines.}{15}{paragraph*.23}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Sample of stakeholders.}{15}{paragraph*.24}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{15}{section.9}\protected@file@percent }
 \newlabel{sec:conclusion}{{9}{15}{Conclusion}{section.9}{}}
 \newlabel{sec:conclusion@cref}{{[section][9][]9}{[1][15][]15}{}{}{}}
+\bibcite{iancu2014pareto}{4}
+\bibcite{stray2024building}{5}
+\bibcite{skalse2024goodhart}{6}
+\bibcite{weng2024reward}{7}
+\bibcite{bradley1952rank}{8}
 \bibcite{sun2025rethinking}{9}
 \bibcite{xalgorithm2023}{10}
 \bibcite{lasser2025designing}{11}
@@ -151,26 +151,26 @@
 \newlabel{app:stakeholders}{{A}{16}{Stakeholder Weight Definitions}{appendix.A}{}}
 \newlabel{app:stakeholders@cref}{{[section][1][]A}{[1][16][]16}{}{}{}}
 \@writefile{toc}{\contentsline {paragraph}{MIND-small.}{16}{paragraph*.25}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Amazon Kindle.}{16}{paragraph*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Amazon Kindle.}{17}{paragraph*.26}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {B}Cosine Matrices}{17}{appendix.B}\protected@file@percent }
 \newlabel{app:cosines}{{B}{17}{Cosine Matrices}{appendix.B}{}}
-\newlabel{app:cosines@cref}{{[section][2][]B}{[1][16][]17}{}{}{}}
+\newlabel{app:cosines@cref}{{[section][2][]B}{[1][17][]17}{}{}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {C}Direction Condition Per-Pair Results}{17}{appendix.C}\protected@file@percent }
 \newlabel{app:direction_pairs}{{C}{17}{Direction Condition Per-Pair Results}{appendix.C}{}}
 \newlabel{app:direction_pairs@cref}{{[section][3][]C}{[1][17][]17}{}{}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {D}Data Budget Full Table}{17}{appendix.D}\protected@file@percent }
 \newlabel{app:data_budget}{{D}{17}{Data Budget Full Table}{appendix.D}{}}
 \newlabel{app:data_budget@cref}{{[section][4][]D}{[1][17][]17}{}{}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Preference budget for hidden stakeholder recovery. $N_{50\%}$/$N_{80\%}$: minimum pairs for 50\%/80\% regret recovery (interpolated). ``$>500$'': not reached within sweep.}}{17}{table.caption.27}\protected@file@percent }
-\newlabel{tab:budget_full}{{6}{17}{Preference budget for hidden stakeholder recovery. $N_{50\%}$/$N_{80\%}$: minimum pairs for 50\%/80\% regret recovery (interpolated). ``$>500$'': not reached within sweep}{table.caption.27}{}}
-\newlabel{tab:budget_full@cref}{{[table][6][]6}{[1][17][]17}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {E}Temperature Sweep}{18}{appendix.E}\protected@file@percent }
-\newlabel{app:temp_sweep}{{E}{18}{Temperature Sweep}{appendix.E}{}}
-\newlabel{app:temp_sweep@cref}{{[section][5][]E}{[1][17][]18}{}{}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Match rate at $|\text  {trained cosine}| > 0.2$ by selection temperature. Hard top-10 is shown for comparison.}}{18}{table.caption.28}\protected@file@percent }
-\newlabel{tab:temp_sweep}{{7}{18}{Match rate at $|\text {trained cosine}| > 0.2$ by selection temperature. Hard top-10 is shown for comparison}{table.caption.28}{}}
-\newlabel{tab:temp_sweep@cref}{{[table][7][]7}{[1][17][]18}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {E}Temperature Sweep}{17}{appendix.E}\protected@file@percent }
+\newlabel{app:temp_sweep}{{E}{17}{Temperature Sweep}{appendix.E}{}}
+\newlabel{app:temp_sweep@cref}{{[section][5][]E}{[1][17][]17}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Preference budget for hidden stakeholder recovery. $N_{50\%}$/$N_{80\%}$: minimum pairs for 50\%/80\% regret recovery (interpolated). ``$>500$'': not reached within sweep.}}{18}{table.caption.27}\protected@file@percent }
+\newlabel{tab:budget_full}{{6}{18}{Preference budget for hidden stakeholder recovery. $N_{50\%}$/$N_{80\%}$: minimum pairs for 50\%/80\% regret recovery (interpolated). ``$>500$'': not reached within sweep}{table.caption.27}{}}
+\newlabel{tab:budget_full@cref}{{[table][6][]6}{[1][17][]18}{}{}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {F}Hyperparameter Robustness}{18}{appendix.F}\protected@file@percent }
 \newlabel{app:hyperparameter}{{F}{18}{Hyperparameter Robustness}{appendix.F}{}}
-\newlabel{app:hyperparameter@cref}{{[section][6][]F}{[1][18][]18}{}{}{}}
-\gdef \@abspage@last{18}
+\newlabel{app:hyperparameter@cref}{{[section][6][]F}{[1][17][]18}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Match rate at $|\text  {trained cosine}| > 0.2$ by selection temperature. Hard top-10 is shown for comparison.}}{19}{table.caption.28}\protected@file@percent }
+\newlabel{tab:temp_sweep}{{7}{19}{Match rate at $|\text {trained cosine}| > 0.2$ by selection temperature. Hard top-10 is shown for comparison}{table.caption.28}{}}
+\newlabel{tab:temp_sweep@cref}{{[table][7][]7}{[1][17][]19}{}{}{}}
+\gdef \@abspage@last{19}
